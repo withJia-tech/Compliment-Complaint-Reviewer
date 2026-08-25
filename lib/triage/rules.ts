@@ -1,17 +1,18 @@
-import type { ReasonCode } from "@/lib/types";
+import type { ReasonCode, ReviewTheme } from "@/lib/types";
 
-type EscalationReasonCode = Exclude<
+type SensitiveReasonCode = Exclude<
   ReasonCode,
   "positive_no_complaint" | "neutral_mixed_sentiment" | "negative_issue"
 >;
 
 /**
- * Escalation keyword lists, deterministic and lowercase-matched. Any hit
- * here takes precedence over star rating: the spec requires these
- * categories to escalate and never auto-publish, regardless of rating.
+ * Sensitive-claim keyword lists, deterministic and lowercase-matched. Any hit
+ * here forces high risk and blocks automatic publishing regardless of star
+ * rating. These are claims a human must answer personally — not a separate
+ * escalation tier, since a one-person team has nobody to escalate to.
  */
-export const ESCALATION_KEYWORDS: Record<EscalationReasonCode, string[]> = {
-  escalation_safety: [
+export const SENSITIVE_KEYWORDS: Record<SensitiveReasonCode, string[]> = {
+  sensitive_safety: [
     "injur",
     "hurt",
     "unsafe",
@@ -24,16 +25,9 @@ export const ESCALATION_KEYWORDS: Record<EscalationReasonCode, string[]> = {
     "assault",
     "threat",
   ],
-  escalation_legal: ["lawsuit", "sue", "lawyer", "attorney", "legal action", "small claims"],
-  escalation_discrimination: [
-    "racist",
-    "racism",
-    "discriminat",
-    "sexist",
-    "homophobic",
-    "slur",
-  ],
-  escalation_medical: [
+  sensitive_legal: ["lawsuit", "sue", "lawyer", "attorney", "legal action", "small claims"],
+  sensitive_discrimination: ["racist", "racism", "discriminat", "sexist", "homophobic", "slur"],
+  sensitive_medical: [
     "allergic reaction",
     "food poisoning",
     "sick",
@@ -41,8 +35,8 @@ export const ESCALATION_KEYWORDS: Record<EscalationReasonCode, string[]> = {
     "hospital",
     "poison",
   ],
-  escalation_fraud: ["scam", "fraud", "stole", "theft", "overcharged", "unauthorized charge"],
-  escalation_compensation: ["refund", "compensation", "reimburse", "money back", "chargeback"],
+  sensitive_fraud: ["scam", "fraud", "stole", "theft", "overcharged", "unauthorized charge"],
+  sensitive_compensation: ["refund", "compensation", "reimburse", "money back", "chargeback"],
 };
 
 /** Keywords that mark a complaint even inside an otherwise high-star review. */
@@ -63,4 +57,72 @@ export const COMPLAINT_KEYWORDS = [
 ];
 
 /** Hints that reinforce a positive read (used only to boost confidence). */
-export const POSITIVE_HINTS = ["great", "love", "excellent", "amazing", "best", "friendly", "recommend"];
+export const POSITIVE_HINTS = [
+  "great",
+  "love",
+  "excellent",
+  "amazing",
+  "best",
+  "friendly",
+  "recommend",
+];
+
+/**
+ * Theme keywords mapped to the Food / Service / Atmosphere sub-ratings Google
+ * Business Profile already collects, so the weekly and monthly rollups can be
+ * read alongside the owner's existing Google metrics.
+ */
+export const THEME_KEYWORDS: Record<ReviewTheme, string[]> = {
+  food: [
+    "food",
+    "coffee",
+    "latte",
+    "meal",
+    "dish",
+    "menu",
+    "taste",
+    "tasty",
+    "delicious",
+    "portion",
+    "cold food",
+    "order was wrong",
+    "drink",
+    "cake",
+    "breakfast",
+    "lunch",
+  ],
+  service: [
+    "service",
+    "staff",
+    "waiter",
+    "waitress",
+    "server",
+    "barista",
+    "rude",
+    "friendly",
+    "slow",
+    "waited",
+    "wait",
+    "manager",
+    "attentive",
+    "helpful",
+  ],
+  atmosphere: [
+    "atmosphere",
+    "ambience",
+    "ambiance",
+    "vibe",
+    "music",
+    "noisy",
+    "loud",
+    "quiet",
+    "decor",
+    "seating",
+    "table",
+    "clean",
+    "dirty",
+    "cosy",
+    "cozy",
+    "crowded",
+  ],
+};

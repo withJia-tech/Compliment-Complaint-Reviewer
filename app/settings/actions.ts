@@ -9,4 +9,5 @@ export async function toggleConsentAction(formData: FormData) {
   locationRepo.update(DEFAULT_LOCATION_ID, { autoPublishConsent: next });
   revalidatePath("/settings");
   revalidatePath("/queue");
+  revalidatePath("/insights");
 }

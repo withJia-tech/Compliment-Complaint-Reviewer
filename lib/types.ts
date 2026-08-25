@@ -29,23 +29,32 @@ export interface ApprovedBusinessFacts {
   facts: ApprovedBusinessFact[];
 }
 
-export type RiskLevel = "low" | "medium" | "high" | "escalate";
+/**
+ * Three levels only. A one-person team or an agency managing businesses has
+ * nobody to escalate *to*, so sensitive claims are high risk flagged
+ * `sensitive` rather than a separate fourth tier.
+ */
+export type RiskLevel = "low" | "medium" | "high";
 
 export type ReasonCode =
   | "positive_no_complaint"
   | "neutral_mixed_sentiment"
   | "negative_issue"
-  | "escalation_safety"
-  | "escalation_legal"
-  | "escalation_discrimination"
-  | "escalation_medical"
-  | "escalation_fraud"
-  | "escalation_compensation";
+  | "sensitive_safety"
+  | "sensitive_legal"
+  | "sensitive_discrimination"
+  | "sensitive_medical"
+  | "sensitive_fraud"
+  | "sensitive_compensation";
 
-export type RecommendedAction =
-  | "auto_publish_eligible"
-  | "approval_required"
-  | "escalate_never_auto";
+export type RecommendedAction = "auto_publish_eligible" | "approval_required";
+
+/**
+ * Feedback themes, aligned with the Food / Service / Atmosphere sub-ratings
+ * Google Business Profile already collects, so weekly and monthly rollups
+ * line up with what the owner sees in Google.
+ */
+export type ReviewTheme = "food" | "service" | "atmosphere";
 
 export interface TriageResult {
   reviewId: string;
@@ -53,6 +62,12 @@ export interface TriageResult {
   riskLevel: RiskLevel;
   reasonCodes: ReasonCode[];
   recommendedAction: RecommendedAction;
+  /**
+   * True for safety, legal, discrimination, medical, fraud, or compensation
+   * claims. Always blocks automatic publishing, independent of star rating.
+   */
+  sensitive: boolean;
+  themes: ReviewTheme[];
   /** 0..1 heuristic confidence, not a calibrated probability */
   confidence: number;
   /** Evidence trail: which keywords drove this classification */
@@ -76,6 +91,22 @@ export type ApprovalStatus =
   | "rejected"
   | "auto_published";
 
+/**
+ * Channels a goodwill remedy is settled through. These are deliberately
+ * OUTSIDE this application: the app records that a remedy was offered so the
+ * audit trail is complete, but never sends a voucher, and never mentions one
+ * in the public reply text.
+ */
+export type RemedyChannel = "email" | "whatsapp" | "phone" | "in_person";
+
+export interface RemedyNote {
+  /** Free-text internal note, e.g. "offered a £10 voucher". Never published. */
+  note: string;
+  channel: RemedyChannel;
+  recordedBy: string;
+  recordedAt: string;
+}
+
 export interface Approval {
   reviewId: string;
   status: ApprovalStatus;
@@ -83,6 +114,8 @@ export interface Approval {
   finalText?: string;
   decidedAt?: string;
   reason?: string;
+  /** Internal-only record of an out-of-band goodwill remedy. Never published. */
+  remedy?: RemedyNote;
 }
 
 export interface ProviderPublishResult {

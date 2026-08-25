@@ -65,12 +65,35 @@ describe("TemplateReplyDrafter", () => {
     }
   });
 
-  it("does not cite the refund policy fact for a compensation escalation (no promised remedy)", () => {
+  it("does not cite the refund policy fact for a compensation claim (no promised remedy)", () => {
     const r = review({ stars: 3, text: "Charged twice on my card, need a refund immediately." });
     const triage = policy.classify(r);
     const draft = drafter.draft(r, triage, facts);
-    expect(triage.riskLevel).toBe("escalate");
+    expect(triage.sensitive).toBe(true);
     expect(draft.factsUsed).not.toContain("policy.refund");
+  });
+
+  it("never mentions a voucher or goodwill offer — those are settled out of band", () => {
+    for (const text of [
+      "Charged twice on my card, need a refund immediately.",
+      "Rude staff, worst experience, never again.",
+      "Food was good but service was really slow today.",
+    ]) {
+      const r = review({ stars: 2, text });
+      const draft = drafter.draft(r, policy.classify(r), facts);
+      for (const word of ["voucher", "gift card", "discount", "compensat", "free "]) {
+        expect(draft.text.toLowerCase()).not.toContain(word);
+      }
+    }
+  });
+
+  it("uses a distinct template for a sensitive claim versus an ordinary bad review", () => {
+    const sensitive = review({ stars: 1, text: "I slipped and got hurt here." });
+    const ordinary = review({ stars: 1, text: "Rude staff, worst experience." });
+    const sensitiveDraft = drafter.draft(sensitive, policy.classify(sensitive), facts);
+    const ordinaryDraft = drafter.draft(ordinary, policy.classify(ordinary), facts);
+    expect(sensitiveDraft.templateId).toBe("sensitive_personal_response");
+    expect(ordinaryDraft.templateId).toBe("negative_acknowledge_no_promise");
   });
 
   it("falls back to generic phrasing instead of inventing contact info when no fact is approved", () => {

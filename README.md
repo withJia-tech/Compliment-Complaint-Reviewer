@@ -28,8 +28,22 @@ npm run scan     # runs the daily worker over fixture data, populating data/stor
 npm run dev      # starts the Next.js dev server at http://localhost:3000
 ```
 
-Open `/queue` to see the daily review queue, click into a review for the evidence/draft/decision
-view, and visit `/settings` to toggle auto-publish consent for the single connected location.
+Open `/queue` to see the daily review queue — click **View** on any row to read the proposed
+reply, edit it in place, and send it without leaving the page. `/insights` rolls the same
+reviews up weekly or monthly by Food / Service / Atmosphere, and `/settings` toggles
+auto-publish consent for the single connected location.
+
+## How it routes
+
+Three risk levels, no escalation tier — a one-person team or an agency has nobody to escalate
+to. Sensitive claims (safety, legal, discrimination, medical, fraud, compensation) are high
+risk flagged `sensitive`: they are never auto-published at any star rating and get their own
+reply wording. Everything else follows the star bands, with complaint language pulling a
+4-5 star review down to "needs approval".
+
+Goodwill remedies — vouchers and the like — are settled outside this app over email or
+WhatsApp. The detail page records that one was offered so the audit trail is complete, but
+nothing is sent from here and no remedy is ever mentioned in the published reply.
 
 ## Scripts
 
@@ -49,9 +63,12 @@ view, and visit `/settings` to toggle auto-publish consent for the single connec
   integration can be swapped in later without touching callers.
 - `lib/providers/`, `lib/drafter/`, `lib/approval/` — the one fixture/stub implementation of each
   interface used by this prototype.
-- `lib/triage/` — the deterministic `DefaultTriagePolicy` implementing the default policy (star
-  bands, complaint-keyword downgrades, and escalation categories that always route to human
-  review and never auto-publish).
+- `lib/triage/` — the deterministic `DefaultTriagePolicy`: star bands, complaint-keyword
+  downgrades, sensitive-claim detection that always routes to a human, and Food / Service /
+  Atmosphere theme tagging.
+- `lib/insights/aggregate.ts` — weekly and monthly rollups over reviews already in the store.
+- `lib/decisions.ts` — send / skip / record-remedy, shared by the queue's inline actions and
+  the detail page so both write identical approval and audit records.
 - `lib/store/` — a JSON-file-backed repository layer (`data/store/*.json`) with atomic writes;
   swapping to a real database later means reimplementing the repos only.
 - `lib/scan/runDailyScan.ts` — the single orchestration function shared by the CLI script

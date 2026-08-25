@@ -24,20 +24,40 @@ will later implement.
 
 ## Default policy
 
-- 4–5 stars with no complaint: eligible for automatic publishing after consent.
-- 3 stars or mixed sentiment: approval required.
-- 1–2 stars: approval required and issue classification shown.
-- Safety, legal, discrimination, medical, fraud, or compensation claims: escalate; never auto-publish.
+Three risk levels — low, medium, high. There is no separate escalation tier: the
+operator is a one-person team or an agency managing businesses, so there is nobody
+to escalate to. Sensitive claims are high risk carrying a `sensitive` flag.
+
+- 4–5 stars with no complaint: **low** — eligible for automatic publishing after consent.
+- 3 stars or mixed sentiment: **medium** — approval required.
+- 1–2 stars: **high** — approval required and issue classification shown.
+- Safety, legal, discrimination, medical, fraud, or compensation claims: **high + sensitive**;
+  never auto-published at any star rating, and answered personally.
 - The model must not invent refunds, causes, timelines, promises, or operational facts.
+
+## Goodwill remedies
+
+Vouchers, refunds, and other goodwill are settled **outside this application** — over
+email, WhatsApp, phone, or in person. The app records that a remedy was offered so
+the audit trail is complete, but never sends one, and never mentions one in the
+published reply.
+
+## Feedback themes
+
+Reviews are tagged Food / Service / Atmosphere — the same split Google Business Profile
+already collects as sub-ratings — and rolled up weekly or monthly so the operator can
+corroborate the queue against their existing Google metrics.
 
 ## Non-goals
 
 - Scraping Google Maps pages.
 - Storing Google passwords.
 - Managing multiple locations in the first slice.
-- Historical review intelligence or long-term review-content storage.
+- Long-term storage of review content. Weekly and monthly rollups aggregate reviews
+  already ingested; they add no new retention.
 - MCP as the scheduler or system of record.
 - Automatic publishing without explicit business consent.
+- Issuing, sending, or tracking the fulfilment of vouchers or refunds.
 
 ## Production-shaped interfaces to preserve
 
