@@ -1,0 +1,101 @@
+[
+  {
+    "id": "rev_001",
+    "locationId": "loc_001",
+    "author": "Priya S.",
+    "stars": 5,
+    "text": "Loved the coffee, staff were so friendly! Best latte in town.",
+    "createTime": "2026-08-20T14:12:00Z",
+    "updateTime": "2026-08-20T14:12:00Z"
+  },
+  {
+    "id": "rev_002",
+    "locationId": "loc_001",
+    "author": "Marcus T.",
+    "stars": 4,
+    "text": "Great food and fast service, will come back for sure.",
+    "createTime": "2026-08-20T18:40:00Z",
+    "updateTime": "2026-08-20T18:40:00Z"
+  },
+  {
+    "id": "rev_003",
+    "locationId": "loc_001",
+    "author": "Elena R.",
+    "stars": 3,
+    "text": "Food was good but service was really slow today.",
+    "createTime": "2026-08-21T09:05:00Z",
+    "updateTime": "2026-08-21T09:05:00Z"
+  },
+  {
+    "id": "rev_004",
+    "locationId": "loc_001",
+    "author": "David K.",
+    "stars": 4,
+    "text": "Nice place but the table was dirty when we sat down.",
+    "createTime": "2026-08-21T12:30:00Z",
+    "updateTime": "2026-08-21T12:30:00Z"
+  },
+  {
+    "id": "rev_005",
+    "locationId": "loc_001",
+    "author": "Wanjiru N.",
+    "stars": 2,
+    "text": "Waited 40 minutes and the order was wrong, very disappointed.",
+    "createTime": "2026-08-22T13:15:00Z",
+    "updateTime": "2026-08-22T13:15:00Z"
+  },
+  {
+    "id": "rev_006",
+    "locationId": "loc_001",
+    "author": "Tom H.",
+    "stars": 1,
+    "text": "Rude staff, worst experience, never again.",
+    "createTime": "2026-08-22T19:50:00Z",
+    "updateTime": "2026-08-22T19:50:00Z"
+  },
+  {
+    "id": "rev_007",
+    "locationId": "loc_001",
+    "author": "Grace L.",
+    "stars": 1,
+    "text": "I slipped on a wet floor with no warning sign and got hurt.",
+    "createTime": "2026-08-23T08:20:00Z",
+    "updateTime": "2026-08-23T08:20:00Z"
+  },
+  {
+    "id": "rev_008",
+    "locationId": "loc_001",
+    "author": "Ahmed F.",
+    "stars": 2,
+    "text": "Got food poisoning after eating here, felt sick all night.",
+    "createTime": "2026-08-23T15:05:00Z",
+    "updateTime": "2026-08-23T15:05:00Z"
+  },
+  {
+    "id": "rev_009",
+    "locationId": "loc_001",
+    "author": "Sofia M.",
+    "stars": 3,
+    "text": "Charged twice on my card, need a refund immediately or I'll dispute it.",
+    "createTime": "2026-08-24T10:45:00Z",
+    "updateTime": "2026-08-24T10:45:00Z"
+  },
+  {
+    "id": "rev_010",
+    "locationId": "loc_001",
+    "author": "Ben O.",
+    "stars": 1,
+    "text": "Terrible treatment, my lawyer will be in touch about this, considering legal action.",
+    "createTime": "2026-08-24T17:30:00Z",
+    "updateTime": "2026-08-24T17:30:00Z"
+  },
+  {
+    "id": "rev_011",
+    "locationId": "loc_001",
+    "author": "Aaliyah J.",
+    "stars": 2,
+    "text": "One of the staff members made a racist comment to me and my family.",
+    "createTime": "2026-08-24T22:00:00Z",
+    "updateTime": "2026-08-24T22:00:00Z"
+  }
+]

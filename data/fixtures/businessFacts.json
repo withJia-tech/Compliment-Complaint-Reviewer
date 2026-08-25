@@ -1,0 +1,17 @@
+{
+  "locationId": "loc_001",
+  "businessName": "Maple & Vine Cafe",
+  "facts": [
+    { "key": "business_name", "category": "identity", "value": "Maple & Vine Cafe" },
+    { "key": "hours.weekday", "category": "hours", "value": "Mon–Fri 7am–6pm" },
+    { "key": "hours.weekend", "category": "hours", "value": "Sat–Sun 8am–4pm" },
+    { "key": "contact.phone", "category": "contact", "value": "(555) 012-3456" },
+    { "key": "contact.email", "category": "contact", "value": "hello@mapleandvine.example" },
+    {
+      "key": "policy.refund",
+      "category": "policy",
+      "value": "We offer store-credit exchanges within 7 days with a receipt."
+    },
+    { "key": "amenity.wifi", "category": "amenity", "value": "Free wifi available for all guests." }
+  ]
+}
