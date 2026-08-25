@@ -1,39 +1,53 @@
 import type { TriagePolicy } from "@/lib/interfaces/triagePolicy";
-import type { ReasonCode, Review, TriageResult } from "@/lib/types";
-import { COMPLAINT_KEYWORDS, ESCALATION_KEYWORDS, POSITIVE_HINTS } from "@/lib/triage/rules";
+import type { ReasonCode, Review, ReviewTheme, TriageResult } from "@/lib/types";
+import {
+  COMPLAINT_KEYWORDS,
+  POSITIVE_HINTS,
+  SENSITIVE_KEYWORDS,
+  THEME_KEYWORDS,
+} from "@/lib/triage/rules";
 import { POLICY_VERSION } from "@/lib/triage/policyVersion";
 
 function findHits(text: string, keywords: string[]): string[] {
   return keywords.filter((keyword) => text.includes(keyword));
 }
 
+function detectThemes(text: string): ReviewTheme[] {
+  return (Object.keys(THEME_KEYWORDS) as ReviewTheme[]).filter(
+    (theme) => findHits(text, THEME_KEYWORDS[theme]).length > 0,
+  );
+}
+
 /**
- * Deterministic default triage policy.
+ * Deterministic default triage policy over three risk levels.
  *
  * Confidence is a simple keyword-hit heuristic, not a calibrated
  * probability — it's a placeholder for a future LLM-based classifier that
- * would implement this same `TriagePolicy` interface.
+ * would implement this same `TriagePolicy` interface. The determinism is the
+ * point: the agent checks and routes, a human still approves.
  */
 export class DefaultTriagePolicy implements TriagePolicy {
   classify(review: Review): TriageResult {
     const textLower = review.text.toLowerCase();
-    const computedAt = new Date().toISOString();
+    const themes = detectThemes(textLower);
     const base = {
       reviewId: review.id,
       policyVersion: POLICY_VERSION,
-      computedAt,
+      themes,
+      computedAt: new Date().toISOString(),
     };
 
-    // 1. Escalation categories take absolute precedence over star rating —
-    // these must never auto-publish regardless of how many stars a review has.
-    for (const [code, keywords] of Object.entries(ESCALATION_KEYWORDS) as [ReasonCode, string[]][]) {
+    // 1. Sensitive claims force high risk and block auto-publish, whatever the
+    // star rating says. A human answers these personally.
+    for (const [code, keywords] of Object.entries(SENSITIVE_KEYWORDS) as [ReasonCode, string[]][]) {
       const hits = findHits(textLower, keywords);
       if (hits.length > 0) {
         return {
           ...base,
-          riskLevel: "escalate",
+          riskLevel: "high",
           reasonCodes: [code],
-          recommendedAction: "escalate_never_auto",
+          recommendedAction: "approval_required",
+          sensitive: true,
           confidence: 0.9,
           matchedKeywords: hits,
         };
@@ -50,19 +64,20 @@ export class DefaultTriagePolicy implements TriagePolicy {
         riskLevel: "high",
         reasonCodes: ["negative_issue"],
         recommendedAction: "approval_required",
+        sensitive: false,
         confidence: complaintHits.length > 0 ? 0.85 : 0.6,
         matchedKeywords: complaintHits,
       };
     }
 
-    // 3. 3 stars, or a 4-5 star review that still contains a real complaint:
-    // approval required (mixed sentiment).
+    // 3. 3 stars, or a 4-5 star review that still contains a real complaint.
     if (review.stars === 3 || complaintHits.length > 0) {
       return {
         ...base,
         riskLevel: "medium",
         reasonCodes: ["neutral_mixed_sentiment"],
         recommendedAction: "approval_required",
+        sensitive: false,
         confidence: 0.7,
         matchedKeywords: complaintHits,
       };
@@ -74,6 +89,7 @@ export class DefaultTriagePolicy implements TriagePolicy {
       riskLevel: "low",
       reasonCodes: ["positive_no_complaint"],
       recommendedAction: "auto_publish_eligible",
+      sensitive: false,
       confidence: positiveHits.length > 0 ? 0.9 : 0.75,
       matchedKeywords: positiveHits,
     };

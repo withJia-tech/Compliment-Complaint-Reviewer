@@ -69,31 +69,69 @@ describe("DefaultTriagePolicy", () => {
     expect(oneStar.recommendedAction).toBe("approval_required");
   });
 
-  const escalationCases: Array<{ text: string; stars: Review["stars"]; reasonCode: string }> = [
-    { text: "I slipped on a wet floor with no warning sign and got hurt.", stars: 1, reasonCode: "escalation_safety" },
-    { text: "My lawyer will be in touch, considering legal action.", stars: 1, reasonCode: "escalation_legal" },
-    { text: "One of the staff members made a racist comment to me.", stars: 2, reasonCode: "escalation_discrimination" },
-    { text: "Got food poisoning after eating here, felt sick all night.", stars: 2, reasonCode: "escalation_medical" },
-    { text: "This place is a total scam, I think they stole from me.", stars: 1, reasonCode: "escalation_fraud" },
-    { text: "Charged twice on my card, need a refund immediately.", stars: 3, reasonCode: "escalation_compensation" },
+  it("only ever uses three risk levels", () => {
+    const seen = new Set(
+      [1, 2, 3, 4, 5].flatMap((stars) =>
+        ["lovely visit", "slow service", "I got hurt here"].map(
+          (text) => policy.classify(review({ stars: stars as Review["stars"], text })).riskLevel,
+        ),
+      ),
+    );
+    expect([...seen].sort()).toEqual(["high", "low", "medium"]);
+  });
+
+  const sensitiveCases: Array<{ text: string; stars: Review["stars"]; reasonCode: string }> = [
+    { text: "I slipped on a wet floor with no warning sign and got hurt.", stars: 1, reasonCode: "sensitive_safety" },
+    { text: "My lawyer will be in touch, considering legal action.", stars: 1, reasonCode: "sensitive_legal" },
+    { text: "One of the staff members made a racist comment to me.", stars: 2, reasonCode: "sensitive_discrimination" },
+    { text: "Got food poisoning after eating here, felt sick all night.", stars: 2, reasonCode: "sensitive_medical" },
+    { text: "This place is a total scam, I think they stole from me.", stars: 1, reasonCode: "sensitive_fraud" },
+    { text: "Charged twice on my card, need a refund immediately.", stars: 3, reasonCode: "sensitive_compensation" },
   ];
 
-  it.each(escalationCases)(
-    "escalates $reasonCode regardless of star rating and never recommends auto-publish",
+  it.each(sensitiveCases)(
+    "flags $reasonCode as sensitive high risk and never recommends auto-publish",
     ({ text, stars, reasonCode }) => {
       const result = policy.classify(review({ stars, text }));
-      expect(result.riskLevel).toBe("escalate");
-      expect(result.recommendedAction).toBe("escalate_never_auto");
+      expect(result.riskLevel).toBe("high");
+      expect(result.sensitive).toBe(true);
+      expect(result.recommendedAction).toBe("approval_required");
       expect(result.reasonCodes).toEqual([reasonCode]);
       expect(result.matchedKeywords.length).toBeGreaterThan(0);
     },
   );
 
-  it("escalates even a 5-star review that mentions a safety issue", () => {
+  it("flags even a 5-star review that mentions a safety issue", () => {
     const result = policy.classify(
       review({ stars: 5, text: "Amazing food, though I did slip and fall near the entrance." }),
     );
-    expect(result.riskLevel).toBe("escalate");
-    expect(result.recommendedAction).toBe("escalate_never_auto");
+    expect(result.riskLevel).toBe("high");
+    expect(result.sensitive).toBe(true);
+    expect(result.recommendedAction).toBe("approval_required");
+  });
+
+  it("never marks an ordinary bad review as sensitive", () => {
+    const result = policy.classify(review({ stars: 1, text: "Rude staff, worst experience." }));
+    expect(result.riskLevel).toBe("high");
+    expect(result.sensitive).toBe(false);
+  });
+
+  describe("themes", () => {
+    it("tags food, service, and atmosphere against Google's sub-rating split", () => {
+      expect(policy.classify(review({ stars: 5, text: "The coffee was delicious" })).themes).toContain("food");
+      expect(policy.classify(review({ stars: 5, text: "The staff were lovely" })).themes).toContain("service");
+      expect(policy.classify(review({ stars: 5, text: "Such a cosy atmosphere" })).themes).toContain("atmosphere");
+    });
+
+    it("can tag more than one theme on a single review", () => {
+      const result = policy.classify(
+        review({ stars: 3, text: "The food was great but the staff were slow and it was very loud." }),
+      );
+      expect(result.themes).toEqual(expect.arrayContaining(["food", "service", "atmosphere"]));
+    });
+
+    it("returns no themes when nothing recognisable is mentioned", () => {
+      expect(policy.classify(review({ stars: 5, text: "Came here yesterday." })).themes).toEqual([]);
+    });
   });
 });

@@ -1,109 +1,174 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ActionBadge } from "@/app/components/ActionBadge";
+import { AppHeader } from "@/app/components/AppHeader";
 import { RiskBadge } from "@/app/components/RiskBadge";
-import { approveAction, editAndApproveAction, rejectAction } from "@/app/review/[id]/actions";
-import { REASON_CODE_EXPLANATIONS } from "@/lib/triage/explain";
-import { approvalRepo } from "@/lib/store/approvalRepo";
+import {
+  recordRemedyAction,
+  rejectAction,
+  sendReplyFromDetailAction,
+} from "@/app/review/[id]/actions";
+import { THEME_LABELS } from "@/lib/insights/aggregate";
+import { loadHeaderData, loadQueueRows } from "@/lib/queueData";
 import { auditRepo } from "@/lib/store/auditRepo";
-import { draftRepo } from "@/lib/store/draftRepo";
-import { reviewRepo } from "@/lib/store/reviewRepo";
-import { triageRepo } from "@/lib/store/triageRepo";
+import { REASON_CODE_EXPLANATIONS } from "@/lib/triage/explain";
 
 export const dynamic = "force-dynamic";
 
+const CHANNEL_LABELS: Record<string, string> = {
+  email: "Email",
+  whatsapp: "WhatsApp",
+  phone: "Phone",
+  in_person: "In person",
+};
+
 export default async function ReviewDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const review = reviewRepo.getById(id);
-  const triage = triageRepo.getByReviewId(id);
-  if (!review || !triage) {
+  const rows = loadQueueRows();
+  const row = rows.find((candidate) => candidate.review.id === id);
+  if (!row) {
     notFound();
   }
-  const draft = draftRepo.getByReviewId(id);
-  const approval = approvalRepo.getByReviewId(id);
+  const { review, triage, draft, approval } = row;
+  const header = loadHeaderData(rows);
   const auditTrail = auditRepo.listByReviewId(id);
+  const decided = Boolean(approval && approval.status !== "pending");
 
-  const boundApprove = approveAction.bind(null, id);
-  const boundEditApprove = editAndApproveAction.bind(null, id);
+  const boundSend = sendReplyFromDetailAction.bind(null, id);
   const boundReject = rejectAction.bind(null, id);
+  const boundRemedy = recordRemedyAction.bind(null, id);
 
   return (
-    <main>
-      <p>
-        <Link href="/queue">&larr; Back to queue</Link>
-      </p>
-      <h1>Review from {review.author}</h1>
-
-      <section>
-        <h2>Evidence</h2>
+    <>
+      <AppHeader {...header} currentPath="/queue" />
+      <main>
         <p>
-          {"★".repeat(review.stars)} ({review.stars}/5) &middot; posted{" "}
-          {new Date(review.createTime).toLocaleString()}
+          <Link href="/queue">&larr; Back to queue</Link>
         </p>
-        <blockquote>{review.text}</blockquote>
-      </section>
+        <div className="page-head">
+          <h1>Review from {review.author}</h1>
+        </div>
 
-      <section>
-        <h2>Triage</h2>
-        <p>
-          <RiskBadge riskLevel={triage.riskLevel} /> <ActionBadge action={triage.recommendedAction} />
-        </p>
-        <p>{REASON_CODE_EXPLANATIONS[triage.reasonCodes[0]]}</p>
-        {triage.matchedKeywords.length > 0 && <p>Matched keywords: {triage.matchedKeywords.join(", ")}</p>}
-        <p>
-          Confidence: {Math.round(triage.confidence * 100)}% &middot; Policy version:{" "}
-          {triage.policyVersion}
-        </p>
-      </section>
-
-      {draft && (
         <section>
-          <h2>Draft reply</h2>
-          <p>{draft.text}</p>
-          <p>Facts cited: {draft.factsUsed.length > 0 ? draft.factsUsed.join(", ") : "none"}</p>
+          <h2>Evidence</h2>
+          <p>
+            {"★".repeat(review.stars)} ({review.stars}/5) &middot; posted{" "}
+            {new Date(review.createTime).toLocaleString("en-GB", {
+              dateStyle: "medium",
+              timeStyle: "short",
+            })}
+          </p>
+          <blockquote>{review.text}</blockquote>
         </section>
-      )}
 
-      <section>
-        <h2>Decision</h2>
-        <p>
-          Current status: <strong>{approval?.status ?? "pending"}</strong>
-          {approval?.reason ? ` — ${approval.reason}` : ""}
-        </p>
-        {(!approval || approval.status === "pending") && draft && (
-          <div className="decision-actions">
-            <form action={boundApprove}>
-              <button type="submit">Approve &amp; publish as-is</button>
-            </form>
-            <form action={boundEditApprove}>
-              <label htmlFor="editedText">Edit before approving</label>
-              <textarea id="editedText" name="editedText" defaultValue={draft.text} rows={4} />
-              <button type="submit">Save edit &amp; approve</button>
-            </form>
-            <form action={boundReject}>
-              <label htmlFor="reason">Rejection reason (optional)</label>
-              <input id="reason" name="reason" type="text" placeholder="Why reject this draft?" />
-              <button type="submit">Reject</button>
-            </form>
-          </div>
-        )}
-      </section>
+        <section>
+          <h2>Triage</h2>
+          <p>
+            <RiskBadge riskLevel={triage.riskLevel} sensitive={triage.sensitive} />{" "}
+            <ActionBadge action={triage.recommendedAction} />
+          </p>
+          <p>{REASON_CODE_EXPLANATIONS[triage.reasonCodes[0]]}</p>
+          {triage.themes.length > 0 && (
+            <p>
+              Themes:{" "}
+              {triage.themes.map((theme) => (
+                <span key={theme} className="chip">
+                  {THEME_LABELS[theme]}
+                </span>
+              ))}
+            </p>
+          )}
+          {triage.matchedKeywords.length > 0 && (
+            <p>Matched keywords: {triage.matchedKeywords.join(", ")}</p>
+          )}
+          <p>
+            Confidence: {Math.round(triage.confidence * 100)}% &middot; Policy version:{" "}
+            {triage.policyVersion}
+          </p>
+        </section>
 
-      <section>
-        <h2>Audit trail</h2>
-        {auditTrail.length === 0 ? (
-          <p>No audit records yet.</p>
-        ) : (
-          <ul>
-            {auditTrail.map((record) => (
-              <li key={record.id}>
-                <strong>{record.action}</strong> at {new Date(record.recordedAt).toLocaleString()} by{" "}
-                {record.actor} (policy {record.policyVersion})
-              </li>
-            ))}
-          </ul>
+        {draft && (
+          <section>
+            <h2>Reply</h2>
+            {decided ? (
+              <>
+                <p>{approval?.finalText ?? draft.text}</p>
+                <p className="decided-note">
+                  {approval?.status === "rejected" ? "Skipped" : "Sent"}
+                  {approval?.reason ? ` — ${approval.reason}` : ""}
+                </p>
+              </>
+            ) : (
+              <form action={boundSend}>
+                <textarea name="replyText" defaultValue={draft.text} rows={4} />
+                <button type="submit">Send reply</button>
+              </form>
+            )}
+            <p className="facts-cited">
+              Facts cited: {draft.factsUsed.length > 0 ? draft.factsUsed.join(", ") : "none"}
+            </p>
+            {!decided && (
+              <form action={boundReject} className="reject-form">
+                <input name="reason" type="text" placeholder="Reason for skipping (optional)" />
+                <button type="submit" className="btn-secondary">
+                  Skip
+                </button>
+              </form>
+            )}
+          </section>
         )}
-      </section>
-    </main>
+
+        <section>
+          <h2>Goodwill remedy</h2>
+          <p className="page-sub">
+            Vouchers and other goodwill are settled outside this app. Recording one here only notes
+            it in the audit trail — nothing is sent, and it never appears in the public reply.
+          </p>
+          {approval?.remedy ? (
+            <p className="remedy-note">
+              <strong>{approval.remedy.note}</strong> &middot; settled via{" "}
+              {CHANNEL_LABELS[approval.remedy.channel] ?? approval.remedy.channel} &middot; recorded{" "}
+              {new Date(approval.remedy.recordedAt).toLocaleString("en-GB", {
+                dateStyle: "medium",
+                timeStyle: "short",
+              })}
+            </p>
+          ) : (
+            <form action={boundRemedy} className="remedy-form">
+              <input name="note" type="text" placeholder="e.g. offered a £10 voucher" />
+              <select name="channel" defaultValue="email">
+                <option value="email">Email</option>
+                <option value="whatsapp">WhatsApp</option>
+                <option value="phone">Phone</option>
+                <option value="in_person">In person</option>
+              </select>
+              <button type="submit" className="btn-secondary">
+                Record remedy
+              </button>
+            </form>
+          )}
+        </section>
+
+        <section>
+          <h2>Audit trail</h2>
+          {auditTrail.length === 0 ? (
+            <p>No audit records yet.</p>
+          ) : (
+            <ul>
+              {auditTrail.map((record) => (
+                <li key={record.id}>
+                  <strong>{record.action}</strong> at{" "}
+                  {new Date(record.recordedAt).toLocaleString("en-GB", {
+                    dateStyle: "medium",
+                    timeStyle: "short",
+                  })}{" "}
+                  by {record.actor} (policy {record.policyVersion})
+                </li>
+              ))}
+            </ul>
+          )}
+        </section>
+      </main>
+    </>
   );
 }
