@@ -30,6 +30,9 @@ npm run dev      # starts the Next.js dev server at http://localhost:3000
 
 Open `/queue` to see the daily review queue, click into a review for the evidence/draft/decision
 view, and visit `/settings` to toggle auto-publish consent for the single connected location.
+<img width="1280" height="1144" alt="image" src="https://github.com/user-attachments/assets/fd146c30-e2c3-4bb4-b9eb-c65647fa248d" />
+<img width="1280" height="900" alt="image" src="https://github.com/user-attachments/assets/fce52202-bc40-40e4-86c1-82e28357932d" />
+<img width="1280" height="1222" alt="image" src="https://github.com/user-attachments/assets/a58587f1-924d-46f8-8914-09b81ee21ba0" />
 
 ## Scripts
 
