@@ -33,6 +33,10 @@ reply, edit it in place, and send it without leaving the page. `/insights` rolls
 reviews up weekly or monthly by Food / Service / Atmosphere, and `/settings` toggles
 auto-publish consent for the single connected location.
 
+<img width="1280" height="1144" alt="Daily review queue" src="https://github.com/user-attachments/assets/fd146c30-e2c3-4bb4-b9eb-c65647fa248d" />
+<img width="1280" height="900" alt="Settings and auto-publish consent" src="https://github.com/user-attachments/assets/fce52202-bc40-40e4-86c1-82e28357932d" />
+<img width="1280" height="1222" alt="Review detail with evidence, draft and audit trail" src="https://github.com/user-attachments/assets/a58587f1-924d-46f8-8914-09b81ee21ba0" />
+
 ## How it routes
 
 Three risk levels, no escalation tier — a one-person team or an agency has nobody to escalate
@@ -40,6 +44,11 @@ to. Sensitive claims (safety, legal, discrimination, medical, fraud, compensatio
 risk flagged `sensitive`: they are never auto-published at any star rating and get their own
 reply wording. Everything else follows the star bands, with complaint language pulling a
 4-5 star review down to "needs approval".
+
+Terms match on word boundaries, and sensitive terms are split into strong and weak tiers — an
+unambiguous claim goes straight to high, while an ambiguous one is softened to medium but is
+still never auto-published. [SPEC.md](./SPEC.md) carries the full routing, grounding and theme
+rubrics; `data/fixtures/golden.json` holds the labelled cases that hold them to it.
 
 Goodwill remedies — vouchers and the like — are settled outside this app over email or
 WhatsApp. The detail page records that one was offered so the audit trail is complete, but
