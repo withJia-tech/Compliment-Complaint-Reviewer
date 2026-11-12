@@ -1,15 +1,20 @@
 import fs from "node:fs";
+import os from "node:os";
 import path from "node:path";
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { readJson, writeJson } from "@/lib/store/jsonStore";
 
-const TEST_FILE = "vitest-roundtrip.json";
-const TEST_FILE_PATH = path.join(process.cwd(), "data", "store", TEST_FILE);
+const TEST_FILE = "roundtrip.json";
+let tmpDir: string;
+
+beforeEach(() => {
+  tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), "ccr-store-"));
+  process.env.CCR_STORE_DIR = tmpDir;
+});
 
 afterEach(() => {
-  if (fs.existsSync(TEST_FILE_PATH)) {
-    fs.unlinkSync(TEST_FILE_PATH);
-  }
+  delete process.env.CCR_STORE_DIR;
+  fs.rmSync(tmpDir, { recursive: true, force: true });
 });
 
 describe("jsonStore", () => {
@@ -23,14 +28,20 @@ describe("jsonStore", () => {
     expect(readJson(TEST_FILE, null)).toEqual(data);
   });
 
-  it("overwrites cleanly on a second write (no leftover temp files)", () => {
+  it("overwrites cleanly on a second write, leaving no temp files behind", () => {
     writeJson(TEST_FILE, { version: 1 });
     writeJson(TEST_FILE, { version: 2 });
     expect(readJson(TEST_FILE, null)).toEqual({ version: 2 });
+    expect(fs.readdirSync(tmpDir).filter((name) => name.endsWith(".tmp"))).toHaveLength(0);
+  });
 
-    const leftoverTmp = fs
-      .readdirSync(path.join(process.cwd(), "data", "store"))
-      .filter((name) => name.includes(TEST_FILE) && name.endsWith(".tmp"));
-    expect(leftoverTmp).toHaveLength(0);
+  it("treats an empty file as absent rather than throwing", () => {
+    fs.writeFileSync(path.join(tmpDir, TEST_FILE), "   ");
+    expect(readJson(TEST_FILE, { fallback: true })).toEqual({ fallback: true });
+  });
+
+  it("writes into CCR_STORE_DIR, never the project store", () => {
+    writeJson(TEST_FILE, { isolated: true });
+    expect(fs.existsSync(path.join(tmpDir, TEST_FILE))).toBe(true);
   });
 });

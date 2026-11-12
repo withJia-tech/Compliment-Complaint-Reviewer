@@ -1,15 +1,46 @@
 import type { TriagePolicy } from "@/lib/interfaces/triagePolicy";
-import type { ReasonCode, Review, ReviewTheme, TriageResult } from "@/lib/types";
+import type { Review, ReviewTheme, RiskLevel, TriageResult } from "@/lib/types";
+import { findComplaintHits, findHits } from "@/lib/triage/match";
 import {
   COMPLAINT_KEYWORDS,
   POSITIVE_HINTS,
   SENSITIVE_KEYWORDS,
+  SENSITIVE_SEVERITY_ORDER,
   THEME_KEYWORDS,
+  type SensitiveReasonCode,
 } from "@/lib/triage/rules";
 import { POLICY_VERSION } from "@/lib/triage/policyVersion";
 
-function findHits(text: string, keywords: string[]): string[] {
-  return keywords.filter((keyword) => text.includes(keyword));
+interface SensitiveMatch {
+  code: SensitiveReasonCode;
+  strength: "strong" | "weak";
+  hits: string[];
+}
+
+/**
+ * The most severe sensitive category the review matches, by the deliberate
+ * order in SENSITIVE_SEVERITY_ORDER. A strong hit in a lower-severity
+ * category still loses to a strong hit in a higher one — physical harm
+ * outranks money — but a strong hit anywhere beats a weak hit everywhere.
+ */
+function findSensitive(text: string): SensitiveMatch | null {
+  const found: SensitiveMatch[] = [];
+
+  for (const code of SENSITIVE_SEVERITY_ORDER) {
+    const rule = SENSITIVE_KEYWORDS[code];
+    const strongHits = findHits(text, rule.strong);
+    if (strongHits.length > 0) {
+      found.push({ code, strength: "strong", hits: strongHits });
+      continue;
+    }
+    const weakHits = findHits(text, rule.weak);
+    if (weakHits.length > 0) {
+      found.push({ code, strength: "weak", hits: weakHits });
+    }
+  }
+
+  if (found.length === 0) return null;
+  return found.find((match) => match.strength === "strong") ?? found[0];
 }
 
 function detectThemes(text: string): ReviewTheme[] {
@@ -18,18 +49,33 @@ function detectThemes(text: string): ReviewTheme[] {
   );
 }
 
+const RISK_RANK: Record<RiskLevel, number> = { low: 0, medium: 1, high: 2 };
+
+function higherRisk(a: RiskLevel, b: RiskLevel): RiskLevel {
+  return RISK_RANK[a] >= RISK_RANK[b] ? a : b;
+}
+
+/** Risk from the star rating alone, before any sensitive or complaint signal. */
+function starBandRisk(stars: Review["stars"]): RiskLevel {
+  if (stars <= 2) return "high";
+  if (stars === 3) return "medium";
+  return "low";
+}
+
 /**
  * Deterministic default triage policy over three risk levels.
  *
- * Confidence is a simple keyword-hit heuristic, not a calibrated
- * probability — it's a placeholder for a future LLM-based classifier that
- * would implement this same `TriagePolicy` interface. The determinism is the
- * point: the agent checks and routes, a human still approves.
+ * `confidence` is one of a small set of fixed values attached to each rule
+ * branch — a rule-strength label, not a calibrated probability. The UI shows
+ * it as a coarse band (see confidenceBand) rather than a percentage, so it
+ * doesn't imply precision the keyword rules don't have. A future
+ * model-based classifier implementing this same interface could replace it
+ * with a real score without changing any caller.
  */
 export class DefaultTriagePolicy implements TriagePolicy {
   classify(review: Review): TriageResult {
-    const textLower = review.text.toLowerCase();
-    const themes = detectThemes(textLower);
+    const text = review.text;
+    const themes = detectThemes(text);
     const base = {
       reviewId: review.id,
       policyVersion: POLICY_VERSION,
@@ -37,25 +83,25 @@ export class DefaultTriagePolicy implements TriagePolicy {
       computedAt: new Date().toISOString(),
     };
 
-    // 1. Sensitive claims force high risk and block auto-publish, whatever the
-    // star rating says. A human answers these personally.
-    for (const [code, keywords] of Object.entries(SENSITIVE_KEYWORDS) as [ReasonCode, string[]][]) {
-      const hits = findHits(textLower, keywords);
-      if (hits.length > 0) {
-        return {
-          ...base,
-          riskLevel: "high",
-          reasonCodes: [code],
-          recommendedAction: "approval_required",
-          sensitive: true,
-          confidence: 0.9,
-          matchedKeywords: hits,
-        };
-      }
+    // 1. Sensitive claims mark the review sensitive and block auto-publish at
+    // any star rating. A strong match goes straight to high; a weak, ambiguous
+    // match only floors at medium, though a bad rating can still lift it.
+    const sensitive = findSensitive(text);
+    if (sensitive) {
+      const floor: RiskLevel = sensitive.strength === "strong" ? "high" : "medium";
+      return {
+        ...base,
+        riskLevel: higherRisk(floor, starBandRisk(review.stars)),
+        reasonCodes: [sensitive.code],
+        recommendedAction: "approval_required",
+        sensitive: true,
+        confidence: sensitive.strength === "strong" ? 0.9 : 0.6,
+        matchedKeywords: sensitive.hits,
+      };
     }
 
-    const complaintHits = findHits(textLower, COMPLAINT_KEYWORDS);
-    const positiveHits = findHits(textLower, POSITIVE_HINTS);
+    const complaintHits = findComplaintHits(text, COMPLAINT_KEYWORDS);
+    const positiveHits = findHits(text, POSITIVE_HINTS);
 
     // 2. 1-2 stars: approval required, issue classification shown.
     if (review.stars <= 2) {

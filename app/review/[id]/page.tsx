@@ -9,6 +9,7 @@ import {
   sendReplyFromDetailAction,
 } from "@/app/review/[id]/actions";
 import { THEME_LABELS } from "@/lib/insights/aggregate";
+import { confidenceBand } from "@/lib/triage/confidence";
 import { loadHeaderData, loadQueueRows } from "@/lib/queueData";
 import { auditRepo } from "@/lib/store/auditRepo";
 import { REASON_CODE_EXPLANATIONS } from "@/lib/triage/explain";
@@ -82,7 +83,7 @@ export default async function ReviewDetailPage({ params }: { params: Promise<{ i
             <p>Matched keywords: {triage.matchedKeywords.join(", ")}</p>
           )}
           <p>
-            Confidence: {Math.round(triage.confidence * 100)}% &middot; Policy version:{" "}
+            Rule strength: {confidenceBand(triage.confidence)} &middot; Policy version:{" "}
             {triage.policyVersion}
           </p>
         </section>

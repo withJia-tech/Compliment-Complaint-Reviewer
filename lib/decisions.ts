@@ -110,10 +110,5 @@ export function recordRemedy(reviewId: string, remedy: Omit<RemedyNote, "recorde
     },
   };
   approvalRepo.upsert(approval);
-  appendAudit({
-    reviewId,
-    action: approval.status === "pending" ? "pending_approval" : "approved_published",
-    approval,
-    outcome: null,
-  });
+  appendAudit({ reviewId, action: "remedy_recorded", approval, outcome: null });
 }

@@ -1,0 +1,150 @@
+[
+  {
+    "label": "clean 5-star praise",
+    "stars": 5,
+    "text": "Loved the coffee, staff were so friendly! Best latte in town.",
+    "expect": { "riskLevel": "low", "sensitive": false, "reasonCode": "positive_no_complaint", "themes": ["food", "service"] }
+  },
+  {
+    "label": "clean 4-star praise",
+    "stars": 4,
+    "text": "Great food and fast service, will come back for sure.",
+    "expect": { "riskLevel": "low", "sensitive": false, "reasonCode": "positive_no_complaint", "themes": ["food", "service"] }
+  },
+  {
+    "label": "3-star mixed",
+    "stars": 3,
+    "text": "Food was good but service was really slow today.",
+    "expect": { "riskLevel": "medium", "sensitive": false, "reasonCode": "neutral_mixed_sentiment", "themes": ["food", "service"] }
+  },
+  {
+    "label": "4-star with a complaint buried in it",
+    "stars": 4,
+    "text": "Nice place but the table was dirty when we sat down.",
+    "expect": { "riskLevel": "medium", "sensitive": false, "reasonCode": "neutral_mixed_sentiment", "themes": ["atmosphere"] }
+  },
+  {
+    "label": "2-star negative",
+    "stars": 2,
+    "text": "Waited 40 minutes and the order was wrong, very disappointed.",
+    "expect": { "riskLevel": "high", "sensitive": false, "reasonCode": "negative_issue", "themes": ["food", "service"] }
+  },
+  {
+    "label": "1-star negative",
+    "stars": 1,
+    "text": "Rude staff, worst experience, never again.",
+    "expect": { "riskLevel": "high", "sensitive": false, "reasonCode": "negative_issue", "themes": ["service"] }
+  },
+
+  {
+    "label": "sensitive: safety, strong",
+    "stars": 1,
+    "text": "I slipped on a wet floor with no warning sign and got hurt.",
+    "expect": { "riskLevel": "high", "sensitive": true, "reasonCode": "sensitive_safety", "themes": ["atmosphere"] }
+  },
+  {
+    "label": "sensitive: medical, strong",
+    "stars": 2,
+    "text": "Got food poisoning after eating here, felt sick all night.",
+    "expect": { "riskLevel": "high", "sensitive": true, "reasonCode": "sensitive_medical", "themes": ["food"] }
+  },
+  {
+    "label": "sensitive: discrimination, strong",
+    "stars": 2,
+    "text": "One of the staff members made a racist comment to me and my family.",
+    "expect": { "riskLevel": "high", "sensitive": true, "reasonCode": "sensitive_discrimination", "themes": ["service"] }
+  },
+  {
+    "label": "sensitive: legal, strong",
+    "stars": 1,
+    "text": "Terrible treatment, my lawyer will be in touch about this, considering legal action.",
+    "expect": { "riskLevel": "high", "sensitive": true, "reasonCode": "sensitive_legal", "themes": ["service"] }
+  },
+  {
+    "label": "sensitive: fraud, strong",
+    "stars": 1,
+    "text": "This place is a total scam, I think they stole from me.",
+    "expect": { "riskLevel": "high", "sensitive": true, "reasonCode": "sensitive_fraud", "themes": [] }
+  },
+  {
+    "label": "sensitive: compensation, strong (chargeback threat)",
+    "stars": 3,
+    "text": "Charged twice on my card, need a refund immediately or I'll dispute the charge.",
+    "expect": { "riskLevel": "high", "sensitive": true, "reasonCode": "sensitive_compensation", "themes": [] }
+  },
+
+  {
+    "label": "severity order: physical harm outranks money",
+    "stars": 1,
+    "text": "My lawyer says I should get compensation after I was hurt here.",
+    "expect": { "riskLevel": "high", "sensitive": true, "reasonCode": "sensitive_safety", "themes": [] }
+  },
+  {
+    "label": "severity order: medical outranks compensation",
+    "stars": 1,
+    "text": "Got food poisoning and I want a refund.",
+    "expect": { "riskLevel": "high", "sensitive": true, "reasonCode": "sensitive_medical", "themes": ["food"] }
+  },
+  {
+    "label": "severity order: discrimination outranks fraud",
+    "stars": 1,
+    "text": "Racist staff and they overcharged me too.",
+    "expect": { "riskLevel": "high", "sensitive": true, "reasonCode": "sensitive_discrimination", "themes": ["service"] }
+  },
+  {
+    "label": "strong match beats weak match in a more severe category",
+    "stars": 2,
+    "text": "I felt a bit sick but honestly the real problem was the chargeback they refused.",
+    "expect": { "riskLevel": "high", "sensitive": true, "reasonCode": "sensitive_compensation", "themes": [] }
+  },
+
+  {
+    "label": "weak sensitive on a happy review softens to medium, never auto",
+    "stars": 5,
+    "text": "Wonderful meal, though I did slip a little on the step outside.",
+    "expect": { "riskLevel": "medium", "sensitive": true, "reasonCode": "sensitive_safety", "themes": ["food"] }
+  },
+  {
+    "label": "weak sensitive on a bad review still lifts to high",
+    "stars": 1,
+    "text": "Awful. I felt sick afterwards.",
+    "expect": { "riskLevel": "high", "sensitive": true, "reasonCode": "sensitive_medical", "themes": [] }
+  },
+
+  {
+    "label": "false positive guard: 'issue' must not match 'sue'",
+    "stars": 4,
+    "text": "There was an issue with my order but they fixed it quickly.",
+    "expect": { "riskLevel": "medium", "sensitive": false, "reasonCode": "neutral_mixed_sentiment", "themes": ["food"] }
+  },
+  {
+    "label": "false positive guard: negated complaint on a happy review",
+    "stars": 5,
+    "text": "No issues at all, lovely visit.",
+    "expect": { "riskLevel": "low", "sensitive": false, "reasonCode": "positive_no_complaint", "themes": [] }
+  },
+  {
+    "label": "false positive guard: 'slippers' must not match 'slip'",
+    "stars": 5,
+    "text": "They sell lovely slippers in the gift shop.",
+    "expect": { "riskLevel": "low", "sensitive": false, "reasonCode": "positive_no_complaint", "themes": [] }
+  },
+  {
+    "label": "false positive guard: 'sunburn' must not match 'burn'",
+    "stars": 5,
+    "text": "Great sunburn cream on sale here.",
+    "expect": { "riskLevel": "low", "sensitive": false, "reasonCode": "positive_no_complaint", "themes": [] }
+  },
+  {
+    "label": "false positive guard: 'fellow' must not match 'fell'",
+    "stars": 4,
+    "text": "A fellow diner recommended the tart.",
+    "expect": { "riskLevel": "low", "sensitive": false, "reasonCode": "positive_no_complaint", "themes": [] }
+  },
+  {
+    "label": "false positive guard: 'pursue' must not match 'sue'",
+    "stars": 5,
+    "text": "I will pursue the tasting menu next time.",
+    "expect": { "riskLevel": "low", "sensitive": false, "reasonCode": "positive_no_complaint", "themes": ["food"] }
+  }
+]

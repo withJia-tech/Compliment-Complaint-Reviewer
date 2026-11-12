@@ -129,7 +129,9 @@ export type AuditAction =
   | "auto_published"
   | "approved_published"
   | "rejected"
-  | "pending_approval";
+  | "pending_approval"
+  /** An out-of-band goodwill remedy was noted. Nothing was published. */
+  | "remedy_recorded";
 
 export interface AuditRecord {
   id: string;
