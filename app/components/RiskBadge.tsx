@@ -4,9 +4,13 @@ const LABELS: Record<RiskLevel, string> = {
   low: "Low",
   medium: "Medium",
   high: "High",
-  escalate: "Escalated",
 };
 
-export function RiskBadge({ riskLevel }: { riskLevel: RiskLevel }) {
-  return <span className={`badge badge-risk-${riskLevel}`}>{LABELS[riskLevel]}</span>;
+export function RiskBadge({ riskLevel, sensitive }: { riskLevel: RiskLevel; sensitive?: boolean }) {
+  return (
+    <span className="badge-group">
+      <span className={`badge badge-risk-${riskLevel}`}>{LABELS[riskLevel]}</span>
+      {sensitive && <span className="badge badge-sensitive">Sensitive</span>}
+    </span>
+  );
 }

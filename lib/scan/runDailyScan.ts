@@ -31,6 +31,8 @@ export interface DailyScanDeps {
 
 export interface DailyScanResult {
   scanned: number;
+  /** Reviews re-seen but left alone because a human had already decided them. */
+  skipped: number;
   since: string;
   scanStartedAt: string;
 }
@@ -52,6 +54,7 @@ export async function runDailyScan(deps: DailyScanDeps): Promise<DailyScanResult
   const scanStartedAt = new Date().toISOString();
 
   const reviews = await deps.provider.listSince(since);
+  let skipped = 0;
 
   for (const review of reviews) {
     reviewRepo.upsert(review);
@@ -66,19 +69,34 @@ export async function runDailyScan(deps: DailyScanDeps): Promise<DailyScanResult
     let outcome: ProviderPublishResult | null = null;
     let action: AuditAction;
 
-    if (triage.recommendedAction === "auto_publish_eligible" && location.autoPublishConsent) {
+    const existing = approvalRepo.getByReviewId(review.id);
+    // A decision a human already made survives a rescan. Without this, an
+    // edited review coming back round would auto-publish over a rejection.
+    const humanDecided = existing !== null && existing.status !== "pending";
+
+    if (
+      triage.recommendedAction === "auto_publish_eligible" &&
+      location.autoPublishConsent &&
+      !humanDecided
+    ) {
       outcome = await deps.provider.publishReply(review.id, draft.text);
       approval = {
         reviewId: review.id,
         status: "auto_published",
         actor: "system",
         decidedAt: new Date().toISOString(),
+        remedy: existing?.remedy,
       };
       approvalRepo.upsert(approval);
       action = "auto_published";
+    } else if (humanDecided) {
+      // The scan took no action: the standing decision holds. Re-triage and
+      // re-draft are recorded above, but writing another audit entry would
+      // claim a decision this pass did not make.
+      skipped += 1;
+      continue;
     } else {
-      // Never clobber a decision a human already made on a previous scan.
-      approval = approvalRepo.getByReviewId(review.id) ?? {
+      approval = existing ?? {
         reviewId: review.id,
         status: "pending",
         actor: STUB_OWNER_ACTOR,
@@ -113,5 +131,5 @@ export async function runDailyScan(deps: DailyScanDeps): Promise<DailyScanResult
 
   locationRepo.update(locationId, { lastSuccessfulScanAt: scanStartedAt });
 
-  return { scanned: reviews.length, since, scanStartedAt };
+  return { scanned: reviews.length, skipped, since, scanStartedAt };
 }

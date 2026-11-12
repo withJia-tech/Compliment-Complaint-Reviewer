@@ -1,6 +1,29 @@
 import type { ReplyDrafter } from "@/lib/interfaces/replyDrafter";
 import type { ApprovedBusinessFacts, Draft, Review, TriageResult } from "@/lib/types";
-import { TEMPLATES_BY_RISK_LEVEL } from "@/lib/drafter/templates";
+import {
+  MIXED_TEMPLATE,
+  NEGATIVE_TEMPLATE,
+  POSITIVE_TEMPLATE,
+  SENSITIVE_TEMPLATE,
+  type ReplyTemplate,
+} from "@/lib/drafter/templates";
+
+/**
+ * A sensitive claim gets its own wording even though it shares the `high`
+ * risk level with an ordinary bad review — it needs a personal answer, not a
+ * service-recovery script.
+ */
+function selectTemplate(triage: TriageResult): ReplyTemplate {
+  if (triage.sensitive) return SENSITIVE_TEMPLATE;
+  switch (triage.riskLevel) {
+    case "low":
+      return POSITIVE_TEMPLATE;
+    case "medium":
+      return MIXED_TEMPLATE;
+    case "high":
+      return NEGATIVE_TEMPLATE;
+  }
+}
 
 /**
  * Template-based composition with an explicit fact allow-list. The drafter
@@ -23,7 +46,7 @@ export class TemplateReplyDrafter implements ReplyDrafter {
       return null;
     };
 
-    const template = TEMPLATES_BY_RISK_LEVEL[triage.riskLevel];
+    const template = selectTemplate(triage);
     const text = template.build(review, cite);
 
     return {

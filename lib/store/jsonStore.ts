@@ -1,16 +1,23 @@
 import fs from "node:fs";
 import path from "node:path";
 
-const STORE_DIR = path.join(process.cwd(), "data", "store");
+/**
+ * Where the runtime store lives. `CCR_STORE_DIR` lets tests point at a
+ * throwaway directory so they never touch the working store; unset, it is
+ * `data/store` under the project root as normal.
+ */
+function storeDir(): string {
+  return process.env.CCR_STORE_DIR ?? path.join(process.cwd(), "data", "store");
+}
 
 function ensureStoreDir(): void {
-  fs.mkdirSync(STORE_DIR, { recursive: true });
+  fs.mkdirSync(storeDir(), { recursive: true });
 }
 
 /** Reads a JSON file from the runtime store, returning `fallback` if it doesn't exist yet. */
 export function readJson<T>(fileName: string, fallback: T): T {
   ensureStoreDir();
-  const filePath = path.join(STORE_DIR, fileName);
+  const filePath = path.join(storeDir(), fileName);
   if (!fs.existsSync(filePath)) {
     return fallback;
   }
@@ -24,8 +31,8 @@ export function readJson<T>(fileName: string, fallback: T): T {
 /** Writes a JSON file atomically (write to a temp file, then rename) to avoid partial writes. */
 export function writeJson<T>(fileName: string, data: T): void {
   ensureStoreDir();
-  const filePath = path.join(STORE_DIR, fileName);
-  const tmpPath = path.join(STORE_DIR, `.${fileName}.${process.pid}.${Date.now()}.tmp`);
+  const filePath = path.join(storeDir(), fileName);
+  const tmpPath = path.join(storeDir(), `.${fileName}.${process.pid}.${Date.now()}.tmp`);
   fs.writeFileSync(tmpPath, JSON.stringify(data, null, 2), "utf-8");
   fs.renameSync(tmpPath, filePath);
 }
