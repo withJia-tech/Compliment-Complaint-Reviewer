@@ -51,11 +51,8 @@ export function AppHeader({
       <div className="app-header-meta">
         <span>{businessName}</span>
         <span aria-hidden="true">·</span>
-        <span>
-          Auto-publish{" "}
-          <strong className={location.autoPublishConsent ? "state-on" : "state-off"}>
-            {location.autoPublishConsent ? "ON" : "OFF"}
-          </strong>
+        <span title="Nothing is sent automatically. You send every reply.">
+          Replies: <strong>sent by you</strong>
         </span>
         <span aria-hidden="true">·</span>
         <span>

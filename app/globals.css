@@ -243,10 +243,10 @@ th {
   background: var(--sensitive);
 }
 
-.badge-action-auto_publish_eligible {
+.badge-action-quick_approve {
   background: var(--low);
 }
-.badge-action-approval_required {
+.badge-action-needs_review {
   background: var(--medium);
 }
 
@@ -422,4 +422,13 @@ textarea {
 
 input[type="text"] {
   min-width: 16rem;
+}
+
+.notice {
+  margin: 0.6rem 0 0;
+  padding: 0.5rem 0.75rem;
+  border-left: 3px solid var(--medium);
+  background: #fbf6e9;
+  border-radius: 4px;
+  font-size: 0.88rem;
 }

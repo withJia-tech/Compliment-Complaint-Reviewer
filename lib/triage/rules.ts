@@ -13,7 +13,7 @@ export type SensitiveReasonCode = Exclude<
  *
  * `weak` terms are real signals but carry ordinary non-complaint meanings
  * too ("sick of waiting", "burnt toast", "sue" in a figure of speech). They
- * still mark the review sensitive — so it is never auto-published — but they
+ * still mark the review sensitive — so it needs the owner's personal attention — but they
  * only floor it at medium risk, so ambiguous hits don't crowd out genuine
  * claims at the top of the queue. A bad star rating can still lift them.
  */

@@ -9,6 +9,7 @@ import { DefaultTriagePolicy } from "@/lib/triage/policy";
 import { approvalRepo } from "@/lib/store/approvalRepo";
 import { auditRepo } from "@/lib/store/auditRepo";
 import { locationRepo } from "@/lib/store/locationRepo";
+import { writeJson } from "@/lib/store/jsonStore";
 import {
   type ApprovedBusinessFacts,
   DEFAULT_LOCATION_ID,
@@ -112,42 +113,36 @@ describe("runDailyScan", () => {
     expect(locationRepo.get(DEFAULT_LOCATION_ID).lastSuccessfulScanAt).toBe(result.scanStartedAt);
   });
 
-  it("publishes nothing while consent is off, even for an eligible review", async () => {
+  // The scan never sends. Every reply is sent by the owner, one at a time,
+  // from the queue. Auto-send for deterministic 5-star positives is parked in
+  // the backlog (docs/DECISIONS.md); until it is built, nothing in the scan
+  // path may reach provider.publishReply.
+  it("never publishes during a scan, for any review, including a clean 5-star", async () => {
     await runDailyScan(deps());
+
+    expect(provider.publishes).toHaveLength(0);
+    expect(approvalRepo.list().every((a) => a.status === "pending")).toBe(true);
+  });
+
+  it("ignores a legacy autoPublishConsent flag left behind in an older store", async () => {
+    // A store written before auto-send was removed can still carry the flag.
+    // It must not switch sending back on.
+    writeJson("location.json", {
+      locationId: DEFAULT_LOCATION_ID,
+      connected: true,
+      autoPublishConsent: true,
+      lastSuccessfulScanAt: null,
+    });
+
+    await runDailyScan(deps());
+
     expect(provider.publishes).toHaveLength(0);
     expect(approvalRepo.getByReviewId("rev_pos")?.status).toBe("pending");
   });
 
-  it("auto-publishes only the low-risk review once consent is on", async () => {
-    locationRepo.update(DEFAULT_LOCATION_ID, { autoPublishConsent: true });
-    await runDailyScan(deps());
-
-    expect(provider.publishes.map((p) => p.reviewId)).toEqual(["rev_pos"]);
-    expect(approvalRepo.getByReviewId("rev_pos")?.status).toBe("auto_published");
-    expect(approvalRepo.getByReviewId("rev_mixed")?.status).toBe("pending");
-    expect(approvalRepo.getByReviewId("rev_sens")?.status).toBe("pending");
-  });
-
-  it("never auto-publishes a sensitive review, whatever the consent setting", async () => {
-    locationRepo.update(DEFAULT_LOCATION_ID, { autoPublishConsent: true });
-    // A 5-star review that still carries a safety claim.
-    provider = new FakeProvider([
-      review("rev_happy_hurt", 5, "Wonderful meal, but I was hurt on the step outside.", ago(15)),
-    ]);
-    await runDailyScan(deps());
-
-    expect(provider.publishes).toHaveLength(0);
-    expect(approvalRepo.getByReviewId("rev_happy_hurt")?.status).toBe("pending");
-  });
-
-  // Regression: the auto-publish branch used to build a fresh approval without
-  // checking for an existing human decision, so an edited review would publish
-  // over a rejection.
-  it("does not auto-publish over a rejection when the review is edited later", async () => {
-    locationRepo.update(DEFAULT_LOCATION_ID, { autoPublishConsent: true });
+  it("leaves a rejection standing when the review is edited and rescanned", async () => {
     provider = new FakeProvider([POSITIVE]);
     await runDailyScan(deps());
-    expect(provider.publishes).toHaveLength(1);
 
     // The owner rejects it, then the customer edits their review.
     approvalRepo.upsert({
@@ -162,7 +157,7 @@ describe("runDailyScan", () => {
 
     expect(result.scanned).toBe(1);
     expect(result.skipped).toBe(1);
-    expect(provider.publishes).toHaveLength(1); // no second publish
+    expect(provider.publishes).toHaveLength(0);
     expect(approvalRepo.getByReviewId("rev_pos")?.status).toBe("rejected");
   });
 

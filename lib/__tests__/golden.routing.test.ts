@@ -71,11 +71,11 @@ describe("golden routing set", () => {
     });
   });
 
-  it("never recommends auto-publish for anything sensitive", () => {
+  it("never offers quick approve for anything sensitive", () => {
     for (const testCase of cases) {
       const result = policy.classify(toReview(testCase));
       if (result.sensitive) {
-        expect(result.recommendedAction).toBe("approval_required");
+        expect(result.recommendedAction).toBe("needs_review");
       }
     }
   });

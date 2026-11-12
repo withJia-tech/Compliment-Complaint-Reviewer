@@ -47,7 +47,15 @@ export type ReasonCode =
   | "sensitive_fraud"
   | "sensitive_compensation";
 
-export type RecommendedAction = "auto_publish_eligible" | "approval_required";
+/**
+ * How much attention the owner should give a review. Nothing is ever sent
+ * automatically — every reply is sent by the owner — so this only says how
+ * quickly it can be cleared.
+ *
+ * `quick_approve`: low risk; the draft can usually be sent as-is in one click.
+ * `needs_review`: read the review and the draft before deciding.
+ */
+export type RecommendedAction = "quick_approve" | "needs_review";
 
 /**
  * Feedback themes, aligned with the Food / Service / Atmosphere sub-ratings
@@ -64,7 +72,8 @@ export interface TriageResult {
   recommendedAction: RecommendedAction;
   /**
    * True for safety, legal, discrimination, medical, fraud, or compensation
-   * claims. Always blocks automatic publishing, independent of star rating.
+   * claims. Always needs the owner's personal attention, whatever the star
+   * rating, and is the class any future auto-send must exclude.
    */
   sensitive: boolean;
   themes: ReviewTheme[];
@@ -88,8 +97,7 @@ export type ApprovalStatus =
   | "pending"
   | "approved"
   | "edited_approved"
-  | "rejected"
-  | "auto_published";
+  | "rejected";
 
 /**
  * Channels a goodwill remedy is settled through. These are deliberately
@@ -126,7 +134,6 @@ export interface ProviderPublishResult {
 }
 
 export type AuditAction =
-  | "auto_published"
   | "approved_published"
   | "rejected"
   | "pending_approval"
@@ -157,7 +164,6 @@ export interface AuditRecord {
 export interface LocationSettings {
   locationId: string;
   connected: boolean;
-  autoPublishConsent: boolean;
   lastSuccessfulScanAt: string | null;
 }
 

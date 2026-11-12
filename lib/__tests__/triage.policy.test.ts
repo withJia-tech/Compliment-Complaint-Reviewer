@@ -24,49 +24,49 @@ describe("DefaultTriagePolicy", () => {
     expect(result.policyVersion).toBe(POLICY_VERSION);
   });
 
-  it("classifies a clean 5-star review as low risk, auto-publish eligible", () => {
+  it("classifies a clean 5-star review as low risk, quick approve", () => {
     const result = policy.classify(
       review({ stars: 5, text: "Loved the coffee, staff were so friendly!" }),
     );
     expect(result.riskLevel).toBe("low");
-    expect(result.recommendedAction).toBe("auto_publish_eligible");
+    expect(result.recommendedAction).toBe("quick_approve");
     expect(result.reasonCodes).toEqual(["positive_no_complaint"]);
   });
 
-  it("classifies a clean 4-star review as low risk, auto-publish eligible", () => {
+  it("classifies a clean 4-star review as low risk, quick approve", () => {
     const result = policy.classify(review({ stars: 4, text: "Great food and fast service." }));
     expect(result.riskLevel).toBe("low");
-    expect(result.recommendedAction).toBe("auto_publish_eligible");
+    expect(result.recommendedAction).toBe("quick_approve");
   });
 
-  it("downgrades a 4-star review containing a complaint keyword to medium/approval_required", () => {
+  it("downgrades a 4-star review containing a complaint keyword to medium/needs_review", () => {
     const result = policy.classify(
       review({ stars: 4, text: "Nice place but the table was dirty when we sat down." }),
     );
     expect(result.riskLevel).toBe("medium");
-    expect(result.recommendedAction).toBe("approval_required");
+    expect(result.recommendedAction).toBe("needs_review");
     expect(result.reasonCodes).toEqual(["neutral_mixed_sentiment"]);
   });
 
-  it("classifies a 3-star review as medium risk, approval required", () => {
+  it("classifies a 3-star review as medium risk, needs review", () => {
     const result = policy.classify(
       review({ stars: 3, text: "Food was good but service was really slow today." }),
     );
     expect(result.riskLevel).toBe("medium");
-    expect(result.recommendedAction).toBe("approval_required");
+    expect(result.recommendedAction).toBe("needs_review");
   });
 
-  it("classifies a 1-2 star review as high risk, approval required", () => {
+  it("classifies a 1-2 star review as high risk, needs review", () => {
     const twoStar = policy.classify(
       review({ stars: 2, text: "Waited 40 minutes and the order was wrong, very disappointed." }),
     );
     expect(twoStar.riskLevel).toBe("high");
-    expect(twoStar.recommendedAction).toBe("approval_required");
+    expect(twoStar.recommendedAction).toBe("needs_review");
     expect(twoStar.reasonCodes).toEqual(["negative_issue"]);
 
     const oneStar = policy.classify(review({ stars: 1, text: "Rude staff, worst experience, never again." }));
     expect(oneStar.riskLevel).toBe("high");
-    expect(oneStar.recommendedAction).toBe("approval_required");
+    expect(oneStar.recommendedAction).toBe("needs_review");
   });
 
   it("only ever uses three risk levels", () => {
@@ -83,7 +83,7 @@ describe("DefaultTriagePolicy", () => {
   // Per-case routing expectations live in data/fixtures/golden.json and are
   // checked by golden.routing.test.ts. These cover the mechanics instead:
   // that a strong hit goes straight to high, that a weak, ambiguous hit is
-  // softened to medium but still blocks auto-publish, and that a bad rating
+  // softened to medium but still needs review, and that a bad rating
   // can lift a weak hit back up.
   const strongCases: Array<{ text: string; stars: Review["stars"]; reasonCode: string }> = [
     { text: "I slipped on a wet floor with no warning sign and got hurt.", stars: 1, reasonCode: "sensitive_safety" },
@@ -100,19 +100,19 @@ describe("DefaultTriagePolicy", () => {
       const result = policy.classify(review({ stars, text }));
       expect(result.riskLevel).toBe("high");
       expect(result.sensitive).toBe(true);
-      expect(result.recommendedAction).toBe("approval_required");
+      expect(result.recommendedAction).toBe("needs_review");
       expect(result.reasonCodes).toEqual([reasonCode]);
       expect(result.matchedKeywords.length).toBeGreaterThan(0);
     },
   );
 
-  it("softens an ambiguous hit on a happy review to medium, but still blocks auto-publish", () => {
+  it("softens an ambiguous hit on a happy review to medium, but still needs review", () => {
     const result = policy.classify(
       review({ stars: 5, text: "Amazing food, though I did slip near the entrance." }),
     );
     expect(result.riskLevel).toBe("medium");
     expect(result.sensitive).toBe(true);
-    expect(result.recommendedAction).toBe("approval_required");
+    expect(result.recommendedAction).toBe("needs_review");
   });
 
   it("lets a bad star rating lift an ambiguous hit back to high", () => {
@@ -154,7 +154,7 @@ describe("DefaultTriagePolicy", () => {
     it("reads a negated complaint on a happy review as praise", () => {
       const result = policy.classify(review({ stars: 5, text: "No issues at all, lovely visit." }));
       expect(result.riskLevel).toBe("low");
-      expect(result.recommendedAction).toBe("auto_publish_eligible");
+      expect(result.recommendedAction).toBe("quick_approve");
     });
 
     it("still counts a complaint that appears both negated and plain", () => {

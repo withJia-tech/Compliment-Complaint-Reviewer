@@ -6,6 +6,7 @@ import { reviewRepo } from "@/lib/store/reviewRepo";
 import { triageRepo } from "@/lib/store/triageRepo";
 import {
   type Approval,
+  type ApprovalStatus,
   type AuditAction,
   type AuditRecord,
   type ProviderPublishResult,
@@ -52,31 +53,75 @@ function appendAudit(params: {
 }
 
 /**
- * Publishes a reply the reviewer approved, with the text they actually saw —
- * edited inline or not. Shared by the queue's inline send and the detail page.
+ * Outcome of a send or skip. A refusal is an expected result, not an error:
+ * server actions are a public HTTP surface, so the UI hiding a button is not
+ * a guard, and two tabs can submit the same review.
  */
-export async function sendReply(reviewId: string, finalText: string): Promise<void> {
+export type DecisionResult =
+  | { ok: true }
+  | { ok: false; reason: "already_decided"; status: ApprovalStatus }
+  | { ok: false; reason: "in_progress" };
+
+/**
+ * Reviews with a send currently awaiting the provider. The claim is taken
+ * synchronously, before the first `await`, because `publishReply` yields
+ * between "check the status" and "record the decision" — without it a second
+ * submit lands in that gap, still sees the review as pending, and publishes
+ * again. In-process only: this prototype has one owner and one server. Across
+ * processes the store would need a real lock (or a database).
+ */
+const inFlight = new Set<string>();
+
+function refusal(reviewId: string): DecisionResult | null {
+  if (inFlight.has(reviewId)) return { ok: false, reason: "in_progress" };
+  const existing = approvalRepo.getByReviewId(reviewId);
+  if (existing && existing.status !== "pending") {
+    return { ok: false, reason: "already_decided", status: existing.status };
+  }
+  return null;
+}
+
+/**
+ * Publishes a reply the owner approved, with the text they actually saw —
+ * edited inline or not. Shared by the queue's inline send and the detail page.
+ * A review can be decided once; a second attempt is refused.
+ */
+export async function sendReply(reviewId: string, finalText: string): Promise<DecisionResult> {
   const { draft } = requireContext(reviewId);
+
+  const blocked = refusal(reviewId);
+  if (blocked) return blocked;
+
   const trimmed = finalText.trim();
   const text = trimmed.length > 0 ? trimmed : draft.text;
   const wasEdited = text !== draft.text;
 
-  const outcome = await provider.publishReply(reviewId, text);
-  const existing = approvalRepo.getByReviewId(reviewId);
-  const approval: Approval = {
-    reviewId,
-    status: wasEdited ? "edited_approved" : "approved",
-    actor: STUB_OWNER_ACTOR,
-    finalText: wasEdited ? text : undefined,
-    decidedAt: new Date().toISOString(),
-    remedy: existing?.remedy,
-  };
-  approvalRepo.upsert(approval);
-  appendAudit({ reviewId, action: "approved_published", approval, outcome });
+  inFlight.add(reviewId);
+  try {
+    const outcome = await provider.publishReply(reviewId, text);
+    const existing = approvalRepo.getByReviewId(reviewId);
+    const approval: Approval = {
+      reviewId,
+      status: wasEdited ? "edited_approved" : "approved",
+      actor: STUB_OWNER_ACTOR,
+      finalText: wasEdited ? text : undefined,
+      decidedAt: new Date().toISOString(),
+      remedy: existing?.remedy,
+    };
+    approvalRepo.upsert(approval);
+    appendAudit({ reviewId, action: "approved_published", approval, outcome });
+    return { ok: true };
+  } finally {
+    inFlight.delete(reviewId);
+  }
 }
 
-export function rejectReply(reviewId: string, reason?: string): void {
+export function rejectReply(reviewId: string, reason?: string): DecisionResult {
   requireContext(reviewId);
+
+  const blocked = refusal(reviewId);
+  if (blocked) return blocked;
+
   const existing = approvalRepo.getByReviewId(reviewId);
   const trimmed = reason?.trim();
   const approval: Approval = {
@@ -89,6 +134,7 @@ export function rejectReply(reviewId: string, reason?: string): void {
   };
   approvalRepo.upsert(approval);
   appendAudit({ reviewId, action: "rejected", approval, outcome: null });
+  return { ok: true };
 }
 
 /**

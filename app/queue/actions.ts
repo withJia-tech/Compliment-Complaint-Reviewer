@@ -1,7 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { rejectReply, sendReply } from "@/lib/decisions";
+import { type DecisionResult, rejectReply, sendReply } from "@/lib/decisions";
 import { buildDefaultScanDeps } from "@/lib/scan/defaultDeps";
 import { runDailyScan } from "@/lib/scan/runDailyScan";
 
@@ -16,13 +16,19 @@ export async function runScanAction() {
   revalidateAll();
 }
 
-/** Send the reply straight from the queue, with any inline edits applied. */
-export async function sendReplyAction(reviewId: string, text: string) {
-  await sendReply(reviewId, text);
+/**
+ * Send the reply straight from the queue, with any inline edits applied.
+ * Returns the outcome rather than throwing: a refusal (already decided, or a
+ * send in progress) is an expected result the row needs to show.
+ */
+export async function sendReplyAction(reviewId: string, text: string): Promise<DecisionResult> {
+  const result = await sendReply(reviewId, text);
   revalidateAll(reviewId);
+  return result;
 }
 
-export async function rejectInlineAction(reviewId: string) {
-  rejectReply(reviewId);
+export async function rejectInlineAction(reviewId: string): Promise<DecisionResult> {
+  const result = rejectReply(reviewId);
   revalidateAll(reviewId);
+  return result;
 }

@@ -11,10 +11,8 @@ import { triageRepo } from "@/lib/store/triageRepo";
 import {
   type ApprovedBusinessFacts,
   type Approval,
-  type AuditAction,
   type AuditRecord,
   DEFAULT_LOCATION_ID,
-  type ProviderPublishResult,
   STUB_OWNER_ACTOR,
 } from "@/lib/types";
 
@@ -40,8 +38,13 @@ export interface DailyScanResult {
 /**
  * Shared orchestration for the "daily worker" step of the workflow: fetch
  * new/updated reviews since the last successful scan, triage, draft, and
- * either auto-publish (only if eligible AND consent is on) or route to
- * human approval — recording one AuditRecord per review either way.
+ * queue each one for the owner — recording one AuditRecord per review.
+ *
+ * The scan NEVER publishes. Every reply is sent by the owner, one at a time,
+ * from the queue (see lib/decisions.ts). `provider.publishReply` is
+ * deliberately unreachable from here; a test asserts it. Auto-send for
+ * deterministic 5-star positives is a backlog item (docs/DECISIONS.md) and
+ * would be a new, narrower rule, not a revival of the old consent toggle.
  *
  * Used by both the CLI script (`scripts/dailyScan.ts`) and the optional
  * "run scan now" API route, so there is exactly one implementation of this
@@ -65,46 +68,23 @@ export async function runDailyScan(deps: DailyScanDeps): Promise<DailyScanResult
     const draft = deps.drafter.draft(review, triage, deps.facts);
     draftRepo.upsert(draft);
 
-    let approval: Approval;
-    let outcome: ProviderPublishResult | null = null;
-    let action: AuditAction;
-
     const existing = approvalRepo.getByReviewId(review.id);
-    // A decision a human already made survives a rescan. Without this, an
-    // edited review coming back round would auto-publish over a rejection.
-    const humanDecided = existing !== null && existing.status !== "pending";
 
-    if (
-      triage.recommendedAction === "auto_publish_eligible" &&
-      location.autoPublishConsent &&
-      !humanDecided
-    ) {
-      outcome = await deps.provider.publishReply(review.id, draft.text);
-      approval = {
-        reviewId: review.id,
-        status: "auto_published",
-        actor: "system",
-        decidedAt: new Date().toISOString(),
-        remedy: existing?.remedy,
-      };
-      approvalRepo.upsert(approval);
-      action = "auto_published";
-    } else if (humanDecided) {
-      // The scan took no action: the standing decision holds. Re-triage and
-      // re-draft are recorded above, but writing another audit entry would
-      // claim a decision this pass did not make.
+    // A decision the owner already made survives a rescan. An edited review
+    // coming back round must not reopen what they have settled, nor write an
+    // audit entry claiming a decision this pass did not make.
+    if (existing !== null && existing.status !== "pending") {
       skipped += 1;
       continue;
-    } else {
-      approval = existing ?? {
-        reviewId: review.id,
-        status: "pending",
-        actor: STUB_OWNER_ACTOR,
-      };
-      approvalRepo.upsert(approval);
-      await deps.approvalChannel.notify(review, triage, draft);
-      action = "pending_approval";
     }
+
+    const approval: Approval = existing ?? {
+      reviewId: review.id,
+      status: "pending",
+      actor: STUB_OWNER_ACTOR,
+    };
+    approvalRepo.upsert(approval);
+    await deps.approvalChannel.notify(review, triage, draft);
 
     const record: AuditRecord = {
       id: `audit_${review.id}_${Date.now()}`,
@@ -121,9 +101,9 @@ export async function runDailyScan(deps: DailyScanDeps): Promise<DailyScanResult
       triage,
       draft,
       approval,
-      action,
+      action: "pending_approval",
       actor: "system",
-      outcome,
+      outcome: null,
       recordedAt: new Date().toISOString(),
     };
     auditRepo.append(record);
