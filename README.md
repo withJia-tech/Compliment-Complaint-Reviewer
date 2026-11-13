@@ -1,10 +1,19 @@
-# Compliment-Complaint-Reviewer
+# Review Desk
 
-A fixture-backed prototype for a governed daily review desk for Google Business Profile teams. It
+A governed review desk for owner-operators.
+
+Scan new reviews, triage risk, draft a grounded response, and approve every send.
+
+This fixture-backed prototype
 demonstrates the narrow first workflow: scan new or updated reviews, classify risk, draft a
 grounded response, and queue every reply for the owner to approve and send. Nothing is sent
 automatically. Every send requires a factual-review confirmation and current source/draft versions.
 The interface labels all sends as simulated.
+
+The daily brief sits above the working queue. Decision-led rows open the reply beside
+approved business facts and the customer's account. Weekly/monthly signals show response
+coverage, risk, edits and theme mentions; they do not infer operational causes. Screenshot
+cases with unknown dates are excluded from date-based counts and trends.
 
 See [verified-send controls and recovery](docs/VERIFIED_SEND.md) for failure states, acceptance evidence and remaining release gates.
 
