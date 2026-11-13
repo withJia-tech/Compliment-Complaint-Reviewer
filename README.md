@@ -89,6 +89,29 @@ Goodwill remedies — vouchers and the like — are settled outside this app ove
 WhatsApp. The detail page records that one was offered so the audit trail is complete, but
 nothing is sent from here and no remedy is ever mentioned in the published reply.
 
+## CI & evaluation
+
+The [current CI workflow](.github/workflows/ci.yml) runs TypeScript checks, unit and policy
+tests (including deterministic golden routing cases), a production build, and a repeated-scan
+check on pull requests. The verified-send change in
+[PR #5](https://github.com/withJia-tech/Compliment-Complaint-Reviewer/pull/5) adds regression
+coverage for stale approvals, edited replies, failed publication and uncertain delivery.
+
+The separate, unmerged
+[classifier branch](https://github.com/withJia-tech/Compliment-Complaint-Reviewer/tree/9e28eeefd02fcc26ed7b15d1b8961cabf1eca238)
+adds expanded golden-set evaluation, adversarial fixtures, dependency and secret scanning,
+and evaluation artifact uploads. Its required model-evaluation evidence is still outstanding.
+Those checks are not part of this branch's workflow.
+
+Per-category recall, semantic grounding coverage and broader policy-compliance gates remain
+planned. The classifier branch's existing metrics are exact match rate, aggregate sensitive
+recall, unsafe quick approvals, false alarms and reader failures. Template and send-boundary
+tests do not establish semantic grounding coverage or live-model prompt-injection robustness.
+
+There is no standalone lint job or test/evaluation artifact upload step in the current workflow.
+Passing CI establishes the checks implemented for that revision; it does not establish
+production readiness. See [verification limits](docs/VERIFIED_SEND.md) for remaining release gates.
+
 ## Scripts
 
 | Command | Description |
