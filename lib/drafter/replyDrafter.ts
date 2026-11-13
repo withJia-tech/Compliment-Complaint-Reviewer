@@ -1,5 +1,11 @@
+import { fingerprint } from "@/lib/approval/context";
 import type { ReplyDrafter } from "@/lib/interfaces/replyDrafter";
-import type { ApprovedBusinessFacts, Draft, Review, TriageResult } from "@/lib/types";
+import type {
+  ApprovedBusinessFacts,
+  Draft,
+  Review,
+  TriageResult,
+} from "@/lib/types";
 import {
   MIXED_TEMPLATE,
   NEGATIVE_TEMPLATE,
@@ -33,7 +39,11 @@ function selectTemplate(triage: TriageResult): ReplyTemplate {
  * independently checked for invented facts.
  */
 export class TemplateReplyDrafter implements ReplyDrafter {
-  draft(review: Review, triage: TriageResult, facts: ApprovedBusinessFacts): Draft {
+  draft(
+    review: Review,
+    triage: TriageResult,
+    facts: ApprovedBusinessFacts,
+  ): Draft {
     const factMap = new Map(facts.facts.map((fact) => [fact.key, fact.value]));
     const factsUsed: string[] = [];
 
@@ -55,6 +65,8 @@ export class TemplateReplyDrafter implements ReplyDrafter {
       factsUsed,
       templateId: template.id,
       generatedAt: new Date().toISOString(),
+      sourceVersion: fingerprint(review),
+      factsVersion: fingerprint(facts),
     };
   }
 }

@@ -1,7 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { recordRemedy, rejectReply, sendReply } from "@/lib/decisions";
+import { recordRemedy, type DecisionResult } from "@/lib/decisions";
 import type { RemedyChannel } from "@/lib/types";
 
 const CHANNELS: RemedyChannel[] = ["email", "whatsapp", "phone", "in_person"];
@@ -12,33 +12,28 @@ function revalidate(reviewId: string) {
   revalidatePath("/insights");
 }
 
-// A plain <form> action cannot show a returned value, so a refused submit (the
-// review was already decided, say from another tab) is not reported here. It
-// still revalidates, and the page re-renders showing the settled decision,
-// which is the whole message the owner needs.
-export async function sendReplyFromDetailAction(reviewId: string, formData: FormData) {
-  await sendReply(reviewId, String(formData.get("replyText") ?? ""));
-  revalidate(reviewId);
-}
-
-export async function rejectAction(reviewId: string, formData: FormData) {
-  rejectReply(reviewId, String(formData.get("reason") ?? ""));
-  revalidate(reviewId);
-}
-
 /**
  * Records a goodwill remedy that was settled outside this app. Nothing is
  * sent from here — this only writes the internal note into the audit trail.
  */
-export async function recordRemedyAction(reviewId: string, formData: FormData) {
+export async function recordRemedyAction(
+  reviewId: string,
+  formData: FormData,
+): Promise<DecisionResult> {
   const note = String(formData.get("note") ?? "").trim();
-  if (note.length === 0) return;
+  if (note.length === 0)
+    return {
+      ok: false,
+      reason: "validation_failed",
+      issues: ["Enter an internal note."],
+    };
 
   const rawChannel = String(formData.get("channel") ?? "email");
   const channel = (CHANNELS as string[]).includes(rawChannel)
     ? (rawChannel as RemedyChannel)
     : "email";
 
-  recordRemedy(reviewId, { note, channel });
+  const result = recordRemedy(reviewId, { note, channel });
   revalidate(reviewId);
+  return result;
 }

@@ -432,3 +432,6 @@ input[type="text"] {
   border-radius: 4px;
   font-size: 0.88rem;
 }
+
+.confirmation-label { display: flex; gap: .6rem; align-items: flex-start; margin: 1rem 0; max-width: 70ch; }
+.confirmation-label input { width: auto; flex: 0 0 auto; margin-top: .25rem; }

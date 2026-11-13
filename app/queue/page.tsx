@@ -37,9 +37,10 @@ export default function QueuePage() {
               </tr>
             </thead>
             <tbody>
-              {rows.map(({ review, triage, draft, approval }) => (
+              {rows.map(({ review, triage, draft, approval, version }) => (
                 <QueueRow
                   key={review.id}
+                  version={version ?? ""}
                   review={review}
                   triage={triage}
                   draft={draft}

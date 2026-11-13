@@ -3,7 +3,10 @@
 A fixture-backed prototype for a governed daily review desk for Google Business Profile teams. It
 demonstrates the narrow first workflow: scan new or updated reviews, classify risk, draft a
 grounded response, and queue every reply for the owner to approve and send. Nothing is sent
-automatically; low-risk reviews are marked quick approve so they clear in one click.
+automatically. Every send requires a factual-review confirmation and current source/draft versions.
+The interface labels all sends as simulated.
+
+See [verified-send controls and recovery](docs/VERIFIED_SEND.md) for failure states, acceptance evidence and remaining release gates.
 
 ## Current boundary
 

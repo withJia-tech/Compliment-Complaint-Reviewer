@@ -1,7 +1,13 @@
 "use server";
 
+import type { SendConfirmation } from "@/lib/approval/context";
 import { revalidatePath } from "next/cache";
-import { type DecisionResult, rejectReply, sendReply } from "@/lib/decisions";
+import {
+  type DecisionResult,
+  rejectReply,
+  sendReply,
+  reconcileReply,
+} from "@/lib/decisions";
 import { buildDefaultScanDeps } from "@/lib/scan/defaultDeps";
 import { runDailyScan } from "@/lib/scan/runDailyScan";
 
@@ -21,14 +27,35 @@ export async function runScanAction() {
  * Returns the outcome rather than throwing: a refusal (already decided, or a
  * send in progress) is an expected result the row needs to show.
  */
-export async function sendReplyAction(reviewId: string, text: string): Promise<DecisionResult> {
-  const result = await sendReply(reviewId, text);
+export async function sendReplyAction(
+  reviewId: string,
+  text: string,
+  confirmation: SendConfirmation,
+): Promise<DecisionResult> {
+  const result = await sendReply(reviewId, text, confirmation);
+  // Keep a stale/invalid editor mounted so its refusal remains visible.
+  if (
+    result.ok ||
+    !["stale_context", "validation_failed", "confirmation_required"].includes(
+      result.reason,
+    )
+  )
+    revalidateAll(reviewId);
+  return result;
+}
+
+export async function rejectInlineAction(
+  reviewId: string,
+): Promise<DecisionResult> {
+  const result = rejectReply(reviewId);
   revalidateAll(reviewId);
   return result;
 }
 
-export async function rejectInlineAction(reviewId: string): Promise<DecisionResult> {
-  const result = rejectReply(reviewId);
+export async function reconcileReplyAction(
+  reviewId: string,
+): Promise<DecisionResult> {
+  const result = await reconcileReply(reviewId);
   revalidateAll(reviewId);
   return result;
 }

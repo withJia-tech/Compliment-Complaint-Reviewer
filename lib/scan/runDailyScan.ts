@@ -1,3 +1,5 @@
+import { randomUUID } from "node:crypto";
+import { acquireStoreLock } from "@/lib/store/jsonStore";
 import type { ApprovalChannel } from "@/lib/interfaces/approvalChannel";
 import type { ReplyDrafter } from "@/lib/interfaces/replyDrafter";
 import type { ReviewProvider } from "@/lib/interfaces/reviewProvider";
@@ -50,66 +52,75 @@ export interface DailyScanResult {
  * "run scan now" API route, so there is exactly one implementation of this
  * business logic.
  */
-export async function runDailyScan(deps: DailyScanDeps): Promise<DailyScanResult> {
-  const locationId = deps.locationId ?? DEFAULT_LOCATION_ID;
-  const location = locationRepo.get(locationId);
-  const since = location.lastSuccessfulScanAt ?? EPOCH;
-  const scanStartedAt = new Date().toISOString();
+export async function runDailyScan(
+  deps: DailyScanDeps,
+): Promise<DailyScanResult> {
+  const release = acquireStoreLock();
+  if (!release)
+    throw new Error(
+      "The review store is busy or requires recovery; no scan was run.",
+    );
+  try {
+    const locationId = deps.locationId ?? DEFAULT_LOCATION_ID;
+    const location = locationRepo.get(locationId);
+    const since = location.lastSuccessfulScanAt ?? EPOCH;
+    const scanStartedAt = new Date().toISOString();
 
-  const reviews = await deps.provider.listSince(since);
-  let skipped = 0;
+    const reviews = await deps.provider.listSince(since);
+    let skipped = 0;
 
-  for (const review of reviews) {
-    reviewRepo.upsert(review);
+    for (const review of reviews) {
+      const existing = approvalRepo.getByReviewId(review.id);
+      // Preserve the source/draft that belongs to a completed or uncertain send.
+      if (
+        existing !== null &&
+        existing.status !== "pending" &&
+        existing.status !== "publish_failed"
+      ) {
+        skipped += 1;
+        continue;
+      }
+      reviewRepo.upsert(review);
+      const triage = deps.policy.classify(review);
+      triageRepo.upsert(triage);
+      const draft = deps.drafter.draft(review, triage, deps.facts);
+      draftRepo.upsert(draft);
 
-    const triage = deps.policy.classify(review);
-    triageRepo.upsert(triage);
+      const approval: Approval = existing ?? {
+        reviewId: review.id,
+        status: "pending",
+        actor: STUB_OWNER_ACTOR,
+      };
+      approvalRepo.upsert(approval);
+      await deps.approvalChannel.notify(review, triage, draft);
 
-    const draft = deps.drafter.draft(review, triage, deps.facts);
-    draftRepo.upsert(draft);
-
-    const existing = approvalRepo.getByReviewId(review.id);
-
-    // A decision the owner already made survives a rescan. An edited review
-    // coming back round must not reopen what they have settled, nor write an
-    // audit entry claiming a decision this pass did not make.
-    if (existing !== null && existing.status !== "pending") {
-      skipped += 1;
-      continue;
+      const record: AuditRecord = {
+        id: randomUUID(),
+        reviewId: review.id,
+        locationId: review.locationId,
+        policyVersion: triage.policyVersion,
+        sourceCreateTime: review.createTime,
+        sourceUpdateTime: review.updateTime,
+        evidence: {
+          stars: review.stars,
+          text: review.text,
+          matchedKeywords: triage.matchedKeywords,
+        },
+        triage,
+        draft,
+        approval,
+        action: "pending_approval",
+        actor: "system",
+        outcome: null,
+        recordedAt: new Date().toISOString(),
+      };
+      auditRepo.append(record);
     }
 
-    const approval: Approval = existing ?? {
-      reviewId: review.id,
-      status: "pending",
-      actor: STUB_OWNER_ACTOR,
-    };
-    approvalRepo.upsert(approval);
-    await deps.approvalChannel.notify(review, triage, draft);
+    locationRepo.update(locationId, { lastSuccessfulScanAt: scanStartedAt });
 
-    const record: AuditRecord = {
-      id: `audit_${review.id}_${Date.now()}`,
-      reviewId: review.id,
-      locationId: review.locationId,
-      policyVersion: triage.policyVersion,
-      sourceCreateTime: review.createTime,
-      sourceUpdateTime: review.updateTime,
-      evidence: {
-        stars: review.stars,
-        text: review.text,
-        matchedKeywords: triage.matchedKeywords,
-      },
-      triage,
-      draft,
-      approval,
-      action: "pending_approval",
-      actor: "system",
-      outcome: null,
-      recordedAt: new Date().toISOString(),
-    };
-    auditRepo.append(record);
+    return { scanned: reviews.length, skipped, since, scanStartedAt };
+  } finally {
+    release();
   }
-
-  locationRepo.update(locationId, { lastSuccessfulScanAt: scanStartedAt });
-
-  return { scanned: reviews.length, skipped, since, scanStartedAt };
 }

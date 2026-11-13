@@ -32,7 +32,25 @@ export function readJson<T>(fileName: string, fallback: T): T {
 export function writeJson<T>(fileName: string, data: T): void {
   ensureStoreDir();
   const filePath = path.join(storeDir(), fileName);
-  const tmpPath = path.join(storeDir(), `.${fileName}.${process.pid}.${Date.now()}.tmp`);
+  const tmpPath = path.join(
+    storeDir(),
+    `.${fileName}.${process.pid}.${Date.now()}.tmp`,
+  );
   fs.writeFileSync(tmpPath, JSON.stringify(data, null, 2), "utf-8");
   fs.renameSync(tmpPath, filePath);
+}
+
+/** Cross-process single-writer guard for this local fixture store. Never expires automatically:
+ * after a crash, an operator must verify the process stopped before removing the directory.
+ * This is not a distributed lock or a database transaction. */
+export function acquireStoreLock(): (() => void) | null {
+  ensureStoreDir();
+  const lock = path.join(storeDir(), ".writer-lock");
+  try {
+    fs.mkdirSync(lock);
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code === "EEXIST") return null;
+    throw error;
+  }
+  return () => fs.rmdirSync(lock);
 }
