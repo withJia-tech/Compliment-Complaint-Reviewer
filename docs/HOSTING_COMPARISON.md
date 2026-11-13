@@ -55,3 +55,18 @@ been retrieved. Google authorization, authenticated business-owner roles, durabl
 real publication/reconciliation and operational support remain release requirements.
 The static comparison does not exercise server actions or store concurrency. The local
 Next.js prototype retains its own checks and is not suitable for public live use.
+
+## Verification record — 13 November 2026
+
+- 145 automated tests passed; TypeScript check and Next.js production build passed.
+- Browser verified the Vercel screen, discovery refusal, explicit no-response decision,
+  Active count reduction, next-item selection, Completed record and reset.
+- Final Vercel deployment: `dpl_3oZEiw1FMcMAYoghLiZ8MbhqYvMP` (READY).
+- Final Sites deployment: `appgdep_6af6a9a925e88191b6c2fe53c5aca407` (succeeded).
+- Sites source: `67380f4805bc32891d9afb9f86c5f03550ec788b`.
+- Pages artifact commit: `165db2f53d759f5fa3e67bfabf21940730eb7101`.
+- Bundle digest: `bb042382b1af3fa2180e1aa2a298b20cc0fca581b370fdb2b254b7401172a412`.
+- Sites browser observation: ChatGPT sign-in required; no in-app UX comparison claimed.
+- GitHub Pages activation remains blocked as described above.
+
+![Published decision-focused review desk](screenshots/review-desk-clean.jpg)
