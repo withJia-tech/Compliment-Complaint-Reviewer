@@ -454,3 +454,6 @@ input[type="text"] {
 #hosted-reply { width: 100%; margin-top: .5rem; padding: .8rem; font: inherit; line-height: 1.6; }
 .demo-shortcuts { display: flex; flex-wrap: wrap; gap: .5rem; }
 @media (max-width: 720px) { .hosted-grid { grid-template-columns: 1fr; } }
+/* Keep the discovery workspace reachable even with a busy queue. */
+.hosted-grid > section[aria-label="Review queue"] { max-height: 65vh; overflow-y: auto; padding-right: .35rem; }
+@media (max-width: 720px) { .hosted-grid > section[aria-label="Review queue"] { max-height: 32vh; } }
