@@ -1,43 +1,56 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { betaZodOutputFormat } from "@anthropic-ai/sdk/helpers/beta/zod";
-import { READER_PROMPT_VERSION, READER_SYSTEM_PROMPT, readerUserMessage } from "@/lib/triage/reader/prompt";
-import { ReaderError, type ReviewReader, type ReviewReading, ReviewReadingSchema } from "@/lib/triage/reader/types";
+import { READER_FINGERPRINT, READER_PROMPT_VERSION, READER_SYSTEM_PROMPT, readerUserMessage } from "@/lib/triage/reader/prompt";
+import {
+  type ModelReader,
+  type ReadAttempt,
+  ReaderError,
+  type ReviewReader,
+  type ReviewReading,
+  ReviewReadingSchema,
+  type TokenUsage,
+} from "@/lib/triage/reader/types";
 import type { Review } from "@/lib/types";
 
-export const DEFAULT_READER_MODEL = "claude-opus-5-5";
+/** Reads every review. Cheap enough to read all of them (B11). */
+export const DEFAULT_READER_MODEL = "claude-haiku-5-5";
+/** Reads only the reviews the routing rules escalate. */
+export const DEFAULT_ESCALATION_MODEL = "claude-sonnet-5-5";
 
-/** Models that accept server-side refusal fallbacks (`fallbacks: "default"`). */
+/**
+ * Models that accept server-side refusal fallbacks (`fallbacks: "default"`).
+ * Haiku 5.5 has none: a Haiku refusal comes back as a failed attempt, and the
+ * cascade escalates it to the stronger model.
+ */
 function supportsServerFallback(model: string): boolean {
   return /^claude-(opus-5|sonnet-5-5|fable-5)/.test(model);
 }
 
-export interface ReaderUsage {
-  inputTokens: number;
-  outputTokens: number;
-}
+const NO_TOKENS: TokenUsage = { inputTokens: 0, outputTokens: 0 };
 
 /**
- * Reads a review with Claude and returns a structured reading.
+ * Reads a review with one Claude model and returns a structured reading.
  *
  * Bring your own key: the client takes credentials from the environment
- * (ANTHROPIC_API_KEY), never from code or the store. The model defaults to
- * Claude Opus 5.5 and can be changed with CCR_READER_MODEL.
+ * (ANTHROPIC_API_KEY), never from code or the store.
  */
-export class ClaudeReviewReader implements ReviewReader {
+export class ClaudeReviewReader implements ModelReader, ReviewReader {
   readonly model: string;
-  readonly usage: ReaderUsage = { inputTokens: 0, outputTokens: 0 };
+  /** Running total for this instance, for the read scripts' summaries. */
+  readonly usage: TokenUsage = { inputTokens: 0, outputTokens: 0 };
   private readonly client: Anthropic;
 
   constructor(options: { client?: Anthropic; model?: string } = {}) {
     this.client = options.client ?? new Anthropic();
-    this.model = options.model ?? process.env.CCR_READER_MODEL ?? DEFAULT_READER_MODEL;
+    this.model = options.model ?? DEFAULT_READER_MODEL;
   }
 
   get id(): string {
-    return `${this.model}:${READER_PROMPT_VERSION}`;
+    return `${this.model}:${READER_PROMPT_VERSION}@${READER_FINGERPRINT}`;
   }
 
-  async read(review: Review): Promise<ReviewReading> {
+  /** Never throws: an API error, refusal or bad output is a failed attempt. */
+  async attempt(review: Review): Promise<ReadAttempt> {
     let response;
     try {
       response = await this.client.beta.messages.parse({
@@ -50,17 +63,24 @@ export class ClaudeReviewReader implements ReviewReader {
         system: READER_SYSTEM_PROMPT,
         messages: [{ role: "user", content: readerUserMessage(review.stars, review.text) }],
       });
-    } catch (error) {
-      const detail = error instanceof Anthropic.APIError ? `${error.status ?? "network"}` : "unknown";
-      throw new ReaderError(`Claude request failed (${detail})`, "api_error");
+    } catch {
+      // The error detail is not logged: it can echo request content.
+      return { model: this.model, ok: false, reason: "api_error", usage: { ...NO_TOKENS } };
     }
 
-    this.usage.inputTokens += response.usage.input_tokens;
-    this.usage.outputTokens += response.usage.output_tokens;
+    const usage = { inputTokens: response.usage.input_tokens, outputTokens: response.usage.output_tokens };
+    this.usage.inputTokens += usage.inputTokens;
+    this.usage.outputTokens += usage.outputTokens;
 
-    if (response.stop_reason === "refusal") throw new ReaderError("Claude declined to read this review", "refused");
-    if (response.stop_reason === "max_tokens") throw new ReaderError("Reading was cut off", "truncated");
-    if (!response.parsed_output) throw new ReaderError("Reading did not match the schema", "unparsed");
-    return response.parsed_output;
+    if (response.stop_reason === "refusal") return { model: this.model, ok: false, reason: "refused", usage };
+    if (response.stop_reason === "max_tokens") return { model: this.model, ok: false, reason: "truncated", usage };
+    if (!response.parsed_output) return { model: this.model, ok: false, reason: "unparsed", usage };
+    return { model: this.model, ok: true, reading: response.parsed_output, usage };
+  }
+
+  async read(review: Review): Promise<ReviewReading> {
+    const result = await this.attempt(review);
+    if (!result.ok) throw new ReaderError(`Claude could not read this review (${result.reason})`, result.reason);
+    return result.reading;
   }
 }

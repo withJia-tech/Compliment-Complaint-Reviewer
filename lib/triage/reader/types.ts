@@ -1,5 +1,5 @@
 import { z } from "zod";
-import type { Review } from "@/lib/types";
+import type { Review, TriageResult } from "@/lib/types";
 
 export const READING_CATEGORIES = [
   "none",
@@ -31,15 +31,38 @@ export const ReviewReadingSchema = z.object({
 
 export type ReviewReading = z.infer<typeof ReviewReadingSchema>;
 
-/** A second reader for a review. Implementations: Claude, a cached replay, or a test fake. */
+/** What the keyword rules decided, given to the reader so routing can see it. Never sent to a model. */
+export interface ReadContext {
+  rules: TriageResult;
+}
+
+/** A second reader for a review. Implementations: the Claude cascade, a cached replay, or a test fake. */
 export interface ReviewReader {
-  /** Identifies the model and prompt version, recorded with every reading. */
+  /** Identifies the models, routing and prompt, recorded with every reading. */
   readonly id: string;
-  read(review: Review): Promise<ReviewReading>;
+  read(review: Review, context?: ReadContext): Promise<ReviewReading>;
+}
+
+export type ReaderFailureReason = "refused" | "truncated" | "unparsed" | "not_cached" | "api_error";
+
+export interface TokenUsage {
+  inputTokens: number;
+  outputTokens: number;
+}
+
+/** One model's attempt at one review: a reading or a failure, and what it cost either way. */
+export type ReadAttempt =
+  | { model: string; ok: true; reading: ReviewReading; usage: TokenUsage }
+  | { model: string; ok: false; reason: ReaderFailureReason; usage: TokenUsage };
+
+/** A single model that reads reviews. The cascade combines one or two of these. */
+export interface ModelReader {
+  readonly model: string;
+  attempt(review: Review): Promise<ReadAttempt>;
 }
 
 export class ReaderError extends Error {
-  constructor(message: string, readonly reason: "refused" | "truncated" | "unparsed" | "not_cached" | "api_error") {
+  constructor(message: string, readonly reason: ReaderFailureReason) {
     super(message);
     this.name = "ReaderError";
   }

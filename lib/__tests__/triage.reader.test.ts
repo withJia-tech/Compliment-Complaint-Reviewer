@@ -1,9 +1,10 @@
 import type Anthropic from "@anthropic-ai/sdk";
 import { describe, expect, it, vi } from "vitest";
 import { DefaultTriagePolicy } from "@/lib/triage/policy";
-import { CachedReviewReader, readingKey } from "@/lib/triage/reader/cachedReader";
+import { CachedModelReader, readingKey } from "@/lib/triage/reader/cachedReader";
+import { CascadeReviewReader } from "@/lib/triage/reader/cascade";
 import { ClaudeReviewReader } from "@/lib/triage/reader/claudeReader";
-import { readerFromEnv } from "@/lib/triage/reader/fromEnv";
+import { defaultReaderId, readerFromEnv } from "@/lib/triage/reader/fromEnv";
 import { READER_SYSTEM_PROMPT } from "@/lib/triage/reader/prompt";
 import { ReaderError, type ReviewReading } from "@/lib/triage/reader/types";
 import { triageReview } from "@/lib/triage/triageReview";
@@ -88,6 +89,15 @@ describe("triageReview", () => {
     expect(result.reasonCodes[0]).toBe("unreadable");
   });
 
+  it("gives the reader the keyword result, so routing can see what the rules found", async () => {
+    const read = vi.fn().mockResolvedValue(reading());
+    await triageReview(review(5, "Rude staff and we waited an hour."), policy, { id: "fake", read });
+    expect(read).toHaveBeenCalledWith(
+      expect.objectContaining({ text: "Rude staff and we waited an hour." }),
+      { rules: expect.objectContaining({ recommendedAction: "needs_review" }) },
+    );
+  });
+
   it("does not call the reader for a rating-only review", async () => {
     const read = vi.fn();
     const result = await triageReview(review(5, ""), policy, { id: "fake", read });
@@ -134,20 +144,58 @@ describe("ClaudeReviewReader", () => {
     const { client } = fakeClient(response);
     await expect(new ClaudeReviewReader({ client }).read(review(4, "x"))).rejects.toMatchObject({ reason });
   });
-});
 
-describe("CachedReviewReader and readerFromEnv", () => {
-  it("replays a saved reading and fails on a miss", async () => {
-    const saved = reading({ concern: "complaint" });
-    const r = review(4, "cold soup");
-    const reader = new CachedReviewReader({ readerId: "m:v", createdAt: "", readings: { [readingKey(r)]: saved } });
-    await expect(reader.read(r)).resolves.toEqual(saved);
-    await expect(reader.read(review(4, "other"))).rejects.toMatchObject({ reason: "not_cached" });
+  it("defaults to Claude Haiku 5.5", () => {
+    expect(new ClaudeReviewReader({ client: fakeClient(ok).client }).model).toBe("claude-haiku-5-5");
   });
 
-  it("is off without a key, and Claude with one", () => {
+  it("reports a refusal as a failed attempt with the tokens it still cost", async () => {
+    const { client } = fakeClient({ ...ok, stop_reason: "refusal" });
+    await expect(new ClaudeReviewReader({ client }).attempt(review(4, "x"))).resolves.toEqual({
+      model: "claude-haiku-5-5",
+      ok: false,
+      reason: "refused",
+      usage: { inputTokens: 100, outputTokens: 20 },
+    });
+  });
+
+  it("reports an API error as a failed attempt that cost nothing", async () => {
+    const parse = vi.fn().mockRejectedValue(new Error("network down"));
+    const client = { beta: { messages: { parse } } } as unknown as Anthropic;
+    await expect(new ClaudeReviewReader({ client }).attempt(review(4, "x"))).resolves.toMatchObject({
+      ok: false,
+      reason: "api_error",
+      usage: { inputTokens: 0, outputTokens: 0 },
+    });
+  });
+});
+
+describe("CachedModelReader and readerFromEnv", () => {
+  it("replays a recorded attempt and reports a miss as not cached", async () => {
+    const saved = reading({ concern: "complaint" });
+    const r = review(4, "cold soup");
+    const cached = new CachedModelReader("claude-haiku-5-5", {
+      [readingKey(r)]: { ok: true, reading: saved, usage: { inputTokens: 5, outputTokens: 1 } },
+    });
+    await expect(cached.attempt(r)).resolves.toMatchObject({ ok: true, reading: saved, model: "claude-haiku-5-5" });
+    await expect(cached.attempt(review(4, "other"))).resolves.toMatchObject({ ok: false, reason: "not_cached" });
+  });
+
+  it("is off without a key; with one, Haiku first and Sonnet on escalation", () => {
     expect(readerFromEnv({})).toBeNull();
-    expect(readerFromEnv({ ANTHROPIC_API_KEY: "sk-test-not-real" })).toBeInstanceOf(ClaudeReviewReader);
+    const live = readerFromEnv({ ANTHROPIC_API_KEY: "sk-test-not-real" });
+    expect(live).toBeInstanceOf(CascadeReviewReader);
+    expect(live?.id).toBe(defaultReaderId());
     expect(() => readerFromEnv({ CCR_READER: "bogus" })).toThrow(/Unknown CCR_READER/);
+  });
+
+  it("lets the owner change either model or turn escalation off, and the id says so", () => {
+    const env = { ANTHROPIC_API_KEY: "sk-test-not-real" };
+    expect(readerFromEnv({ ...env, CCR_READER_MODEL: "claude-sonnet-5-5", CCR_READER_ESCALATION_MODEL: "off" })?.id).toMatch(
+      /^routing-v1\[claude-sonnet-5-5\]:/,
+    );
+    expect(readerFromEnv({ ...env, CCR_READER_ESCALATION_MODEL: "claude-opus-5-5" })?.id).toMatch(
+      /^routing-v1\[claude-haiku-5-5>claude-opus-5-5\]:/,
+    );
   });
 });

@@ -106,7 +106,7 @@ export async function triageReview(
   if (review.text.trim() === "") return rules;
 
   try {
-    return applyReading(rules, await reader.read(review), reader.id);
+    return applyReading(rules, await reader.read(review, { rules }), reader.id);
   } catch {
     // Any failure, expected (ReaderError) or not, holds the review for the
     // owner rather than letting the keyword result stand unread.

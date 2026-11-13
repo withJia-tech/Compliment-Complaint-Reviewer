@@ -1,5 +1,5 @@
 {
-  "$comment": "Release gate for triage behaviour on tests/fixtures/golden/risk_classifier_v1.jsonl. CI fails if any metric breaches its limit, and on a pull request fails if any limit is loosened compared with the base branch. Tighten limits as the classifier improves; to loosen one deliberately, fill in loosening_reason and it is printed in the run summary.",
+  "$comment": "Release gate for triage behaviour on tests/fixtures/golden/risk_classifier_v1.jsonl. CI fails if any metric breaches its limit, and on a pull request fails if any limit is loosened compared with the base branch. Tighten limits as the classifier improves; to loosen one deliberately, fill in loosening_reason and it is printed in the run summary. costPerReviewUsd is the mean measured model cost per review read, in US$ (owner's limit of one cent, set 2026-11-13 before any run).",
   "dataset": "tests/fixtures/golden/risk_classifier_v1.jsonl",
   "readings": "tests/fixtures/golden/readings/risk_classifier_v1.json",
   "loosening_reason": "",
@@ -16,7 +16,8 @@
       "sensitiveRecall": { "min": 1 },
       "unsafeQuickApprove": { "max": 0 },
       "falseAlarm": { "max": 1 },
-      "readerFailures": { "max": 0 }
+      "readerFailures": { "max": 0 },
+      "costPerReviewUsd": { "max": 0.01 }
     }
   }
 }

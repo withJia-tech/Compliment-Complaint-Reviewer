@@ -20,6 +20,7 @@ import {
   type CaseOutcome,
   type EvalMetrics,
   type ModeThresholds,
+  checkReadingsIdentity,
   checkThresholds,
   evaluate,
   loadGoldenFixtures,
@@ -27,8 +28,9 @@ import {
   summarize,
 } from "@/lib/eval/goldenEval";
 import { DefaultTriagePolicy } from "@/lib/triage/policy";
-import { CachedReviewReader, loadReadingCache } from "@/lib/triage/reader/cachedReader";
-import { READER_PROMPT_VERSION } from "@/lib/triage/reader/prompt";
+import { type ReadingCacheFile, cascadeFromCache, loadReadingCache } from "@/lib/triage/reader/cachedReader";
+import { defaultReaderId } from "@/lib/triage/reader/fromEnv";
+import { usageSummary } from "@/lib/triage/reader/pricing";
 
 interface ThresholdsFile {
   dataset: string;
@@ -52,16 +54,23 @@ function pct(n: number): string {
   return `${(n * 100).toFixed(1)}%`;
 }
 
+function usd(n: number | undefined): string {
+  if (n === undefined) return "—";
+  return Number.isFinite(n) ? `$${n.toFixed(5)}` : "unknown";
+}
+
 function markdown(results: ModeResult[], loosened: string[], reason: string, passed: boolean): string {
   const lines = [`## Golden evaluation gate: ${passed ? "PASSED" : "FAILED"}`, ""];
-  lines.push("| Mode | Status | Exact match | Sensitive recall | Unsafe quick approve | False alarms | Reader failures |");
-  lines.push("|---|---|---|---|---|---|---|");
+  lines.push(
+    "| Mode | Status | Exact match | Sensitive recall | Unsafe quick approve | False alarms | Reader failures | Cost / review | Escalated |",
+  );
+  lines.push("|---|---|---|---|---|---|---|---|---|");
   for (const r of results) {
     const m = r.metrics;
     lines.push(
       m
-        ? `| ${r.mode} | ${r.status} | ${m.exactMatch}/${m.cases} (${pct(m.exactMatchRate)}) | ${pct(m.sensitiveRecall)} | ${m.unsafeQuickApprove} | ${m.falseAlarm} | ${m.readerFailures} |`
-        : `| ${r.mode} | ${r.status} | — | — | — | — | — |`,
+        ? `| ${r.mode} | ${r.status} | ${m.exactMatch}/${m.cases} (${pct(m.exactMatchRate)}) | ${pct(m.sensitiveRecall)} | ${m.unsafeQuickApprove} | ${m.falseAlarm} | ${m.readerFailures} | ${usd(m.costPerReviewUsd)} | ${m.escalations ?? "—"} |`
+        : `| ${r.mode} | ${r.status} | — | — | — | — | — | — | — |`,
     );
   }
   for (const r of results) {
@@ -100,40 +109,48 @@ async function main() {
   // Mode 1: rules only.
   {
     const outcomes = await evaluate(fixtures, policy, null);
-    const metrics = summarize(outcomes);
+    const metrics: EvalMetrics = { ...summarize(outcomes), costPerReviewUsd: 0 };
     const breaches = checkThresholds(metrics, config.modes.rules_only);
     results.push({ mode: "rules_only", status: breaches.length ? "fail" : "pass", note: "", metrics, breaches, outcomes });
   }
 
   // Mode 2: rules + reader, replayed from the committed evaluation run.
   {
-    const cache = loadReadingCache(config.readings);
-    if (!cache) {
-      results.push({
-        mode: "rules_plus_reader",
-        status: "not_run",
-        note: `No evaluation run at ${config.readings}. Run \`npm run read:golden -- --yes\` with your own key and commit the file. A missing run fails the gate: it is never treated as a pass.`,
-        metrics: null,
-        breaches: [],
-        outcomes: [],
-      });
-    } else if (!cache.readerId.endsWith(`:${READER_PROMPT_VERSION}`)) {
-      results.push({
-        mode: "rules_plus_reader",
-        status: "fail",
-        note: `Evaluation run is stale: made with ${cache.readerId}, but the reader prompt is now ${READER_PROMPT_VERSION}. Re-run \`npm run read:golden -- --yes\`.`,
-        metrics: null,
-        breaches: [],
-        outcomes: [],
-      });
-    } else {
-      const outcomes = await evaluate(fixtures, policy, new CachedReviewReader(cache));
-      const metrics = summarize(outcomes);
+    const expectedReaderId = defaultReaderId();
+    const rerun = "Run `npm run read:golden -- --yes` with your own key and commit the file.";
+    const notRun = (status: "fail" | "not_run", note: string) =>
+      results.push({ mode: "rules_plus_reader", status, note, metrics: null, breaches: [], outcomes: [] });
+
+    let cache: ReadingCacheFile | null = null;
+    let invalid = "";
+    try {
+      cache = loadReadingCache(config.readings);
+    } catch (error) {
+      invalid = error instanceof Error ? error.message : "unreadable";
+    }
+    const identity = checkReadingsIdentity(cache, expectedReaderId);
+
+    if (invalid) notRun("fail", `${invalid} A run that cannot be validated is never replayed.`);
+    else if (identity.status === "missing")
+      notRun("not_run", `No evaluation run at ${config.readings}. ${rerun} A missing run fails the gate: it is never treated as a pass.`);
+    else if (identity.status === "stale") notRun("fail", `${identity.note} ${rerun}`);
+    else if (cache) {
+      const reader = cascadeFromCache(cache);
+      const outcomes = await evaluate(fixtures, policy, reader);
+      const usage = usageSummary(reader.stats);
+      const metrics: EvalMetrics = {
+        ...summarize(outcomes),
+        costPerReviewUsd: usage.costPerReviewUsd,
+        escalations: reader.stats.escalations,
+      };
       const breaches = checkThresholds(metrics, config.modes.rules_plus_reader);
+      const priceNote = usage.unknownPriceModels.length
+        ? ` No price for ${usage.unknownPriceModels.join(", ")}: cost cannot be measured, which fails.`
+        : "";
       results.push({
         mode: "rules_plus_reader",
         status: breaches.length ? "fail" : "pass",
-        note: `Replayed from ${cache.readerId}, recorded ${cache.createdAt}.`,
+        note: `Replayed from ${cache.readerId}, recorded ${cache.createdAt}. ${reader.stats.escalations} of ${reader.stats.reads} reviews escalated.${priceNote}`,
         metrics,
         breaches,
         outcomes,

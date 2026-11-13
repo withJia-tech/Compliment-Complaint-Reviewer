@@ -1,71 +1,113 @@
 import { createHash } from "node:crypto";
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import path from "node:path";
-import { ReaderError, type ReviewReader, type ReviewReading } from "@/lib/triage/reader/types";
+import { z } from "zod";
+import { CascadeReviewReader } from "@/lib/triage/reader/cascade";
+import { type ModelReader, type ReadAttempt, ReviewReadingSchema } from "@/lib/triage/reader/types";
 import type { Review } from "@/lib/types";
 
 /**
- * Saved readings, keyed by a hash of the star rating and text, so a demo or
- * an evaluation can replay real model readings without a key or any cost.
+ * Saved model attempts, so the demo and the evaluation gate can replay real
+ * readings without a key or any cost. Each model's attempts are kept apart and
+ * the routing is re-run on replay, so a change in routing, prompt or models
+ * cannot silently reuse readings it did not produce.
  */
-export interface ReadingCacheFile {
-  readerId: string;
-  createdAt: string;
-  readings: Record<string, ReviewReading>;
-}
+const UsageSchema = z.object({ inputTokens: z.number().int().min(0), outputTokens: z.number().int().min(0) });
 
+const RecordedAttemptSchema = z.discriminatedUnion("ok", [
+  z.object({ ok: z.literal(true), reading: ReviewReadingSchema, usage: UsageSchema }),
+  z.object({
+    ok: z.literal(false),
+    reason: z.enum(["refused", "truncated", "unparsed", "not_cached", "api_error"]),
+    usage: UsageSchema,
+  }),
+]);
+export type RecordedAttempt = z.infer<typeof RecordedAttemptSchema>;
+
+export const ReadingCacheFileSchema = z.object({
+  format: z.literal(2),
+  readerId: z.string().min(1),
+  createdAt: z.string(),
+  models: z.object({ primary: z.string().min(1), escalation: z.string().min(1).nullable() }),
+  /** model -> review key -> attempt */
+  attempts: z.record(z.string(), z.record(z.string(), RecordedAttemptSchema)),
+});
+export type ReadingCacheFile = z.infer<typeof ReadingCacheFileSchema>;
+
+/** Keyed by a hash of the star rating and text, so the file holds no review text. */
 export function readingKey(review: Pick<Review, "stars" | "text">): string {
   return createHash("sha256").update(`${review.stars}\n${review.text}`).digest("hex");
 }
 
+/** Null when there is no file; throws when the file is not a valid readings file (never replayed). */
 export function loadReadingCache(file: string): ReadingCacheFile | null {
   if (!existsSync(file)) return null;
-  return JSON.parse(readFileSync(file, "utf8")) as ReadingCacheFile;
+  const parsed = ReadingCacheFileSchema.safeParse(JSON.parse(readFileSync(file, "utf8")));
+  if (!parsed.success) {
+    throw new Error(`${file} is not a valid readings file (format 2). Re-record it with npm run read:golden / read:demo.`);
+  }
+  return parsed.data;
 }
 
-/** Replays readings from a cache file. A review not in the cache fails closed. */
-export class CachedReviewReader implements ReviewReader {
-  readonly id: string;
-  private readonly readings: Record<string, ReviewReading>;
+/** Replays one model's recorded attempts. A review it never saw is a failed attempt, not a guess. */
+export class CachedModelReader implements ModelReader {
+  constructor(
+    readonly model: string,
+    private readonly attempts: Record<string, RecordedAttempt>,
+  ) {}
 
-  constructor(cache: ReadingCacheFile) {
-    this.id = `${cache.readerId} (cached)`;
-    this.readings = cache.readings;
-  }
-
-  static fromFile(file: string): CachedReviewReader {
-    const cache = loadReadingCache(file);
-    if (!cache) throw new Error(`No reading cache at ${file}. Run "npm run read:demo" with your key first.`);
-    return new CachedReviewReader(cache);
-  }
-
-  async read(review: Review): Promise<ReviewReading> {
-    const reading = this.readings[readingKey(review)];
-    if (!reading) throw new ReaderError("No saved reading for this review", "not_cached");
-    return reading;
+  async attempt(review: Review): Promise<ReadAttempt> {
+    const recorded = this.attempts[readingKey(review)];
+    if (!recorded) return { model: this.model, ok: false, reason: "not_cached", usage: { inputTokens: 0, outputTokens: 0 } };
+    return { ...recorded, model: this.model };
   }
 }
 
-/** Wraps a live reader and saves every successful reading to a cache file. */
-export class RecordingReviewReader implements ReviewReader {
-  private readonly cache: ReadingCacheFile;
+/** Rebuilds the cascade a file was recorded with, reading from the file instead of the API. */
+export function cascadeFromCache(cache: ReadingCacheFile): CascadeReviewReader {
+  const { primary, escalation } = cache.models;
+  return new CascadeReviewReader(
+    new CachedModelReader(primary, cache.attempts[primary] ?? {}),
+    escalation ? new CachedModelReader(escalation, cache.attempts[escalation] ?? {}) : null,
+  );
+}
 
-  constructor(private readonly inner: ReviewReader, private readonly file: string) {
-    this.cache = { readerId: inner.id, createdAt: new Date().toISOString(), readings: {} };
+export function cascadeFromFile(file: string): CascadeReviewReader {
+  const cache = loadReadingCache(file);
+  if (!cache) throw new Error(`No reading cache at ${file}. Run "npm run read:demo -- --yes" with your key first.`);
+  return cascadeFromCache(cache);
+}
+
+/** Wraps live model readers and records every attempt they make, for saving as a readings file. */
+export class ReadingRecorder {
+  private readonly attempts: Record<string, Record<string, RecordedAttempt>> = {};
+  private readonly models: string[] = [];
+
+  wrap(inner: ModelReader): ModelReader {
+    this.models.push(inner.model);
+    return {
+      model: inner.model,
+      attempt: async (review: Review) => {
+        const attempt = await inner.attempt(review);
+        const { model: _model, ...recorded } = attempt;
+        (this.attempts[inner.model] ??= {})[readingKey(review)] = recorded;
+        return attempt;
+      },
+    };
   }
 
-  get id(): string {
-    return this.inner.id;
-  }
-
-  async read(review: Review): Promise<ReviewReading> {
-    const reading = await this.inner.read(review);
-    this.cache.readings[readingKey(review)] = reading;
-    return reading;
-  }
-
-  save(): void {
-    mkdirSync(path.dirname(this.file), { recursive: true });
-    writeFileSync(this.file, `${JSON.stringify(this.cache, null, 2)}\n`);
+  /** `reader` must be the cascade built from this recorder's wrapped readers. */
+  save(file: string, reader: CascadeReviewReader): void {
+    const [primary, escalation] = this.models;
+    const cache: ReadingCacheFile = {
+      format: 2,
+      readerId: reader.id,
+      createdAt: new Date().toISOString(),
+      models: { primary, escalation: escalation ?? null },
+      attempts: this.attempts,
+    };
+    ReadingCacheFileSchema.parse(cache);
+    mkdirSync(path.dirname(file), { recursive: true });
+    writeFileSync(file, `${JSON.stringify(cache, null, 2)}\n`);
   }
 }

@@ -62,6 +62,10 @@ export interface EvalMetrics {
   falseAlarm: number;
   sensitiveRecall: number;
   readerFailures: number;
+  /** Mean model cost per review read, in US$. Set by the gate from measured token usage. */
+  costPerReviewUsd?: number;
+  /** Reviews the cheap reader sent to the stronger one. Reported, not limited. */
+  escalations?: number;
 }
 
 export function judge(fixture: GoldenFixture, result: TriageResult): CaseOutcome {
@@ -125,6 +129,7 @@ export interface ModeThresholds {
   unsafeQuickApprove: { max: number };
   falseAlarm: { max: number };
   readerFailures: { max: number };
+  costPerReviewUsd?: { max: number };
 }
 
 export interface Breach {
@@ -133,14 +138,39 @@ export interface Breach {
   limit: string;
 }
 
+/**
+ * Lists every limit the metrics breach. A limited metric that is missing or
+ * not a number (an empty run, an unknown price) is a breach, never a pass.
+ */
 export function checkThresholds(metrics: EvalMetrics, thresholds: ModeThresholds): Breach[] {
   const breaches: Breach[] = [];
   for (const [metric, limit] of Object.entries(thresholds) as [keyof ModeThresholds, { min?: number; max?: number }][]) {
     const actual = metrics[metric];
+    if (actual === undefined || !Number.isFinite(actual)) {
+      breaches.push({ metric, actual: Number.NaN, limit: "a measured value" });
+      continue;
+    }
     if (limit.min !== undefined && actual < limit.min) breaches.push({ metric, actual, limit: `>= ${limit.min}` });
     if (limit.max !== undefined && actual > limit.max) breaches.push({ metric, actual, limit: `<= ${limit.max}` });
   }
   return breaches;
+}
+
+export type ReadingsIdentity = { status: "ok" } | { status: "missing" | "stale"; note: string };
+
+/**
+ * The committed evaluation run must come from exactly the configured reader:
+ * same models, same routing, same prompt and schema. Anything else is stale.
+ */
+export function checkReadingsIdentity(cache: { readerId: string } | null, expectedReaderId: string): ReadingsIdentity {
+  if (!cache) return { status: "missing", note: "No evaluation run." };
+  if (cache.readerId !== expectedReaderId) {
+    return {
+      status: "stale",
+      note: `Evaluation run is stale: made with ${cache.readerId}, but the configured reader is ${expectedReaderId}.`,
+    };
+  }
+  return { status: "ok" };
 }
 
 /**

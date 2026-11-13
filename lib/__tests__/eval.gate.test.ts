@@ -2,6 +2,7 @@ import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import {
   type ModeThresholds,
+  checkReadingsIdentity,
   checkThresholds,
   evaluate,
   loadGoldenFixtures,
@@ -9,6 +10,8 @@ import {
   summarize,
 } from "@/lib/eval/goldenEval";
 import { DefaultTriagePolicy } from "@/lib/triage/policy";
+import { cascadeReaderId } from "@/lib/triage/reader/cascade";
+import { defaultReaderId } from "@/lib/triage/reader/fromEnv";
 
 const limits: ModeThresholds = {
   exactMatchRate: { min: 0.9 },
@@ -42,6 +45,40 @@ describe("evaluation gate", () => {
       "m.unsafeQuickApprove.max: 0 -> 2",
     ]);
     expect(loosenedLimits({ m: limits }, {})).toEqual(["m: removed"]);
+  });
+
+  it("treats a missing or non-numeric metric as a breach, never a pass", () => {
+    const withCost: ModeThresholds = { ...limits, costPerReviewUsd: { max: 0.01 } };
+    expect(checkThresholds({ ...good, costPerReviewUsd: 0.004 }, withCost)).toEqual([]);
+    expect(checkThresholds({ ...good, costPerReviewUsd: 0.02 }, withCost).map((b) => b.metric)).toEqual(["costPerReviewUsd"]);
+    expect(checkThresholds(good, withCost).map((b) => b.metric)).toEqual(["costPerReviewUsd"]);
+    expect(checkThresholds({ ...good, costPerReviewUsd: Number.NaN }, withCost).map((b) => b.metric)).toEqual(["costPerReviewUsd"]);
+  });
+
+  it("adding a limit is not loosening; removing one is", () => {
+    const withCost = { ...limits, costPerReviewUsd: { max: 0.01 } };
+    expect(loosenedLimits({ m: limits }, { m: withCost })).toEqual([]);
+    expect(loosenedLimits({ m: withCost }, { m: limits })).toEqual(["m.costPerReviewUsd: removed"]);
+    expect(loosenedLimits({ m: withCost }, { m: { ...withCost, costPerReviewUsd: { max: 0.05 } } })).toEqual([
+      "m.costPerReviewUsd.max: 0.01 -> 0.05",
+    ]);
+  });
+
+  it("caps the committed reader at one cent per review", () => {
+    const config = JSON.parse(readFileSync("eval/thresholds.json", "utf8"));
+    expect(config.modes.rules_plus_reader.costPerReviewUsd).toEqual({ max: 0.01 });
+  });
+
+  it("rejects an evaluation run made by any reader other than the configured default", () => {
+    const expected = defaultReaderId();
+    expect(expected).toContain("claude-haiku-5-5>claude-sonnet-5-5");
+    expect(checkReadingsIdentity({ readerId: expected }, expected)).toEqual({ status: "ok" });
+    // Same prompt version, different model: the old prompt-version-only check let this through.
+    const opusRun = cascadeReaderId("claude-opus-5-5", null);
+    expect(opusRun.split(":")[1]).toBe(expected.split(":")[1]);
+    expect(checkReadingsIdentity({ readerId: opusRun }, expected)).toMatchObject({ status: "stale" });
+    expect(checkReadingsIdentity({ readerId: cascadeReaderId("claude-haiku-5-5", null) }, expected)).toMatchObject({ status: "stale" });
+    expect(checkReadingsIdentity(null, expected)).toMatchObject({ status: "missing" });
   });
 
   it("today's rules-only results meet the committed rules_only thresholds", async () => {
