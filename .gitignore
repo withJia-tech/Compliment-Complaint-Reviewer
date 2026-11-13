@@ -16,3 +16,4 @@ next-env.d.ts
 
 # Isolated synthetic sessions; each demo launch starts fresh.
 /data/demo-sessions/
+evals/reports/

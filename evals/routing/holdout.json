@@ -1,0 +1,47 @@
+[
+  {"id":"hold-001","stars":5,"text":"Wonderful dinner, the staff looked after us so well.","expect":{"mustReview":false,"sensitive":null},"tags":["clean_praise"]},
+  {"id":"hold-002","stars":5,"text":"Superb roast duck and very attentive service.","expect":{"mustReview":false,"sensitive":null},"tags":["clean_praise"]},
+  {"id":"hold-003","stars":4,"text":"Solid neighbourhood cafe. Good flat white.","expect":{"mustReview":false,"sensitive":null},"tags":["clean_praise"]},
+  {"id":"hold-004","stars":5,"text":"Our go-to place for family lunch. Never disappoints.","expect":{"mustReview":false,"sensitive":null},"tags":["clean_praise","negation"]},
+  {"id":"hold-005","stars":5,"text":"Yummy desserts and the place is spotless.","expect":{"mustReview":false,"sensitive":null},"tags":["clean_praise"]},
+  {"id":"hold-006","stars":4,"text":"Quick, cheap and tasty. What more do you want.","expect":{"mustReview":false,"sensitive":null},"tags":["clean_praise"]},
+  {"id":"hold-007","stars":5,"text":"Thanks to Mei Ling for the warm welcome, we enjoyed every dish.","expect":{"mustReview":false,"sensitive":null},"tags":["clean_praise"]},
+  {"id":"hold-008","stars":5,"text":"10/10","expect":{"mustReview":false,"sensitive":null},"tags":["clean_praise"]},
+  {"id":"hold-009","stars":5,"text":"👍👍👍","expect":{"mustReview":false,"sensitive":null},"tags":["clean_praise"]},
+  {"id":"hold-010","stars":5,"text":"","expect":{"mustReview":false,"sensitive":null},"tags":["star_only"]},
+
+  {"id":"hold-011","stars":4,"text":"Nice ambience, yet the portions have shrunk since last year.","expect":{"mustReview":true,"sensitive":null},"tags":["contrast"]},
+  {"id":"hold-012","stars":5,"text":"Great satay. Only gripe is the toilets were filthy.","expect":{"mustReview":true,"sensitive":null},"tags":["contrast"]},
+  {"id":"hold-013","stars":4,"text":"Excellent mains, pity the dessert menu was unavailable and nobody told us.","expect":{"mustReview":true,"sensitive":null},"tags":["contrast"]},
+  {"id":"hold-014","stars":5,"text":"Love the food here. Staff could be a lot more polite.","expect":{"mustReview":true,"sensitive":null},"tags":["contrast"]},
+  {"id":"hold-015","stars":4,"text":"Friendly crew. My order was mixed up twice.","expect":{"mustReview":true,"sensitive":null},"tags":["contrast"]},
+  {"id":"hold-016","stars":5,"text":"Best prata around, if you can stand being shouted at by the cashier.","expect":{"mustReview":true,"sensitive":null},"tags":["contrast"]},
+
+  {"id":"hold-017","stars":5,"text":"Brilliant. Paid for two coffees, received one, and was told to queue again.","expect":{"mustReview":true,"sensitive":null},"tags":["sarcasm"]},
+  {"id":"hold-018","stars":5,"text":"Thank you so much for the hair in my noodles, really completed the meal.","expect":{"mustReview":true,"sensitive":null},"tags":["sarcasm"]},
+  {"id":"hold-019","stars":4,"text":"Recommend this place to anyone who enjoys being ignored for half an hour.","expect":{"mustReview":true,"sensitive":null},"tags":["sarcasm"]},
+
+  {"id":"hold-020","stars":5,"text":"服务很慢，等了一个小时。","expect":{"mustReview":true,"sensitive":null},"tags":["non_english"]},
+  {"id":"hold-021","stars":4,"text":"Best place! Tapi servis lambat gila, pelayan pun kurang ajar.","expect":{"mustReview":true,"sensitive":null},"tags":["non_english","contrast"]},
+  {"id":"hold-022","stars":5,"text":"Aiyo the kopi so diluted, uncle somemore scold me when I ask.","expect":{"mustReview":true,"sensitive":null},"tags":["non_english"]},
+  {"id":"hold-023","stars":5,"text":"料理は冷たくて、店員も不親切でした。","expect":{"mustReview":true,"sensitive":null},"tags":["non_english"]},
+
+  {"id":"hold-024","stars":2,"text":"My father tripped on the uneven step outside and fractured his wrist.","expect":{"mustReview":true,"sensitive":"sensitive_safety"},"tags":["sensitive_paraphrase"]},
+  {"id":"hold-025","stars":5,"text":"Food was nice. Just flagging that the hot plate scalded my hand because nobody warned me.","expect":{"mustReview":true,"sensitive":"sensitive_safety"},"tags":["sensitive_paraphrase"]},
+  {"id":"hold-026","stars":1,"text":"Spent the night in A&E with stomach cramps after the oysters.","expect":{"mustReview":true,"sensitive":"sensitive_medical"},"tags":["sensitive_paraphrase"]},
+  {"id":"hold-027","stars":4,"text":"Good meal but I told them about my nut allergy and the dessert still came with peanuts.","expect":{"mustReview":true,"sensitive":"sensitive_medical"},"tags":["sensitive_paraphrase"]},
+  {"id":"hold-028","stars":1,"text":"Diarrhoea for two days. Avoid the buffet.","expect":{"mustReview":true,"sensitive":"sensitive_medical"},"tags":["sensitive_paraphrase"]},
+  {"id":"hold-029","stars":1,"text":"We were refused a table and the host said people like us should eat elsewhere.","expect":{"mustReview":true,"sensitive":"sensitive_discrimination"},"tags":["sensitive_paraphrase"]},
+  {"id":"hold-030","stars":2,"text":"The supervisor made remarks about my hijab in front of other customers.","expect":{"mustReview":true,"sensitive":"sensitive_discrimination"},"tags":["sensitive_paraphrase"]},
+  {"id":"hold-031","stars":1,"text":"I have lodged a police report and my solicitor has the CCTV request.","expect":{"mustReview":true,"sensitive":"sensitive_legal"},"tags":["sensitive_explicit"]},
+  {"id":"hold-032","stars":2,"text":"Taking this to the Small Claims Tribunal.","expect":{"mustReview":true,"sensitive":"sensitive_legal"},"tags":["sensitive_paraphrase"]},
+  {"id":"hold-033","stars":1,"text":"They kept my deposit and stopped answering calls. Pure cheating.","expect":{"mustReview":true,"sensitive":"sensitive_fraud"},"tags":["sensitive_paraphrase"]},
+  {"id":"hold-034","stars":3,"text":"The bill was padded with a service fee that is not on the menu. Daylight robbery.","expect":{"mustReview":true,"sensitive":"sensitive_fraud"},"tags":["sensitive_paraphrase"]},
+  {"id":"hold-035","stars":2,"text":"I expect you to cover my dry cleaning after the waiter spilt curry on my suit.","expect":{"mustReview":true,"sensitive":"sensitive_compensation"},"tags":["sensitive_paraphrase"]},
+  {"id":"hold-036","stars":3,"text":"Please reverse the charge for the dish we sent back.","expect":{"mustReview":true,"sensitive":"sensitive_compensation"},"tags":["sensitive_paraphrase"]},
+
+  {"id":"hold-037","stars":5,"text":"Ill never go anywhere else for nasi lemak. Fantastic.","expect":{"mustReview":false,"sensitive":null},"tags":["idiom"]},
+  {"id":"hold-038","stars":5,"text":"The view is a steal for the price, and the pizza is great.","expect":{"mustReview":false,"sensitive":null},"tags":["idiom"]},
+  {"id":"hold-039","stars":5,"text":"Dangerously good brownies. Love this bakery.","expect":{"mustReview":false,"sensitive":null},"tags":["idiom"]},
+  {"id":"hold-040","stars":4,"text":"Got hooked after one accident of a visit, now a regular. Great team.","expect":{"mustReview":false,"sensitive":null},"tags":["idiom"]}
+]

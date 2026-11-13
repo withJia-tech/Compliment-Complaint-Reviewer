@@ -25,6 +25,19 @@ jobs:
       - name: Test
         run: npm test
 
+      # Routing eval gates (also enforced inside npm test). This step adds the
+      # per-category printout and the JSON report artifact for review.
+      - name: Routing eval
+        run: npm run eval
+
+      - name: Upload eval report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: routing-eval-report
+          path: evals/reports/latest.json
+          if-no-files-found: warn
+
       - name: Build
         run: npm run build
 

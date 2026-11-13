@@ -14,7 +14,9 @@
     "typecheck": "tsc --noEmit",
     "demo": "node scripts/demo.mjs",
     "demo:prepare": "node scripts/demo.mjs --prepare-only",
-    "build:comparison": "node --import tsx scripts/buildComparison.ts"
+    "build:comparison": "node --import tsx scripts/buildComparison.ts",
+    "eval": "tsx scripts/evalRouting.ts",
+    "eval:report": "tsx scripts/evalRouting.ts --report-only"
   },
   "dependencies": {
     "next": "^15.1.0",

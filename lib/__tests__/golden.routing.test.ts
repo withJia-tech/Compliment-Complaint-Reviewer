@@ -46,6 +46,8 @@ describe("golden routing set", () => {
       "positive_no_complaint",
       "neutral_mixed_sentiment",
       "negative_issue",
+      "unreadable_language",
+      "unconfirmed_praise",
       "sensitive_safety",
       "sensitive_medical",
       "sensitive_discrimination",

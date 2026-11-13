@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { buildDemoDatasets, canPractiseRecentCase, classifyDataset2, DATASET2_POLICY } from "@/lib/demo/datasets";
 import { rowsForView } from "@/lib/demo/queue";
+import { POLICY_VERSION } from "@/lib/triage/policyVersion";
 import { DefaultTriagePolicy } from "@/lib/triage/policy";
 import { validateReply } from "@/lib/validation/reply";
 
@@ -55,7 +56,7 @@ describe("unpromoted dataset-two classifier candidate", () => {
     const review = {id:"probe",stars:5 as const,text:"I spotted a piece of broken glass near the water dispenser."};
     expect(classifyDataset2(review)).toMatchObject({policyVersion:DATASET2_POLICY,riskLevel:"high",sensitive:true,reasonCodes:["sensitive_safety"]});
     // Adding a demonstration candidate does not silently promote the production policy.
-    expect(new DefaultTriagePolicy().classify(review)).toMatchObject({policyVersion:"policy-v1.0.0",sensitive:false});
+    expect(new DefaultTriagePolicy().classify(review)).toMatchObject({policyVersion:POLICY_VERSION,sensitive:false});
   });
   it("routes the missing-items refund request without inferring compensation rights", () => {
     expect(byId("neo").triage).toMatchObject({sensitive:true,reasonCodes:["sensitive_compensation"]});
