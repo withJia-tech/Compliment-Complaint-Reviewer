@@ -24,7 +24,7 @@ it('allows the hosted demo and required assets', () => {
 it('blocks store access on Vercel even without the explicit demo flag', () => {
   vi.stubEnv('CCR_HOSTED_DEMO', '');
   vi.stubEnv('VERCEL', '1');
-  expect(() => readJson('reviews.json', {})).toThrow('Server storage is disabled');
+  expect(() => readJson('reviews.json', {}, () => null)).toThrow('Server storage is disabled');
   expect(() => writeJson('reviews.json', {})).toThrow('Server storage is disabled');
   expect(() => acquireStoreLock()).toThrow('Server storage is disabled');
 });

@@ -1,4 +1,5 @@
 import { assertLocalStore } from "@/lib/demo/hosting";
+import type { Check } from "@/lib/store/schema";
 import fs from "node:fs";
 import path from "node:path";
 
@@ -16,8 +17,30 @@ function ensureStoreDir(): void {
   fs.mkdirSync(storeDir(), { recursive: true });
 }
 
-/** Reads a JSON file from the runtime store, returning `fallback` if it doesn't exist yet. */
-export function readJson<T>(fileName: string, fallback: T): T {
+/**
+ * A store file that exists but cannot be trusted: unparseable, or the wrong
+ * shape. Reads fail closed: nothing downstream (routing, the send path, the
+ * audit trail) runs on data that only claims to be the right type.
+ */
+export class StoreIntegrityError extends Error {
+  constructor(
+    readonly fileName: string,
+    readonly problem: string,
+  ) {
+    super(
+      `Store file ${fileName} failed its integrity check (${problem}). ` +
+        "Nothing was changed. Inspect or restore the file before continuing.",
+    );
+    this.name = "StoreIntegrityError";
+  }
+}
+
+/**
+ * Reads a JSON file from the runtime store, returning `fallback` if it
+ * doesn't exist yet. The parsed value must pass `check` before it is
+ * returned as `T`; a file that fails throws StoreIntegrityError.
+ */
+export function readJson<T>(fileName: string, fallback: T, check: Check): T {
   ensureStoreDir();
   const filePath = path.join(storeDir(), fileName);
   if (!fs.existsSync(filePath)) {
@@ -27,7 +50,15 @@ export function readJson<T>(fileName: string, fallback: T): T {
   if (raw.trim().length === 0) {
     return fallback;
   }
-  return JSON.parse(raw) as T;
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(raw);
+  } catch {
+    throw new StoreIntegrityError(fileName, "not valid JSON");
+  }
+  const problem = check(parsed, "$");
+  if (problem) throw new StoreIntegrityError(fileName, problem);
+  return parsed as T;
 }
 
 /** Writes a JSON file atomically (write to a temp file, then rename) to avoid partial writes. */
