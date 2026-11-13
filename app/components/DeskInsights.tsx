@@ -23,7 +23,7 @@ export function DeskInsights({ rows, period, asOf }: { rows: DeskRow[]; period: 
     <div className="insight-cards">
       <section><h2>Response coverage</h2><dl><dt>Awaiting a decision</dt><dd>{metrics.awaiting}</dd><dt>Replies approved</dt><dd>{metrics.approved}</dd><dt>Skipped</dt><dd>{metrics.skipped}</dd><dt>No response required</dt><dd>{metrics.noResponse}</dd></dl></section>
       <section><h2>Risk mix</h2><dl><dt>Sensitive</dt><dd>{metrics.risk.sensitive}</dd><dt>High · other</dt><dd>{metrics.risk.high}</dd><dt>Medium</dt><dd>{metrics.risk.medium}</dd><dt>Low</dt><dd>{metrics.risk.low}</dd></dl></section>
-      <section><h2>Response quality</h2><dl><dt>Edited before approval</dt><dd>{metrics.edited} / {metrics.approved}</dd><dt>Current failed sends</dt><dd>{metrics.failed}</dd><dt>Delivery unconfirmed</dt><dd>{metrics.uncertain}</dd></dl><p className="page-sub">Stale-approval counts are not recorded.</p></section>
+      <section><h2>Response quality</h2><dl><dt>Edited before approval</dt><dd>{metrics.edited} / {metrics.approved}</dd><dt>Current failed sends</dt><dd>{metrics.failed}</dd><dt>Delivery unconfirmed</dt><dd>{metrics.uncertain}</dd></dl></section>
     </div>
     {buckets.length > 0 && <section className="theme-history"><h2>Theme mentions over time</h2><p className="page-sub">A review can mention several themes. These counts do not establish a cause.</p><div className="table-scroll"><table><thead><tr><th>Period</th><th>Reviews</th><th>Food</th><th>Service</th><th>Atmosphere</th></tr></thead><tbody>{buckets.map(bucket => <tr key={bucket.key}><td>{bucket.label}</td><td>{bucket.reviewCount}</td>{bucket.themes.map(theme => <td key={theme.theme}>{theme.count}</td>)}</tr>)}</tbody></table></div></section>}
   </div>;

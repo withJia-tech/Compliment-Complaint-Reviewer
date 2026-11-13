@@ -15,6 +15,8 @@ approved business facts and the customer's account. Weekly/monthly signals show 
 coverage, risk, edits and theme mentions; they do not infer operational causes. Screenshot
 cases with unknown dates are excluded from date-based counts and trends.
 
+The client demo links to `/demo-behindthehood` in a new tab. That read-only engineering companion explains rubrics, traceability, reliability limits and a pinned CI checkpoint, distinguishing hosted behavior, local fixture controls and proposed assisted workflows. It exposes no live logs or administrative operations. The static build emits the same page for all three demo hosts.
+
 See [verified-send controls and recovery](docs/VERIFIED_SEND.md) for failure states, acceptance evidence and remaining release gates.
 
 ## Current boundary

@@ -19,7 +19,7 @@ const recommendation = (row: Row) => row.triage.sensitive
   : row.triage.riskLevel === "medium" ? "Acknowledge the concern while preserving the positive feedback."
   : "Check the thank-you draft, or close the review if no response is needed.";
 
-export function HostedDemo({ datasets }: { datasets: DemoDataset[] }) {
+export function HostedDemo({ datasets, engineeringHref = "/demo-behindthehood" }: { datasets: DemoDataset[]; engineeringHref?: string }) {
   const [datasetId, setDatasetId] = useState("dataset2");
   const dataset = datasets.find(item => item.id === datasetId) ?? datasets[0];
   const { rows, facts } = dataset;
@@ -84,6 +84,7 @@ export function HostedDemo({ datasets }: { datasets: DemoDataset[] }) {
         {row.historical ? <section className="desk-decision"><h3>Historical example</h3><p>This review stays outside the active six-month queue. No new decision is required.</p><details><summary>Alternative draft for discussion</summary><p>{row.draft.text}</p></details></section> : <Editor key={`${row.review.id}-${reset}`} row={row} facts={facts} outcome={outcomes[row.review.id]} onRecord={record} />}
       </section> : <section className="desk-workspace desk-empty"><h2>{view === "completed" ? "Your decisions will appear here" : "Nothing waiting on you"}</h2><p>{view === "completed" ? "Complete a review to keep its decision here for this session." : "Each reviewed item stays available in Completed."}</p></section>}
     </div></>}
+    <footer className="desk-footer"><a href={engineeringHref} target="_blank" rel="noopener noreferrer">Behind the hood <span aria-hidden="true">↗</span><span className="sr-only"> (opens in a new tab)</span></a></footer>
   </main>;
 }
 
