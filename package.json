@@ -11,7 +11,9 @@
     "start": "next start",
     "scan": "tsx scripts/dailyScan.ts",
     "test": "vitest run",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "demo": "node scripts/demo.mjs",
+    "demo:prepare": "node scripts/demo.mjs --prepare-only"
   },
   "dependencies": {
     "next": "^15.1.0",

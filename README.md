@@ -22,6 +22,13 @@ This is a fresh implementation inspired by the product scope and architecture of
 does not copy OpenReply source code and is not presented as a fork. If source code is reused in a
 future version, retain OpenReply's MIT license and attribution.
 
+## Client demonstration
+
+Run `npm run demo` after installing dependencies, then open `http://127.0.0.1:3000/demo`.
+Each launch creates a fresh, isolated synthetic queue. All sends remain simulated.
+See [the five-minute walkthrough](docs/CLIENT_DEMO.md) for setup, reset behaviour and limits.
+The local demo is not authenticated and must not be exposed publicly.
+
 ## Getting started
 
 Requires Node.js >= 22.13.0.

@@ -3,6 +3,7 @@ import { runScanAction } from "@/app/queue/actions";
 import type { LocationSettings } from "@/lib/types";
 
 const NAV = [
+  { href: "/demo", label: "Demo guide" },
   { href: "/queue", label: "Queue" },
   { href: "/insights", label: "Insights" },
   { href: "/settings", label: "Settings" },
@@ -52,7 +53,7 @@ export function AppHeader({
         <span>{businessName}</span>
         <span aria-hidden="true">·</span>
         <span title="Nothing is sent automatically. You send every reply.">
-          Replies: <strong>sent by you</strong>
+          Replies: <strong>simulated · owner approval required</strong>
         </span>
         <span aria-hidden="true">·</span>
         <span>

@@ -435,3 +435,13 @@ input[type="text"] {
 
 .confirmation-label { display: flex; gap: .6rem; align-items: flex-start; margin: 1rem 0; max-width: 70ch; }
 .confirmation-label input { width: auto; flex: 0 0 auto; margin-top: .25rem; }
+
+/* Guided client demonstration */
+.demo-notice { border: 1px solid var(--border); background: var(--panel); padding: 1.25rem; border-radius: 10px; margin: 1.5rem 0; }
+.demo-notice p { max-width: 75ch; line-height: 1.6; }
+.demo-steps { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1rem; }
+.demo-step { padding: 1.25rem; border: 1px solid var(--border); border-radius: 10px; background: var(--panel); }
+.demo-step h2 { font-size: 1.2rem; }
+.demo-step p { line-height: 1.6; }
+.demo-step a, .demo-notice a { color: var(--accent); font-weight: 600; }
+@media (max-width: 720px) { .demo-steps { grid-template-columns: 1fr; } .app-header-row { flex-wrap: wrap; gap: .5rem; } .app-nav { margin-left: 0; flex-wrap: wrap; } }
