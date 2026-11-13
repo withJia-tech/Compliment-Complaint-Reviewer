@@ -38,7 +38,7 @@ npm run dev         # http://localhost:3000
   combines it with the rules. **It can only raise, and fails closed.** BYOK: `ANTHROPIC_API_KEY`, never stored.
 - `tests/fixtures/golden/` — versioned, checksum-pinned golden dataset; never edit an approved version
 - `lib/drafter/` — templates filled only from approved facts; `factsUsed` records citations
-- `lib/decisions.ts` — send / skip / remedy; one decision per review (in-process claim)
+- `lib/decisions.ts` — send / skip / remedy / reconciliation; persistent attempt plus local writer lock
 - `lib/scan/runDailyScan.ts` — the daily worker; idempotent, never publishes
 - `data/fixtures/golden.json` + `lib/__tests__/golden.routing.test.ts` — the routing rubric as data
 
@@ -59,6 +59,7 @@ npm run dev         # http://localhost:3000
   removed `ESCALATION_KEYWORDS`, and still substring-matches). Port its checks; don't merge it.
 - README screenshots: `scripts/screenshots.mjs`, captured from `npm run build && npm start`
   (the dev server stamps an indicator on every page). Playwright is not a dependency.
-- Known gaps are listed in `docs/DECISIONS.md` (B3 failed publish recorded as approved, B5 audit
-  embeds review text, B6 cross-process write race). Don't silently "fix" around them — do them as
-  backlog items with tests.
+- Read `docs/VERIFIED_SEND.md` before changing the send boundary. B2 semantic validation, B4 live
+  provider behaviour and B5 audit retention remain open. A context hash is not authentication.
+- Never expire the store lock automatically or retry an uncertain send. Recovery must establish
+  whether the previous process and provider operation have completed.

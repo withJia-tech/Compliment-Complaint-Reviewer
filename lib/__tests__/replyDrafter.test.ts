@@ -12,7 +12,11 @@ const facts: ApprovedBusinessFacts = {
   facts: [
     { key: "business_name", category: "identity", value: "Maple & Vine Cafe" },
     { key: "contact.phone", category: "contact", value: "(555) 012-3456" },
-    { key: "contact.email", category: "contact", value: "hello@mapleandvine.example" },
+    {
+      key: "contact.email",
+      category: "contact",
+      value: "hello@mapleandvine.example",
+    },
     {
       key: "policy.refund",
       category: "policy",
@@ -25,7 +29,13 @@ const approvedFactKeys = new Set(facts.facts.map((fact) => fact.key));
 
 // Words that would signal an invented, unapproved promise if they ever
 // appeared in generated text without being sourced from `facts` above.
-const FORBIDDEN_UNSOURCED_WORDS = ["tomorrow", "$", "guarantee", "promise you", "will refund"];
+const FORBIDDEN_UNSOURCED_WORDS = [
+  "tomorrow",
+  "$",
+  "guarantee",
+  "promise you",
+  "will refund",
+];
 
 function review(overrides: Partial<Review>): Review {
   return {
@@ -53,8 +63,14 @@ describe("TemplateReplyDrafter", () => {
   });
 
   it("never invents a promise, timeline, or dollar amount in negative/escalation replies", () => {
-    const negative = review({ stars: 1, text: "Rude staff, worst experience, never again." });
-    const escalation = review({ stars: 1, text: "I slipped and got hurt, no warning sign." });
+    const negative = review({
+      stars: 1,
+      text: "Rude staff, worst experience, never again.",
+    });
+    const escalation = review({
+      stars: 1,
+      text: "I slipped and got hurt, no warning sign.",
+    });
 
     for (const r of [negative, escalation]) {
       const triage = policy.classify(r);
@@ -66,7 +82,10 @@ describe("TemplateReplyDrafter", () => {
   });
 
   it("does not cite the refund policy fact for a compensation claim (no promised remedy)", () => {
-    const r = review({ stars: 3, text: "Charged twice on my card, need a refund immediately." });
+    const r = review({
+      stars: 3,
+      text: "Charged twice on my card, need a refund immediately.",
+    });
     const triage = policy.classify(r);
     const draft = drafter.draft(r, triage, facts);
     expect(triage.sensitive).toBe(true);
@@ -81,28 +100,52 @@ describe("TemplateReplyDrafter", () => {
     ]) {
       const r = review({ stars: 2, text });
       const draft = drafter.draft(r, policy.classify(r), facts);
-      for (const word of ["voucher", "gift card", "discount", "compensat", "free "]) {
+      for (const word of [
+        "voucher",
+        "gift card",
+        "discount",
+        "compensat",
+        "free ",
+      ]) {
         expect(draft.text.toLowerCase()).not.toContain(word);
       }
     }
   });
 
   it("uses a distinct template for a sensitive claim versus an ordinary bad review", () => {
-    const sensitive = review({ stars: 1, text: "I slipped and got hurt here." });
-    const ordinary = review({ stars: 1, text: "Rude staff, worst experience." });
-    const sensitiveDraft = drafter.draft(sensitive, policy.classify(sensitive), facts);
-    const ordinaryDraft = drafter.draft(ordinary, policy.classify(ordinary), facts);
+    const sensitive = review({
+      stars: 1,
+      text: "I slipped and got hurt here.",
+    });
+    const ordinary = review({
+      stars: 1,
+      text: "Rude staff, worst experience.",
+    });
+    const sensitiveDraft = drafter.draft(
+      sensitive,
+      policy.classify(sensitive),
+      facts,
+    );
+    const ordinaryDraft = drafter.draft(
+      ordinary,
+      policy.classify(ordinary),
+      facts,
+    );
     expect(sensitiveDraft.templateId).toBe("sensitive_personal_response");
     expect(ordinaryDraft.templateId).toBe("negative_acknowledge_no_promise");
   });
 
   it("falls back to generic phrasing instead of inventing contact info when no fact is approved", () => {
-    const noContactFacts: ApprovedBusinessFacts = { locationId: "loc_001", businessName: "Test Biz", facts: [] };
+    const noContactFacts: ApprovedBusinessFacts = {
+      locationId: "loc_001",
+      businessName: "Test Biz",
+      facts: [],
+    };
     const r = review({ stars: 2, text: "Very disappointed with the service." });
     const triage = policy.classify(r);
     const draft = drafter.draft(r, triage, noContactFacts);
     expect(draft.factsUsed).toEqual([]);
-    expect(draft.text).toContain("our front desk");
+    expect(draft.text).not.toMatch(/front desk|contact us at/);
   });
 
   it("cites the business name fact for a positive review", () => {
@@ -126,16 +169,23 @@ describe("reviewer names that end in an initial", () => {
     [1, "I slipped on a wet floor and got hurt."],
   ];
 
-  it.each(authors)("never doubles punctuation for %s, in any template", (author) => {
-    for (const [stars, text] of reviews) {
-      const r = review({ author, stars, text });
-      const draft = drafter.draft(r, policy.classify(r), facts);
-      expect(draft.text, `${author} / ${stars}★`).not.toMatch(/[.,!?][.,!?]/);
-    }
-  });
+  it.each(authors)(
+    "never doubles punctuation for %s, in any template",
+    (author) => {
+      for (const [stars, text] of reviews) {
+        const r = review({ author, stars, text });
+        const draft = drafter.draft(r, policy.classify(r), facts);
+        expect(draft.text, `${author} / ${stars}★`).not.toMatch(/[.,!?][.,!?]/);
+      }
+    },
+  );
 
   it("still greets the reviewer by name", () => {
-    const r = review({ author: "Elena R.", stars: 3, text: "Food was good but service was slow." });
+    const r = review({
+      author: "Elena R.",
+      stars: 3,
+      text: "Food was good but service was slow.",
+    });
     const draft = drafter.draft(r, policy.classify(r), facts);
     expect(draft.text).toContain("Elena R");
   });

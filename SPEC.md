@@ -23,8 +23,11 @@ will later implement.
 ## Sending
 
 **Nothing is ever sent automatically.** Every reply — including a clean five-star thank-you — waits
-in the queue until the owner sends it. Low-risk reviews are marked **quick approve**, so clearing
-one takes a single click, but a person still clicks.
+in the queue until the owner sends it. Low-risk reviews are marked **quick approve**, but every send still requires explicit factual
+review and confirmation of the current version. The label is a routing suggestion, not a safety guarantee.
+
+The earlier conditional-auto-publication contradiction is resolved: the scan never publishes.
+[Verified-send controls](docs/VERIFIED_SEND.md) govern the simulated send path and its recovery.
 
 Auto-send is in the backlog as a much narrower rule than the consent toggle it replaces: only a
 5-star review that is *deterministically* positive. See docs/DECISIONS.md for the conditions it
@@ -214,4 +217,5 @@ changes no approval status.
 - The interface makes it obvious how much attention each review needs, and that the owner sends every reply.
 - The draft is useful without inventing facts, by the grounding rubric above.
 - The user can explain why a review was flagged sensitive, and which category.
-- The prototype is suitable for a live Google integration without redesigning the core workflow.
+- Live integration remains blocked pending authenticated identity, provider freshness/reconciliation,
+  semantic evidence validation, retention and security checks. ADR-001 remains open.

@@ -3,7 +3,10 @@
 A fixture-backed prototype for a governed daily review desk for Google Business Profile teams. It
 demonstrates the narrow first workflow: scan new or updated reviews, classify risk, draft a
 grounded response, and queue every reply for the owner to approve and send. Nothing is sent
-automatically; low-risk reviews are marked quick approve so they clear in one click.
+automatically. Every send requires a factual-review confirmation and current source/draft versions.
+The interface labels all sends as simulated.
+
+See [verified-send controls and recovery](docs/VERIFIED_SEND.md) for failure states, acceptance evidence and remaining release gates.
 
 ## Current boundary
 
@@ -24,6 +27,24 @@ future version, retain OpenReply's MIT license and attribution.
 MIT licensed. Created by [withJia-tech](https://github.com/withJia-tech). The licence requires
 keeping the copyright notice in `LICENSE` in any copy or fork. If you build on this, please also
 credit the project and link back to this repository.
+
+## Hosted comparison demonstration
+
+The same browser demo is prepared for Vercel, ChatGPT Sites and GitHub Pages.
+Run `npm run build:comparison` to generate `comparison/dist`. See
+[hosting status and comparison procedure](docs/HOSTING_COMPARISON.md).
+Reviews are limited to the past six calendar months. Human decisions move items out
+of Active into Completed; **No response required** is an explicit reviewed decision.
+The hosted demo uses tab memory, with no external publication. Dataset 2 (the default)
+contains five supplied real review-and-owner-reply pairs; Dataset 1 retains synthetic reviews.
+See [Dataset 2 provenance, dates and classifier boundary](docs/DATASET_2.md).
+
+## Client demonstration
+
+Run `npm run demo` after installing dependencies, then open `http://127.0.0.1:3000/demo`.
+Each launch creates a fresh, isolated synthetic queue. All sends remain simulated.
+See [the five-minute walkthrough](docs/CLIENT_DEMO.md) for setup, reset behaviour and limits.
+The local demo is not authenticated and must not be exposed publicly.
 
 ## Getting started
 
@@ -136,8 +157,9 @@ AI behaviour is treated as a release-gated capability, not just code. Every pull
 
 | Check | What fails it |
 |---|---|
-| **Golden evaluation gate** | Any metric in [`eval/thresholds.json`](eval/thresholds.json) regresses, in either mode: keyword rules only, or rules plus the second reader replayed from the committed evaluation run. A missing or stale evaluation run fails; it is never a pass. A threshold loosened against the base branch fails unless a reason is written down. The report (fixture ids only, never review text) is attached to the run and shown in its summary. |
-| **Typecheck, tests, build** | Any failure, or **any skipped test**: a green check means every test ran. |
+| **Golden evaluation gate** | Any metric in [`eval/thresholds.json`](eval/thresholds.json) regresses, in either mode: keyword rules only, or rules plus the second reader replayed from the committed evaluation run. A missing run, or one made by any reader other than the configured default (models, routing, prompt), fails; it is never a pass. Cost above one cent per review fails. A threshold loosened against the base branch fails unless a reason is written down. The report (fixture ids only, never review text) is attached to the run and shown in its summary. |
+| **Typecheck, tests, build** | Any failure, or **any skipped test**: a green check means every test ran. Includes the golden routing cases and the verified-send regressions (stale approvals, edited replies, failed and uncertain publication). |
+| **Scan idempotency** | A second daily scan finds anything new. |
 | **Secret scan** | gitleaks (checksum-verified binary) finds a credential anywhere in git history. |
 | **Dependency audit** | `npm audit` finds a moderate or worse vulnerability, or a package fails registry signature checks. |
 | **CodeQL** | Static analysis of the TypeScript and the workflow files themselves. |
@@ -148,8 +170,15 @@ is pinned to a full commit SHA, and Dependabot proposes pin updates. CI never ho
 the reader is replayed from saved readings, so any run reproduces from a clean checkout.
 
 Metrics the gate tracks: exact match rate, sensitive recall, unsafe quick approves (a review that
-needs a read marked safe to clear: the costly miss), false alarms (praise held back), and reader
-failures.
+needs a read marked safe to clear: the costly miss), false alarms (praise held back), reader
+failures and cost per review. **The model-evaluation evidence is still outstanding:** until the
+owner commits an evaluation run, the gate fails on purpose.
+
+What CI does not establish: per-category recall, semantic grounding coverage and broader
+policy-compliance gates are still planned (see [the learning-loop plan](docs/LEARNING_LOOP_PLAN.md)).
+Template and send-boundary tests do not prove semantic grounding or live-model prompt-injection
+robustness. Passing CI establishes the checks for that revision, not production readiness. See
+[verification limits](docs/VERIFIED_SEND.md) for the remaining release gates.
 
 ## Scripts
 

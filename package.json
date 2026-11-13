@@ -16,7 +16,10 @@
     "read:demo": "tsx --env-file-if-exists=.env.local scripts/readReviews.ts demo",
     "test": "vitest run",
     "typecheck": "tsc --noEmit",
-    "eval:gate": "tsx scripts/evalGate.ts"
+    "eval:gate": "tsx scripts/evalGate.ts",
+    "demo": "node scripts/demo.mjs",
+    "demo:prepare": "node scripts/demo.mjs --prepare-only",
+    "build:comparison": "node --import tsx scripts/buildComparison.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^1.8.0",
@@ -29,6 +32,7 @@
     "@types/node": "^22.10.0",
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",
+    "esbuild": "0.28.2",
     "tsx": "^4.19.0",
     "typescript": "^5.7.0",
     "vite": "^8.3.8",

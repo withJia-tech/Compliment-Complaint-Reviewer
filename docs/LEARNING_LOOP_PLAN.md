@@ -14,7 +14,7 @@ interfaces, files and tests for this codebase. Implement a slice only when the o
 | Line of work | Where | State |
 |---|---|---|
 | `main` | `6b8437d` (PR #4 merged) | Rules triage, template drafter, fixture provider, no auto-send. CI: typecheck, tests, build, scan idempotency. |
-| Verified approval-to-send | draft PR #5, `codex/verified-approval-send` @ `f104a9d` | Pins source and facts, validates final text, records send intent, separates `publish_failed` from `publish_unknown` (B3 at the fixture boundary), cross-process writer lock (part of B6), hosted browser-only demo, Dataset 2. **Unmerged.** |
+| Verified approval-to-send | PR #5, squash-merged to `main` as `809c0ef` (2026-11-13) | Pins source and facts, validates final text, records send intent, separates `publish_failed` from `publish_unknown` (B3 at the fixture boundary), cross-process writer lock (part of B6), hosted browser-only demo, Dataset 2. **Merged.** |
 | Classifier, evaluation and security gates | `claude/golden-risk-classifier-v1` (no PR yet) | Golden dataset v1 (49 fixtures, **approved 2026-11-13**), normalised matching and guards, second reader (Haiku with code-routed escalation to Sonnet), golden evaluation gate with threshold ratchet, reader-identity check and a 1¢/review cost limit, gitleaks, npm audit and signatures, CodeQL, log-leak check, skipped-test check, SHA-pinned actions. **Unmerged.** |
 | Assurance contracts v0.5 | draft PR #3 | Compile-fails against `main`; port its checks, do not merge (CLAUDE.md). |
 
@@ -70,11 +70,13 @@ golden v2 (D4).
 
 PR 0 is new: the plan cannot start until the two unmerged lines are one.
 
-### PR 0 — One base
+### PR 0 — One base  *(done on this branch, 2026-11-13)*
 
-Merge both lines in the order the owner picks (D1), resolving the seven conflicts as above.
-Done when: CI (all gates) is green on the merged `main`; the scan-with-reader test passes; D3 is
-applied to Dataset 2.
+The owner chose PR #5 first (D1). `main` was merged into this branch with the conflicts resolved:
+the scan keeps `triageReview`, and a test fails if a scan with a reader leaves any review with text
+unread (checked by reverting the line: 3 tests fail). The owner had already confirmed Dataset 2
+(PR #5's description), so D3 is decided. Remaining: open the PR for this branch and get CI green
+on it, which needs the owner's evaluation run.
 
 ### PR 1 — Release manifest, metric registry, baseline inventory
 
@@ -197,9 +199,9 @@ including where OAuth tokens live; see the proposal in `docs/DECISIONS.md`).
 
 | # | Decision | Blocks | Recommendation |
 |---|---|---|---|
-| D1 | Merge order of PR #5 and this branch | PR 0 | This branch first: its gates (evaluation, gitleaks, CodeQL, log-leak) then check PR #5 when it rebases. Either order works if `triageReview` survives the merge. |
+| D1 | Merge order of PR #5 and this branch | PR 0 | **Decided:** PR #5 first (merged 2026-11-13). |
 | D2 | Who is the second, independent adjudicator for high-risk labels while there is one person? | PR 3 holdout, any promotion from live data | A second trusted human for high-risk and ambiguous labels only. A model cannot be one. Without a second person, live-derived labels stay development-only and cannot satisfy a gate. |
-| D3 | Dataset 2 (real reviews of a named business, reviewer names, hosted demo) | PR 0 / PR #5 merge | Replace with synthetic look-alikes before merge. If the repo is or was public, also decide whether the history needs purging. |
+| D3 | Dataset 2 (real reviews of a named business, reviewer names, hosted demo) | — | **Decided by the owner** before PR #5 ("added to this public repository after the user's confirmation"). Still conflicts with the plan's no-production-cases rule and CLAUDE.md's no-archive rule; worth revisiting before any real customer's data is involved. |
 | D4 | Critical categories and their numbers: which categories get their own recall gate, `minCases`, floors and allowed regression | PR 1 `approved: true` | Safety, medical, discrimination, legal, fraud as critical. Golden v2 with at least 59 cases per critical category if the target is "under 5% misses with 95% confidence". |
 | D5 | Who operates, owns risk, adjudicates, promotes and rolls back | PR 4 authority, PR 5 | At this stage the owner holds all roles; write that down as an accepted exception, since separation of duties cannot hold with one person. |
 | D6 | Live data: what may be kept or reused, for how long, where, and how deletion propagates | PR 2 live, PR 3 live | Keep references and hashes, fetch text from Google when needed (B5). Check Google's terms and the local data-protection law that applies to the business. |

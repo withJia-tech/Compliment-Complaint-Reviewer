@@ -17,3 +17,6 @@ next-env.d.ts
 eval-report/
 test-results/
 logs/
+
+# Isolated synthetic sessions; each demo launch starts fresh.
+/data/demo-sessions/

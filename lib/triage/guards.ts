@@ -56,7 +56,7 @@ function raise(result: TriageResult, code: ReasonCode): TriageResult {
 }
 
 /** Guards that always apply, with or without a second reader. */
-export function applyGuards(result: TriageResult, review: Review): TriageResult {
+export function applyGuards(result: TriageResult, review: Pick<Review, "text">): TriageResult {
   let out = result;
   if (hasPersonalInfo(review.text)) out = raise(out, "personal_info");
   if (hasLink(review.text)) out = raise(out, "contains_link");
@@ -68,6 +68,6 @@ export function applyGuards(result: TriageResult, review: Review): TriageResult 
  * Applies only when no second reader is available: a review nobody could read
  * is never marked safe to clear in one click.
  */
-export function applyNoReaderGuard(result: TriageResult, review: Review): TriageResult {
+export function applyNoReaderGuard(result: TriageResult, review: Pick<Review, "text">): TriageResult {
   return isNonLatinScript(review.text) ? raise(result, "unreadable") : result;
 }

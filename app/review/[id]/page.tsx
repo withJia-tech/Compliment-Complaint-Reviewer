@@ -1,13 +1,10 @@
+import { RemedyForm } from "@/app/components/RemedyForm";
+import { ReplyEditor } from "@/app/components/ReplyEditor";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ActionBadge } from "@/app/components/ActionBadge";
 import { AppHeader } from "@/app/components/AppHeader";
 import { RiskBadge } from "@/app/components/RiskBadge";
-import {
-  recordRemedyAction,
-  rejectAction,
-  sendReplyFromDetailAction,
-} from "@/app/review/[id]/actions";
 import { THEME_LABELS } from "@/lib/insights/aggregate";
 import { confidenceBand } from "@/lib/triage/confidence";
 import { loadHeaderData, loadQueueRows } from "@/lib/queueData";
@@ -23,21 +20,20 @@ const CHANNEL_LABELS: Record<string, string> = {
   in_person: "In person",
 };
 
-export default async function ReviewDetailPage({ params }: { params: Promise<{ id: string }> }) {
+export default async function ReviewDetailPage({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}) {
   const { id } = await params;
   const rows = loadQueueRows();
   const row = rows.find((candidate) => candidate.review.id === id);
   if (!row) {
     notFound();
   }
-  const { review, triage, draft, approval } = row;
+  const { review, triage, draft, approval, version } = row;
   const header = loadHeaderData(rows);
   const auditTrail = auditRepo.listByReviewId(id);
-  const decided = Boolean(approval && approval.status !== "pending");
-
-  const boundSend = sendReplyFromDetailAction.bind(null, id);
-  const boundReject = rejectAction.bind(null, id);
-  const boundRemedy = recordRemedyAction.bind(null, id);
 
   return (
     <>
@@ -65,7 +61,10 @@ export default async function ReviewDetailPage({ params }: { params: Promise<{ i
         <section>
           <h2>Triage</h2>
           <p>
-            <RiskBadge riskLevel={triage.riskLevel} sensitive={triage.sensitive} />{" "}
+            <RiskBadge
+              riskLevel={triage.riskLevel}
+              sensitive={triage.sensitive}
+            />{" "}
             <ActionBadge action={triage.recommendedAction} />
           </p>
           <p>{REASON_CODE_EXPLANATIONS[triage.reasonCodes[0]]}</p>
@@ -90,70 +89,44 @@ export default async function ReviewDetailPage({ params }: { params: Promise<{ i
             </p>
           )}
           <p>
-            Rule strength: {confidenceBand(triage.confidence)} &middot; Policy version:{" "}
-            {triage.policyVersion}
+            Rule strength: {confidenceBand(triage.confidence)} &middot; Policy
+            version: {triage.policyVersion}
           </p>
         </section>
 
         {draft && (
           <section>
             <h2>Reply</h2>
-            {decided ? (
-              <>
-                <p>{approval?.finalText ?? draft.text}</p>
-                <p className="decided-note">
-                  {approval?.status === "rejected" ? "Skipped" : "Sent"}
-                  {approval?.reason ? ` — ${approval.reason}` : ""}
-                </p>
-              </>
-            ) : (
-              <form action={boundSend}>
-                <textarea name="replyText" defaultValue={draft.text} rows={4} />
-                <button type="submit">Send reply</button>
-              </form>
-            )}
-            <p className="facts-cited">
-              Facts cited: {draft.factsUsed.length > 0 ? draft.factsUsed.join(", ") : "none"}
-            </p>
-            {!decided && (
-              <form action={boundReject} className="reject-form">
-                <input name="reason" type="text" placeholder="Reason for skipping (optional)" />
-                <button type="submit" className="btn-secondary">
-                  Skip
-                </button>
-              </form>
-            )}
+            <ReplyEditor
+              key={version}
+              reviewId={id}
+              draft={draft}
+              approval={approval}
+              version={version ?? ""}
+            />
           </section>
         )}
 
         <section>
           <h2>Goodwill remedy</h2>
           <p className="page-sub">
-            Vouchers and other goodwill are settled outside this app. Recording one here only notes
-            it in the audit trail — nothing is sent, and it never appears in the public reply.
+            Vouchers and other goodwill are settled outside this app. Recording
+            one here only notes it in the audit trail — nothing is sent, and it
+            never appears in the public reply.
           </p>
           {approval?.remedy ? (
             <p className="remedy-note">
               <strong>{approval.remedy.note}</strong> &middot; settled via{" "}
-              {CHANNEL_LABELS[approval.remedy.channel] ?? approval.remedy.channel} &middot; recorded{" "}
+              {CHANNEL_LABELS[approval.remedy.channel] ??
+                approval.remedy.channel}{" "}
+              &middot; recorded{" "}
               {new Date(approval.remedy.recordedAt).toLocaleString("en-GB", {
                 dateStyle: "medium",
                 timeStyle: "short",
               })}
             </p>
           ) : (
-            <form action={boundRemedy} className="remedy-form">
-              <input name="note" type="text" placeholder="e.g. offered a £10 voucher" />
-              <select name="channel" defaultValue="email">
-                <option value="email">Email</option>
-                <option value="whatsapp">WhatsApp</option>
-                <option value="phone">Phone</option>
-                <option value="in_person">In person</option>
-              </select>
-              <button type="submit" className="btn-secondary">
-                Record remedy
-              </button>
-            </form>
+            <RemedyForm reviewId={id} />
           )}
         </section>
 

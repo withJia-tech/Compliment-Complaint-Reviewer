@@ -80,28 +80,26 @@ approved **unedited**, and the golden set holds a negative case for each way it 
 (sarcasm, "5 stars but…", an owner-visible edit). That evidence is the way out: if shadow mode
 disagrees with the owner, we have lost nothing.
 
-### B2 — Validation stage  *(next)*
+### B2 — Validation stage (partial implementation)
 
-Check a draft, and any owner edit, before it can be sent. First failing test: an owner edit that
-adds "we'll refund you" is flagged before publishing and the send is blocked, with the reason
-shown — the owner's words are not silently rewritten. Port the deterministic checks from
-`feat/assurance-contracts-v0.5`; do **not** merge that branch as it stands (it imports the removed
-`ESCALATION_KEYWORDS`, and still matches on substrings).
+Implemented in the verified-send slice: source/draft/facts freshness checks, explicit human
+confirmation, bounded English checks on both drafts and edits, visible refusal messages, and no
+blank-edit fallback. Semantic claim provenance, multilingual validation and manager identity are
+still release gates. See [VERIFIED_SEND.md](VERIFIED_SEND.md). Do not merge the older assurance
+branch unchanged.
 
-### B3 — Publish failure handling
+### B3 — Publish failure handling (implemented for the fixture boundary)
 
-`sendReply` marks a review approved even if the provider returns `success: false`. Impossible with
-the fixture, certain with Google. Needs a failure audit action and a retry path. Do it with the
-provider contract tests (B4's neighbour), not before. *Status:* draft PR #5
-(`codex/verified-approval-send`) implements this for the fixture boundary, plus a cross-process
-writer lock (B6). It is not merged, and it conflicts with this branch in seven files.
+Confirmed provider failure records `publish_failed`; exceptions or incomplete receipts record
+`publish_unknown`. Persisted intent blocks duplicate retries after process restart. Reconciliation
+never sends and only conclusive non-publication allows human retry. The stateless fixture cannot
+resolve an interrupted send. Live provider semantics and operational testing remain unverified. Merged in PR #5 (2026-11-13), with a cross-process writer lock (part of B6).
 
 ### B4 — Existing-reply awareness
 
 Google's review resource carries the current reply. Reviews already answered must not enter the
 queue — otherwise the first scan of a live account floods it with every old review — and "answered"
-should be read from Google rather than inferred locally. Also makes the double-send guard
-cross-process safe in practice, because Google's answer wins.
+should be read from Google rather than inferred locally. A read-before-write alone does not guarantee cross-process exclusion or resolve an in-flight write.
 
 ### B5 — Audit evidence by reference
 
@@ -110,9 +108,10 @@ data-residency gap. Additive to the schema (decision 7), so it can wait for the 
 
 ### B6 — Cross-process write safety
 
-`auditRepo.append` is read-modify-write, so the CLI scan and the dev server can drop each other's
-records. The in-process double-send guard does not cover this. Fix with append-only JSONL plus a
-lock, or by moving to SQLite — the repo layer exists to make that a small change.
+Scans and decision entry points now share an exclusive filesystem writer lock. This protects the
+existing local store without choosing a database. Crash recovery is manual and conservative;
+no distributed locking, power-loss durability or multi-file transaction guarantee is claimed.
+Low-level repository methods must remain behind the guarded entry points.
 
 ### B7 — Capture owner edits; offline evaluation
 

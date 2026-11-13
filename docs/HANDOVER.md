@@ -13,16 +13,17 @@ Written 2026-11-13. Read `CLAUDE.md`, `SPEC.md`, `docs/DECISIONS.md` and
 
 ## Where things stand
 
-- Branch `claude/golden-risk-classifier-v1` (pushed, **no PR yet**). Typecheck, 209 tests (none
-  skipped) and build pass. `npm run eval:gate` **fails on purpose** until the owner commits an
-  evaluation run.
+- PR #5 (verified send, Dataset 2, hosted demo) is **merged** to `main` (`809c0ef`). `main` is merged
+  into branch `claude/golden-risk-classifier-v1` (pushed, **no PR yet**): typecheck, 259 tests (none
+  skipped), build, scan idempotency and the log-leak check pass. `npm run eval:gate` **fails on
+  purpose** until the owner commits an evaluation run.
 - **B11 built, not yet proven.** Haiku 5.5 reads every review; code (`routing-v1`) escalates the
   uncertain ones to Sonnet 5.5 (decision 15). The gate checks the exact reader id and cost per
   review, max 1¢ (decision 16). Quality thresholds unchanged.
 - **Golden v1 approved** (decision 17). Frozen: changes need a v2.
 - **OAuth token storage:** assessed, recommendation recorded as *proposed* in `DECISIONS.md`.
 - **Learning loop:** reconciled plan in `docs/LEARNING_LOOP_PLAN.md`, planning only, with
-  decisions D1–D8 for the owner.
+  decisions D2 and D4–D8 still open (D1 and D3 decided).
 
 ## Waiting on the owner
 
@@ -35,8 +36,7 @@ Written 2026-11-13. Read `CLAUDE.md`, `SPEC.md`, `docs/DECISIONS.md` and
    ```
    Optional comparison (not committed): `CCR_READER_MODEL=claude-sonnet-5-5
    CCR_READER_ESCALATION_MODEL=off npm run read:golden -- --yes --out /tmp/sonnet.json`.
-2. Decisions D1–D8 in `docs/LEARNING_LOOP_PLAN.md`; D1 (merge order) and D3 (Dataset 2 on PR #5)
-   come first.
+2. Decisions D2 and D4–D8 in `docs/LEARNING_LOOP_PLAN.md` (D1 and D3 are decided).
 3. Google route for B12 (API with OAuth, MCP connector, or both), and apply for Business Profile
    API access: approval is the long pole.
 4. Repo settings: make the CI checks **required** on `main`; turn on secret scanning with push
@@ -46,7 +46,7 @@ Written 2026-11-13. Read `CLAUDE.md`, `SPEC.md`, `docs/DECISIONS.md` and
 
 - If the gate fails on quality: fix routing (bump `ROUTING_VERSION`) or the prompt; never loosen
   `rules_plus_reader` thresholds.
-- PR 0 of the learning-loop plan (merge the two lines, keep `triageReview` in the scan).
+- Open the PR for this branch once the evaluation run is committed (the gate fails until then).
 - B10 tenant key, then B12.
 
 ## Environment notes

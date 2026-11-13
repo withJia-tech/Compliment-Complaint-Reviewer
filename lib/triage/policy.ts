@@ -1,4 +1,4 @@
-import type { TriagePolicy } from "@/lib/interfaces/triagePolicy";
+import type { ClassificationInput, TriagePolicy } from "@/lib/interfaces/triagePolicy";
 import type { Review, ReviewTheme, RiskLevel, TriageResult } from "@/lib/types";
 import { applyGuards } from "@/lib/triage/guards";
 import { findComplaintHits, findHits } from "@/lib/triage/match";
@@ -75,11 +75,11 @@ function starBandRisk(stars: Review["stars"]): RiskLevel {
  * with a real score without changing any caller.
  */
 export class DefaultTriagePolicy implements TriagePolicy {
-  classify(review: Review): TriageResult {
+  classify(review: ClassificationInput): TriageResult {
     return applyGuards(this.classifyByKeywords(review), review);
   }
 
-  private classifyByKeywords(review: Review): TriageResult {
+  private classifyByKeywords(review: ClassificationInput): TriageResult {
     // Matched against the original text plus a normalised copy, so spaced,
     // dotted, zero-width and digit-for-letter spellings still match.
     const text = matchableText(review.text);

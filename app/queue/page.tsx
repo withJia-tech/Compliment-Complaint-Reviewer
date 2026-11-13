@@ -1,3 +1,5 @@
+import Link from "next/link";
+import { withinReviewWindow } from "@/lib/triage/reviewWindow";
 import { AppHeader } from "@/app/components/AppHeader";
 import { QueueRow } from "@/app/components/QueueRow";
 import { loadHeaderData, loadQueueRows } from "@/lib/queueData";
@@ -5,16 +7,22 @@ import { REASON_CODE_EXPLANATIONS } from "@/lib/triage/explain";
 
 export const dynamic = "force-dynamic";
 
-export default function QueuePage() {
-  const rows = loadQueueRows();
-  const header = loadHeaderData(rows);
+export default async function QueuePage({ searchParams }: { searchParams: Promise<{ view?: string }> }) {
+  const showCompleted = (await searchParams).view === "completed";
+  const all = loadQueueRows();
+  const header = loadHeaderData(all);
+  const rows = all.filter(row => {
+    const completed = row.approval && ["approved", "edited_approved", "rejected", "no_response_required"].includes(row.approval.status);
+    return showCompleted ? completed : !completed && (withinReviewWindow(row.review) || ["publishing", "publish_unknown"].includes(row.approval?.status ?? ""));
+  });
 
   return (
     <>
       <AppHeader {...header} currentPath="/queue" />
       <main>
         <div className="page-head">
-          <h1>Daily queue</h1>
+          <h1>{showCompleted ? "Completed reviews" : "Daily queue"}</h1>
+          <p><Link href="/queue">Active</Link> · <Link href="/queue?view=completed">Completed decisions</Link></p>
           <p className="page-sub">
             {header.pendingCount === 0
               ? "Nothing waiting on you."
@@ -23,7 +31,7 @@ export default function QueuePage() {
         </div>
 
         {rows.length === 0 ? (
-          <p>No reviews yet. Run a scan to populate the queue.</p>
+          <p>No reviews in this view. Completed decisions remain available separately.</p>
         ) : (
           <table>
             <thead>
@@ -37,9 +45,10 @@ export default function QueuePage() {
               </tr>
             </thead>
             <tbody>
-              {rows.map(({ review, triage, draft, approval }) => (
+              {rows.map(({ review, triage, draft, approval, version }) => (
                 <QueueRow
                   key={review.id}
+                  version={version ?? ""}
                   review={review}
                   triage={triage}
                   draft={draft}
