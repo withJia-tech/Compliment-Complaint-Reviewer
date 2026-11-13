@@ -102,3 +102,18 @@ Read from Google at the moment of need. No local archive. Needs B7's data to be 
 
 Before live OAuth, add a tenant key to the repos so multi-location is a migration, not a rewrite.
 This is what keeps decision 8 a two-way door.
+
+### B11 — Cheaper reader model  *(next)*
+
+Switch the second reader's default from Claude Opus 5.5 (about a cent per review) to a cheaper
+model such as Claude Sonnet 5.5 (about half) or Claude Haiku 5.5 (far less). Only if the
+evaluation gate still passes with unchanged `rules_plus_reader` thresholds. First close the gate
+gap: it checks the readings' prompt version but not their model, so it must also fail when the
+committed run was made with a different model from the configured default.
+
+### B12 — Live Google reviews  *(after B10)*
+
+Read the owner's real reviews through Google's Business Profile API with OAuth (scope
+`business.manage`), or through an MCP connector if one fits. Needs the tenant key (B10) first,
+and a decision on where OAuth refresh tokens live, since storing them is a one-way door. MCP stays
+a way to read, never the scheduler or system of record (SPEC non-goal).
