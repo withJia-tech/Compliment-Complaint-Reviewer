@@ -507,3 +507,16 @@ input[type="text"] {
 .desk-decision { padding-top: .3rem; line-height: 1.6; }
 .review-desk button:focus-visible, .review-desk summary:focus-visible, .review-desk textarea:focus-visible { outline: 3px solid #5883a4; outline-offset: 3px; }
 @media (max-width: 720px) { .desk-header { display: block; } .desk-demo { justify-items: start; margin-top: 1rem; display: flex; align-items: center; justify-content: space-between; } .desk-review-list { max-height: 30vh; } .desk-workspace { padding: 1.1rem; } .desk-workspace-head { flex-wrap: wrap; gap: .5rem; } .desk-actions { grid-template-columns: 1fr; } }
+
+/* Dataset selection and attributed review sources. */
+.desk-dataset { display: flex; flex-wrap: wrap; align-items: center; gap: .65rem; margin: -.3rem 0 1.3rem; }
+.desk-dataset label { font-size: .8rem; font-weight: 650; }
+.desk-dataset select { max-width: 100%; padding: .5rem .7rem; }
+.desk-dataset > span { font-size: .75rem; color: var(--muted); }
+.hosted-review .desk-date, .desk-subratings { font-size: .72rem; color: var(--muted); }
+.desk-review-text { white-space: pre-line; max-height: 15rem; overflow-y: auto; }
+.desk-original-reply { font-size: .83rem; margin: 0 0 1.3rem; }
+.desk-original-reply blockquote { white-space: pre-line; margin-top: .8rem; max-height: 20rem; overflow-y: auto; }
+.desk-facts p { line-height: 1.6; }
+.desk-tabs button { white-space: nowrap; }
+@media (max-width: 720px) { .desk-dataset > span { flex-basis: 100%; } }
