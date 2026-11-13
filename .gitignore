@@ -14,3 +14,6 @@ next-env.d.ts
 # blocked). The commits themselves are the source of truth.
 *.patch
 .env
+eval-report/
+test-results/
+logs/

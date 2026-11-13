@@ -21,6 +21,7 @@ rubrics) and `docs/DECISIONS.md` (decision log + backlog) before changing behavi
 ```bash
 npm install
 npm run typecheck && npm test && npm run build   # all three must pass; CI runs the same + an idempotency gate
+npm run eval:gate   # golden evaluation gate (CI runs it; fails on any threshold regression)
 npm run scan        # seed data/store/*.json from fixtures (store is gitignored)
 npm run dev         # http://localhost:3000
 ```
@@ -45,6 +46,9 @@ npm run dev         # http://localhost:3000
 - Tests that touch the store set `process.env.CCR_STORE_DIR` to a temp dir (see existing tests).
 - Scan tests use timestamps **relative to `Date.now()`** — `listSince` compares against the real
   clock, so fixed dates silently stop being "new" and assertions pass against an empty scan.
+- Never skip a test to get green: CI fails on any skipped test. Never loosen `eval/thresholds.json`
+  without filling in `loosening_reason`; only tighten it as results improve.
+- Never print review text, personal details or keys in logs; CI scans logs and reports for them.
 - Write the failing test first; for a fix, confirm the test fails without it (mutation check).
 - Every bug becomes a golden or unit case before the fix lands.
 

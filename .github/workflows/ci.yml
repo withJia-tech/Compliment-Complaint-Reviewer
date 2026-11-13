@@ -5,13 +5,35 @@ on:
     branches: [main]
   pull_request:
 
-jobs:
-  check:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
+# Read-only by default. No job here needs to write; CodeQL (codeql.yml) is the
+# only workflow granted more, and only security-events: write.
+permissions:
+  contents: read
 
-      - uses: actions/setup-node@v4
+# Explicit bash runs steps with -eo pipefail. Without it a failing command
+# piped into `tee` would still pass the step.
+defaults:
+  run:
+    shell: bash
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+# Third-party actions are pinned to full commit SHAs (tag in the comment).
+# Dependabot (.github/dependabot.yml) proposes updates to the pins.
+
+jobs:
+  test:
+    name: Typecheck, tests, build
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version: "22"
           cache: npm
@@ -22,17 +44,127 @@ jobs:
       - name: Typecheck
         run: npm run typecheck
 
-      - name: Test
-        run: npm test
+      - name: Unit and golden tests
+        run: |
+          mkdir -p logs test-results
+          npx vitest run --reporter=default --reporter=json --outputFile=test-results/vitest.json 2>&1 | tee logs/tests.log
+
+      # A green check must mean every test ran: no skipped, pending or todo tests.
+      - name: No skipped tests
+        run: npx tsx scripts/ci/noSkippedTests.ts test-results/vitest.json
 
       - name: Build
-        run: npm run build
+        run: npm run build 2>&1 | tee logs/build.log
 
       # The scan must stay re-runnable: a second pass over unchanged fixtures
       # should find nothing new. A regression here means the daily worker
       # would reprocess and re-notify every review, every day.
       - name: Daily scan is idempotent
+        env:
+          CCR_READER: "off"
         run: |
-          npm run scan
-          npm run scan | tee second-scan.log
-          grep -q "0 review(s) processed" second-scan.log
+          npm run scan | tee logs/scan-1.log
+          npm run scan | tee logs/scan-2.log
+          grep -q "0 review(s) processed" logs/scan-2.log
+
+      - name: No secrets, review text or personal details in logs
+        if: always()
+        run: npx tsx scripts/ci/checkLogLeaks.ts logs test-results
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: test-results
+          path: test-results/
+          if-no-files-found: error
+          retention-days: 30
+
+  eval:
+    name: Golden evaluation gate
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          # Full history, so the thresholds can be compared with the base branch.
+          fetch-depth: 0
+
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: "22"
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      # Thresholds may only tighten. Compare with the base branch on a pull
+      # request, or with the previous commit on a push to main.
+      - name: Fetch base thresholds
+        env:
+          BASE_REF: ${{ github.base_ref }}
+        run: |
+          if [ -n "$BASE_REF" ]; then base="origin/$BASE_REF"; else base="HEAD^"; fi
+          git show "$base:eval/thresholds.json" > base-thresholds.json 2>/dev/null || rm -f base-thresholds.json
+          if [ -f base-thresholds.json ]; then echo "Comparing thresholds with $base"; else echo "No thresholds on $base yet"; fi
+
+      # Runs the golden dataset with rules only and with the second reader
+      # (replayed from the committed evaluation run; no key in CI). Fails if
+      # any metric breaches eval/thresholds.json, if the evaluation run is
+      # missing or stale, or if a threshold was loosened without a reason.
+      - name: Evaluation gate
+        run: |
+          mkdir -p logs
+          npm run eval:gate -- --base base-thresholds.json 2>&1 | tee logs/eval.log
+
+      - name: No secrets, review text or personal details in logs or report
+        if: always()
+        run: npx tsx scripts/ci/checkLogLeaks.ts logs eval-report
+
+      - name: Upload evaluation report
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: eval-report
+          path: eval-report/
+          if-no-files-found: error
+          retention-days: 90
+
+  security:
+    name: Secret scan and dependency audit
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      GITLEAKS_VERSION: "8.30.1"
+      # sha256 of gitleaks_8.30.1_linux_x64.tar.gz from the release's checksums file.
+      GITLEAKS_SHA256: "551f6fc83ea457d62a0d98237cbad105af8d557003051f41f3e7ca7b3f2470eb"
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: "22"
+          cache: npm
+
+      # Scans the whole git history, not just this change. Findings are
+      # redacted in the log, so the scan itself cannot leak what it finds.
+      - name: Secret scan (gitleaks, checksum-verified)
+        run: |
+          curl -sSfL -o gitleaks.tgz \
+            "https://github.com/gitleaks/gitleaks/releases/download/v${GITLEAKS_VERSION}/gitleaks_${GITLEAKS_VERSION}_linux_x64.tar.gz"
+          echo "${GITLEAKS_SHA256}  gitleaks.tgz" | sha256sum --check --strict
+          tar -xzf gitleaks.tgz gitleaks
+          ./gitleaks git . --redact --no-banner --exit-code 1
+
+      - name: Dependency audit
+        run: npm audit --audit-level=moderate
+
+      - name: Install dependencies without running install scripts
+        run: npm ci --ignore-scripts
+
+      - name: Verify registry signatures of installed packages
+        run: npm audit signatures

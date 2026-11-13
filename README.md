@@ -123,6 +123,27 @@ Goodwill remedies — vouchers and the like — are settled outside this app ove
 WhatsApp. The detail page records that one was offered so the audit trail is complete, but
 nothing is sent from here and no remedy is ever mentioned in the published reply.
 
+## Release gates in CI
+
+AI behaviour is treated as a release-gated capability, not just code. Every pull request runs:
+
+| Check | What fails it |
+|---|---|
+| **Golden evaluation gate** | Any metric in [`eval/thresholds.json`](eval/thresholds.json) regresses, in either mode: keyword rules only, or rules plus the second reader replayed from the committed evaluation run. A missing or stale evaluation run fails; it is never a pass. A threshold loosened against the base branch fails unless a reason is written down. The report (fixture ids only, never review text) is attached to the run and shown in its summary. |
+| **Typecheck, tests, build** | Any failure, or **any skipped test**: a green check means every test ran. |
+| **Secret scan** | gitleaks (checksum-verified binary) finds a credential anywhere in git history. |
+| **Dependency audit** | `npm audit` finds a moderate or worse vulnerability, or a package fails registry signature checks. |
+| **CodeQL** | Static analysis of the TypeScript and the workflow files themselves. |
+| **Log leak check** | A log or report contains an API key, a token, a golden review's text or a planted personal detail. |
+
+Workflows run with read-only permissions (only CodeQL may write security alerts), every action
+is pinned to a full commit SHA, and Dependabot proposes pin updates. CI never holds an API key:
+the reader is replayed from saved readings, so any run reproduces from a clean checkout.
+
+Metrics the gate tracks: exact match rate, sensitive recall, unsafe quick approves (a review that
+needs a read marked safe to clear: the costly miss), false alarms (praise held back), and reader
+failures.
+
 ## Scripts
 
 | Command | Description |

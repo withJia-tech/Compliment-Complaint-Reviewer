@@ -1,0 +1,22 @@
+{
+  "$comment": "Release gate for triage behaviour on tests/fixtures/golden/risk_classifier_v1.jsonl. CI fails if any metric breaches its limit, and on a pull request fails if any limit is loosened compared with the base branch. Tighten limits as the classifier improves; to loosen one deliberately, fill in loosening_reason and it is printed in the run summary.",
+  "dataset": "tests/fixtures/golden/risk_classifier_v1.jsonl",
+  "readings": "tests/fixtures/golden/readings/risk_classifier_v1.json",
+  "loosening_reason": "",
+  "modes": {
+    "rules_only": {
+      "exactMatchRate": { "min": 0.59 },
+      "sensitiveRecall": { "min": 0.5 },
+      "unsafeQuickApprove": { "max": 6 },
+      "falseAlarm": { "max": 1 },
+      "readerFailures": { "max": 0 }
+    },
+    "rules_plus_reader": {
+      "exactMatchRate": { "min": 0.9 },
+      "sensitiveRecall": { "min": 1 },
+      "unsafeQuickApprove": { "max": 0 },
+      "falseAlarm": { "max": 1 },
+      "readerFailures": { "max": 0 }
+    }
+  }
+}

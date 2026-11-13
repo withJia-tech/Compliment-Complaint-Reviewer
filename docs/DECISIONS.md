@@ -24,6 +24,7 @@ here is judged by one question — *if we are wrong, what does it cost to undo?*
 | 10 | **Second reader can only raise, and fails closed** | Two-way | A model reading is added on top of the keyword result; it can never lower one. Any failure holds the review. So the worst a bad model does is cost the owner a read, never mark a dangerous review safe. Removing the reader returns to rules only. |
 | 11 | **Bring your own key**; keys live only in each owner's environment | Two-way | No hosted service, no stored secrets, no tenant model needed for keys. A hosted version that stores other people's keys would need encryption and a tenant key (see 8), so it waits for real demand. |
 | 12 | Golden dataset versions are immutable once approved | Two-way | Pinned by checksum. A change is a new version file, so past evaluation runs stay comparable. |
+| 14 | **Triage behaviour is release-gated** | Two-way | `npm run eval:gate` fails CI when a metric in `eval/thresholds.json` regresses, when the evaluation run is missing or stale, or when a limit is loosened without a stated reason. CI holds no key: it replays the committed run, so results reproduce from a clean checkout. |
 | 13 | Gaps are fixed, not catalogued | Two-way | The handover proposed `knownGap` markers. The owner chose to make the classifier reason through them instead, so the dataset states the target and the second reader is the fix. |
 
 The three to watch are **6, 7 and 8**. Everything else can be changed in an afternoon.

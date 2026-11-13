@@ -3,9 +3,8 @@ import { readFileSync } from "node:fs";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
 import { DefaultTriagePolicy } from "@/lib/triage/policy";
-import { CachedReviewReader, loadReadingCache } from "@/lib/triage/reader/cachedReader";
 import { triageReview } from "@/lib/triage/triageReview";
-import type { RecommendedAction, Review, RiskLevel, TriageResult } from "@/lib/types";
+import type { RecommendedAction, Review, RiskLevel } from "@/lib/types";
 
 /**
  * Versioned golden dataset for the risk classifier.
@@ -17,12 +16,7 @@ import type { RecommendedAction, Review, RiskLevel, TriageResult } from "@/lib/t
  */
 const DIR = path.resolve(__dirname, "../../tests/fixtures/golden");
 const FILE = "risk_classifier_v1.jsonl";
-/**
- * Saved model readings for this dataset: one evaluation run, produced by
- * `npm run read:golden` with the owner's own key. Replaying them makes the
- * test deterministic and free. Absent until that run has been done.
- */
-const READINGS = path.join(DIR, "readings", "risk_classifier_v1.json");
+
 
 const CATEGORIES = [
   "safety",
@@ -121,37 +115,10 @@ describe("risk classifier golden dataset — integrity", () => {
   });
 });
 
-function expectMatches(fixture: Fixture, result: TriageResult) {
-  expect({
-    action: result.recommendedAction,
-    riskLevel: result.riskLevel,
-    sensitive: result.sensitive,
-  }).toEqual({
-    action: fixture.expected_primary_action,
-    riskLevel: fixture.expected_risk_level,
-    sensitive: fixture.expected_sensitive,
-  });
-  if (fixture.expected_sensitive) {
-    const category = result.reasonCodes[0].replace("sensitive_", "");
-    expect(fixture.expected_categories).toContain(category);
-  }
-}
-
 const policy = new DefaultTriagePolicy();
-const cache = loadReadingCache(READINGS);
-
-/**
- * The headline: keyword rules plus the second reader, replayed from the saved
- * evaluation run. Every fixture must match. Skipped (not failed) until the
- * owner has run `npm run read:golden` once with their key.
- */
-describe.skipIf(cache === null)("risk classifier golden dataset — rules + reader", () => {
-  const reader = cache ? new CachedReviewReader(cache) : null;
-
-  it.each(fixtures)("$fixture_id [$family] $notes", async (fixture) => {
-    expectMatches(fixture, await triageReview(toReview(fixture), policy, reader));
-  });
-});
+// The rules + reader replay of the committed evaluation run is gated by
+// `npm run eval:gate` (scripts/evalGate.ts), not here, so that a missing run
+// fails CI loudly instead of showing up as skipped tests.
 
 /**
  * Keyword rules and deterministic guards alone, with no reader (the mode
