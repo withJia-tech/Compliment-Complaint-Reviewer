@@ -29,7 +29,9 @@ Run `npm run build:comparison` to generate `comparison/dist`. See
 [hosting status and comparison procedure](docs/HOSTING_COMPARISON.md).
 Reviews are limited to the past six calendar months. Human decisions move items out
 of Active into Completed; **No response required** is an explicit reviewed decision.
-The hosted demo uses sample data and tab memory, with no external publication.
+The hosted demo uses tab memory, with no external publication. Dataset 2 (the default)
+contains five supplied real review-and-owner-reply pairs; Dataset 1 retains synthetic reviews.
+See [Dataset 2 provenance, dates and classifier boundary](docs/DATASET_2.md).
 
 ## Client demonstration
 

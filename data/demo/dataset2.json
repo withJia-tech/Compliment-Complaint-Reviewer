@@ -1,0 +1,207 @@
+{
+  "id": "dataset2",
+  "version": "dataset2-v1",
+  "businessName": "Tiong Bahru Bakery",
+  "sourceKind": "user-supplied Google Maps screenshots",
+  "receivedAt": "2026-11-13",
+  "capturedAt": null,
+  "cases": [
+    {
+      "id": "dataset2_daniel",
+      "businessName": "Tiong Bahru Bakery",
+      "author": "Daniel Foo",
+      "stars": 1,
+      "text": "The worst customer service.\n\nCashier cannot be bothered to engage with customer. Have the ppl ”owe him money” attitude. Refuse to speak up, black faced and kept mumbling his replies.\n\nAfter ordering, went over to pastry showcase and I spotted a piece of broken glass near the water dispenser and brought it to the attention of one of their staff. Staff was muttering ”broken glass broken glass..” like I was giving her extra work. Freaking ridiculous attitude from cashier to floor staff.\n\nWon’t be patronising anymore.",
+      "sourceDate": {
+        "label": "a month ago",
+        "ageMonthsAtCapture": 1,
+        "kind": "posted",
+        "exactDate": null
+      },
+      "subratings": {
+        "food": 3,
+        "service": 1,
+        "atmosphere": 3
+      },
+      "ownerReply": {
+        "author": "Tiong Bahru Bakery (Owner)",
+        "text": "Dear Daniel Foo,\n\nGreetings from Tiong Bahru Bakery!\n\nThank you for taking the time to share your detailed feedback with us. We truly value hearing from our customers, and we're sorry to learn about your experience during your visit.\n\nWe take feedback regarding our service seriously and would appreciate the opportunity to better understand your experience and review the matter with the relevant team.\n\nTo allow us to assist you further, we kindly invite you to write to our Customer Care team at enquiries@tiongbahrubakery.com. A representative will get back to you within 3 working days.\n\nWe appreciate your support and look forward to the opportunity to address your feedback.",
+        "dateLabel": "a month ago"
+      },
+      "sourceFiles": [
+        {
+          "file": "IMG_9411(2).jpeg",
+          "role": "customer_review",
+          "sha256": "c61b57e7a300f618221204ea5f19832d90389f55ea7ec4dd97f852be6e453b17"
+        },
+        {
+          "file": "IMG_9412(2).jpeg",
+          "role": "owner_reply",
+          "sha256": "8c1b318a941dd4c42b4e4fee13ac89bbc6cfdd258880e7e9af0d49e73e902f4b"
+        }
+      ],
+      "discoveryChecks": [
+        "Prioritise the reported broken glass; the screenshot does not establish whether the hazard was present or removed.",
+        "Keep the guest’s account of staff behaviour separate from any staff account or verified finding.",
+        "The existing reply’s contact address and three-working-day commitment are not approved facts for this demo."
+      ],
+      "proposedReply": "Thank you for flagging the broken glass you reported near the water dispenser, Daniel. That safety concern deserves careful attention. We’re sorry that you felt unheard when you raised it, and that the service left you disappointed."
+    },
+    {
+      "id": "dataset2_neo",
+      "businessName": "Tiong Bahru Bakery",
+      "author": "Neo Eng Seng (Owen)",
+      "stars": 1,
+      "text": "Missing item when ordering takeaway.\n\nOrdered 2 kouign amann, 2 almond croissant and cream shio pan.\n\nInitially, took 2 kouign amann and 1 almond croissant but saw there is a promo to get 50% off a shiopan, so requested to get another almond croissant.\n\nWhen everything is packed, we assume all is well so we took it and left.\n\nLater found out that the shop did not take another almond croissant to put in the bag.\n\nWe did wanted to take it ourselves but the cashier assured us that they can assist on that so we can proceed with payment.\n\nI tried reaching out for a refund by calling the number twice, but both reached missed call.\n\nPlease reach out to me.\n\nEDIT: Definitely did not get the cream shio pan. Added photo.",
+      "sourceDate": {
+        "label": "2 months ago",
+        "ageMonthsAtCapture": 2,
+        "kind": "posted",
+        "exactDate": null
+      },
+      "subratings": null,
+      "ownerReply": {
+        "author": "Tiong Bahru Bakery (Owner)",
+        "text": "Hi Neo Eng Seng (Owen),\n\nWe’re very sorry for the missing items in your takeaway order and for the inconvenience caused. We also apologise that you were unable to reach us by phone when trying to follow up.\n\nWe’d like to make this right. Please reach out to us at enquiries@tiongbahrubakery.com with your order details, and our team will assist you further. Thank you for bringing this to our attention.",
+        "dateLabel": "2 months ago"
+      },
+      "sourceFiles": [
+        {
+          "file": "IMG_9410(2).png",
+          "role": "customer_review",
+          "sha256": "f77ec7f7461875b02bad1ef7489e9137cd35ab8b7a1e7f21ac3a0513b9e6206d"
+        },
+        {
+          "file": "IMG_9409(2).jpeg",
+          "role": "owner_reply",
+          "sha256": "0ac2c3f76e904aec1977babbade8d1a776e7a84e51e72a66aecdec9cda669e4a"
+        }
+      ],
+      "discoveryChecks": [
+        "Clarify the missing items: the original account mentions an almond croissant; the edit specifically mentions cream shio pan.",
+        "Check authorised order and packing records. A receipt alone does not prove what was in the bag.",
+        "The guest requests a refund; any recovery decision needs business authority and a private conversation."
+      ],
+      "proposedReply": "Thank you for explaining what happened with your takeaway order. We’re sorry for the frustration described in your account of missing items and unanswered calls. We’ve noted your clarification about the cream shio pan, alongside your earlier account about the almond croissant."
+    },
+    {
+      "id": "dataset2_psm",
+      "businessName": "Tiong Bahru Bakery",
+      "author": "PS M",
+      "stars": 1,
+      "text": "Food and drink are mediocre. However, they charge 10% service charges but the customers have to look for the table themselves, queue to order at the cashier, and bring the food to their own table. The staff only bring the coffee to you. The place is stuffy and hot too. I always wonder is this 10% service charge justifiable?",
+      "sourceDate": {
+        "label": "a year ago",
+        "ageMonthsAtCapture": 12,
+        "kind": "posted",
+        "exactDate": null
+      },
+      "subratings": {
+        "food": 2,
+        "service": 1,
+        "atmosphere": 2
+      },
+      "ownerReply": {
+        "author": "Tiong Bahru Bakery (Owner)",
+        "text": "We’re so sorry to hear about your experience. Please provide us your contact details at https://go.momos.com/S35JF so that we can reach out to you personally. We'd love the opportunity to make this right.",
+        "dateLabel": "a year ago"
+      },
+      "sourceFiles": [
+        {
+          "file": "IMG_9413(2).jpeg",
+          "role": "customer_review",
+          "sha256": "83487167c2705b69e97ed8bf476b909b5413cb8e060e3aa39f3a7c165604834d"
+        },
+        {
+          "file": "IMG_9414(2).jpeg",
+          "role": "owner_reply",
+          "sha256": "fa0396e2cbdd9901f7a8e5be96e3847f5835245578becc215fdb22c300ddf557"
+        }
+      ],
+      "discoveryChecks": [
+        "The concern is the relationship between the service charge and the service experienced, alongside heat and comfort.",
+        "No approved service-charge explanation is supplied; do not invent one.",
+        "The historical contact link is shown only as part of the original reply, not as an endorsed recovery channel."
+      ],
+      "proposedReply": "Thank you for explaining the gap between the service charge and the service you experienced. Having to find a table, queue and carry your food left you questioning the value, and the heat added to your discomfort. We’re sorry the visit was disappointing."
+    },
+    {
+      "id": "dataset2_lind",
+      "businessName": "Tiong Bahru Bakery",
+      "author": "Lind Vic",
+      "stars": 1,
+      "text": "Absolutely disaster place.\nNo AC, people made to sit outside while inside host many non-buying shopper.\nYou can hear staffs literally complaining about overworking.\nTables are designed without thoughts. See photo.\nWe will stay away from this badly managed cafe as 3 coffee & a small bun fly the cost to nearly $30.\nDefinitely a rip-off place\n\nThank you for your reply.\nWe have definitely eaten better pastries than those cold items in your bakery. It is not a price issue, rather this cafe obviously has over rated itself so much that it doesn't match the actual experience. Too 👎",
+      "sourceDate": {
+        "label": "Edited a year ago",
+        "ageMonthsAtCapture": 12,
+        "kind": "edited",
+        "exactDate": null
+      },
+      "subratings": null,
+      "ownerReply": {
+        "author": "Tiong Bahru Bakery (Owner)",
+        "text": "Dear Vicki,\n\nThank you for taking the time to share your experience at Tiong Bahru Bakery. We sincerely apologize for the discomfort and disappointment you faced during your visit. Your feedback regarding the lack of air conditioning and the seating arrangements is very important to us, and we understand how frustrating it can be to feel uncomfortable while dining.\n\nWe also appreciate you bringing to our attention the concerns about our staff’s well-being and the overall management of the café. It is our goal to ensure a positive experience for both our customers and our team members, and your comments will be shared with the relevant departments for further review.\n\nRegarding your experience with pricing, we understand that value is a significant factor for our customers, and we take your input seriously as we strive to provide a satisfactory dining experience.\n\nThank you once again for your feedback. We are committed to addressing these issues and hope to have the opportunity to improve your experience in the future.",
+        "dateLabel": "a year ago"
+      },
+      "sourceFiles": [
+        {
+          "file": "IMG_9415(2).jpeg",
+          "role": "customer_review",
+          "sha256": "1b67020de8e28d36198434780caaa3f3dcb63f489f7ac4194d9cca76cde8f010"
+        },
+        {
+          "file": "IMG_9416(2).png",
+          "role": "owner_reply",
+          "sha256": "7c52c0fd48bfcaba15544f094f0afd3b8804ec159941a86f355e114543432e1b"
+        }
+      ],
+      "discoveryChecks": [
+        "Preserve the edited clarification: the grievance is the experience relative to expectations, not simply price.",
+        "Reported comments about overwork are the guest’s account, not verified staff welfare or performance findings.",
+        "The source reply says “Dear Vicki” while the displayed reviewer is Lind Vic; do not infer their identity."
+      ],
+      "proposedReply": "Thank you for clarifying that your concern is about the overall experience rather than price alone. We’re sorry the seating, heat and pastries left you disappointed. Your description of the visit helps explain why it did not meet your expectations."
+    },
+    {
+      "id": "dataset2_dwayne",
+      "businessName": "Tiong Bahru Bakery",
+      "author": "Dwayne Leong",
+      "stars": 1,
+      "text": "$26 for the tiniest big breakfast in the universe. Spinach does not look like spinach, looks like a chinese green that didn't fit at all with the rest of the dish. Mushrooms were disgusting. Sausage was good, but only came with one. Same with the eggs. Potatoes were the only thing i thought was well portioned and tasty, but all that for $26?\n\nFriend paid $22 for the most premade looking bacon pancakes in existence. Pancake texture was tough, no butter, bacon looked like it was shaved off, crisp but absolutely no chew. Portion was tiny as well.\n\nCoffee was mediocre. Very weak taste.\n\nWe will just get the croissants next time.",
+      "sourceDate": {
+        "label": "2 years ago",
+        "ageMonthsAtCapture": 24,
+        "kind": "posted",
+        "exactDate": null
+      },
+      "subratings": {
+        "food": 1,
+        "service": 3,
+        "atmosphere": 3
+      },
+      "ownerReply": {
+        "author": "Tiong Bahru Bakery (Owner)",
+        "text": "Hi Dwayne Leong, thank you for sharing your experience at Tiong Bahru Bakery. We apologize for the disappointment with the portion size and taste of your breakfast. We'll share your feedback with our team for improvement. We hope you'll give us another chance to provide you with a better dining experience.",
+        "dateLabel": "2 years ago"
+      },
+      "sourceFiles": [
+        {
+          "file": "IMG_9417(2).png",
+          "role": "customer_review",
+          "sha256": "e44d03f766ad1197b92b112fe815910f992e39bf169966af64cf2d7d17824cf6"
+        },
+        {
+          "file": "IMG_9418(1).jpeg",
+          "role": "owner_reply",
+          "sha256": "d336a7b15ff38e273f3236a0034e74e75694ddc34146e8201325c6bf9bf9a87b"
+        }
+      ],
+      "discoveryChecks": [
+        "Keep both sides of the account: the sausage and potatoes were appreciated, while portions, pancakes and coffee disappointed.",
+        "Do not assert that ingredients were substituted or food was premade; those are the guest’s impressions.",
+        "The stated prices are historical customer-reported amounts, not a current menu or approved refund amount."
+      ],
+      "proposedReply": "Thank you for the detailed feedback, Dwayne. We’re glad you enjoyed the sausage and potatoes, and we’re sorry the portions, pancakes and coffee left you disappointed with the value of breakfast. We appreciate you pointing out both what worked and what did not."
+    }
+  ]
+}

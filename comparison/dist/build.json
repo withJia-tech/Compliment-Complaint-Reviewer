@@ -1,5 +1,19 @@
 {
-  "sha256": "bb042382b1af3fa2180e1aa2a298b20cc0fca581b370fdb2b254b7401172a412",
+  "sha256": "d902c2560084ce103c60e5c63d3e9630bc4038b1a2427760dbe87fca3865a740",
   "asOf": "2026-11-13T00:00:00.000Z",
-  "cases": 11
+  "cases": 16,
+  "datasets": [
+    {
+      "id": "dataset1",
+      "cases": 11,
+      "active": 11,
+      "historical": 0
+    },
+    {
+      "id": "dataset2",
+      "cases": 5,
+      "active": 2,
+      "historical": 3
+    }
+  ]
 }
