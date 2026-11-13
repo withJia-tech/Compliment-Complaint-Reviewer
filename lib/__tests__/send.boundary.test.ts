@@ -152,7 +152,7 @@ it.each([
   "Here's your vouch\u200ber.",
   "",
   " ",
-  "x".repeat(4001),
+  "x".repeat(4097),
 ])("blocks unsafe/invalid edited text (%#)", async (text) => {
   const { confirmation } = seed();
   const publish = vi.spyOn(FixtureReviewProvider.prototype, "publishReply");
@@ -172,7 +172,7 @@ it("persists exact approved text and intent before invoking the provider", async
       expect(approvalRepo.getByReviewId(review.id)).toMatchObject({
         status: "publishing",
         finalText: text,
-        validationVersion: "public-reply-v1",
+        validationVersion: "public-reply-v2",
       });
       expect(auditRepo.list()[0]).toMatchObject({
         action: "publish_requested",
@@ -390,4 +390,12 @@ it("uses an injected provider and treats one that cannot reconcile as unknown", 
   expect(await reconcileReply(review.id, { provider, facts })).toEqual({ ok: false, reason: "publish_unknown" });
   expect(calls).toEqual([review.id]);
   expect(approvalRepo.getByReviewId(review.id)?.status).toBe("publish_unknown");
+});
+
+it("refuses a reply over Google's 4,096-byte limit before the provider is called", async () => {
+  const { confirmation } = seed();
+  const publish = vi.spyOn(FixtureReviewProvider.prototype, "publishReply");
+  const reply = "谢谢您的反馈".repeat(233) + "谢谢"; // 1,400 characters, 4,200 bytes
+  expect(await sendReply(review.id, reply, confirmation)).toMatchObject({ reason: "validation_failed" });
+  expect(publish).not.toHaveBeenCalled();
 });
