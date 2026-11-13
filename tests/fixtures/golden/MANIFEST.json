@@ -1,0 +1,8 @@
+{
+  "risk_classifier_v1.jsonl": {
+    "version": "1.0.0",
+    "status": "draft",
+    "fixtures": 49,
+    "sha256": "6a402b14efe2d4093281e10492f6bfbaa658eb51be70008aa4bbe557d7ee1ce9"
+  }
+}
