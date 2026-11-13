@@ -4,7 +4,7 @@ import type { SendConfirmation } from "@/lib/approval/context";
 import { revalidatePath } from "next/cache";
 import {
   type DecisionResult,
-  rejectReply,
+  noResponseRequired,
   sendReply,
   reconcileReply,
 } from "@/lib/decisions";
@@ -44,10 +44,11 @@ export async function sendReplyAction(
   return result;
 }
 
-export async function rejectInlineAction(
+export async function noResponseRequiredAction(
   reviewId: string,
+  confirmation: SendConfirmation,
 ): Promise<DecisionResult> {
-  const result = rejectReply(reviewId);
+  const result = noResponseRequired(reviewId, confirmation);
   revalidateAll(reviewId);
   return result;
 }

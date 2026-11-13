@@ -13,7 +13,8 @@
     "test": "vitest run",
     "typecheck": "tsc --noEmit",
     "demo": "node scripts/demo.mjs",
-    "demo:prepare": "node scripts/demo.mjs --prepare-only"
+    "demo:prepare": "node scripts/demo.mjs --prepare-only",
+    "build:comparison": "node --import tsx scripts/buildComparison.ts"
   },
   "dependencies": {
     "next": "^15.1.0",
@@ -24,6 +25,7 @@
     "@types/node": "^22.10.0",
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",
+    "esbuild": "0.28.2",
     "tsx": "^4.19.0",
     "typescript": "^5.7.0",
     "vitest": "^2.1.0"

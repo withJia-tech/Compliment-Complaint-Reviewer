@@ -100,6 +100,7 @@ export type ApprovalStatus =
   | "pending"
   | "approved"
   | "edited_approved"
+  | "no_response_required"
   | "rejected"
   | "publishing"
   | "publish_failed"
@@ -145,6 +146,7 @@ export interface ProviderPublishResult {
 
 export type AuditAction =
   | "approved_published"
+  | "no_response_required"
   | "rejected"
   | "pending_approval"
   | "publish_requested"

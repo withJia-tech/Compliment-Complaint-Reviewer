@@ -22,12 +22,14 @@ This is a fresh implementation inspired by the product scope and architecture of
 does not copy OpenReply source code and is not presented as a fork. If source code is reused in a
 future version, retain OpenReply's MIT license and attribution.
 
-## Hosted demonstration on Vercel
+## Hosted comparison demonstration
 
-The Vercel configuration serves an isolated synthetic browser demo at `/hosted-demo`.
-Edits and simulated decisions remain in tab memory; refreshing resets them. Server-side
-mutations and file storage are disabled on Vercel. See [deployment and acceptance checks](docs/VERCEL_DEMO.md).
-This target is not the live production service.
+The same browser demo is prepared for Vercel, ChatGPT Sites and GitHub Pages.
+Run `npm run build:comparison` to generate `comparison/dist`. See
+[hosting status and comparison procedure](docs/HOSTING_COMPARISON.md).
+Reviews are limited to the past six calendar months. Human decisions move items out
+of Active into Completed; **No response required** is an explicit reviewed decision.
+The hosted demo uses sample data and tab memory, with no external publication.
 
 ## Client demonstration
 

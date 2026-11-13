@@ -5,7 +5,7 @@ import { spawnSync } from "node:child_process";
 import { afterEach, beforeEach, expect, it, vi } from "vitest";
 import businessFacts from "@/data/fixtures/businessFacts.json";
 import { contextVersion } from "@/lib/approval/context";
-import { sendReply, reconcileReply, rejectReply } from "@/lib/decisions";
+import { sendReply, reconcileReply, rejectReply, noResponseRequired } from "@/lib/decisions";
 import { TemplateReplyDrafter } from "@/lib/drafter/replyDrafter";
 import { FixtureReviewProvider } from "@/lib/providers/fixtureReviewProvider";
 import { DefaultTriagePolicy } from "@/lib/triage/policy";
@@ -356,4 +356,17 @@ it("treats an incomplete success receipt as unknown", async () => {
   expect(await sendReply(review.id, draft.text, confirmation)).toMatchObject({
     reason: "publish_unknown",
   });
+});
+
+
+it("records a no-response decision only after current evidence confirmation and never publishes", () => {
+  const { confirmation } = seed();
+  const publish = vi.spyOn(FixtureReviewProvider.prototype, "publishReply");
+  expect(noResponseRequired(review.id)).toMatchObject({reason:"confirmation_required"});
+  expect(noResponseRequired(review.id, {...confirmation, contextVersion:"stale"})).toMatchObject({reason:"stale_context"});
+  expect(noResponseRequired(review.id, confirmation)).toEqual({ok:true});
+  expect(approvalRepo.getByReviewId(review.id)?.status).toBe("no_response_required");
+  expect(auditRepo.list().at(-1)?.action).toBe("no_response_required");
+  expect(noResponseRequired(review.id, confirmation)).toMatchObject({reason:"already_decided"});
+  expect(publish).not.toHaveBeenCalled();
 });

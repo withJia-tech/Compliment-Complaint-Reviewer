@@ -1,3 +1,4 @@
+import { reviewWindowStart, withinReviewWindow } from "@/lib/triage/reviewWindow";
 import { randomUUID } from "node:crypto";
 import { acquireStoreLock } from "@/lib/store/jsonStore";
 import type { ApprovalChannel } from "@/lib/interfaces/approvalChannel";
@@ -18,7 +19,7 @@ import {
   STUB_OWNER_ACTOR,
 } from "@/lib/types";
 
-const EPOCH = new Date(0).toISOString();
+
 
 export interface DailyScanDeps {
   provider: ReviewProvider;
@@ -63,10 +64,15 @@ export async function runDailyScan(
   try {
     const locationId = deps.locationId ?? DEFAULT_LOCATION_ID;
     const location = locationRepo.get(locationId);
-    const since = location.lastSuccessfulScanAt ?? EPOCH;
-    const scanStartedAt = new Date().toISOString();
+    const now = new Date();
+    const scanStartedAt = now.toISOString();
+    // listSince is exclusive; fetch the exact boundary too, then filter inclusively.
+    const cutoff = new Date(reviewWindowStart(now).getTime() - 1).toISOString();
+    const since = location.lastSuccessfulScanAt && location.lastSuccessfulScanAt > cutoff
+      ? location.lastSuccessfulScanAt : cutoff;
 
-    const reviews = await deps.provider.listSince(since);
+    const fetched = await deps.provider.listSince(since);
+    const reviews = fetched.filter(review => review.locationId === locationId && withinReviewWindow(review, now));
     let skipped = 0;
 
     for (const review of reviews) {

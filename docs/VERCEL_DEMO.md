@@ -6,7 +6,14 @@ Approval/failure demonstrations run in React state; they do not exercise real se
 server concurrency or durable audit persistence. Reloading clears all edits and decisions.
 Do not enter real customer/staff data. No review text is submitted by the sandbox.
 
-## Deployment
+## Current comparison deployment
+
+The production alias now serves the static `comparison/dist` bundle. It has no
+server endpoints; `/hosted-demo` redirects to `/`. The identical assets are used
+for the Sites and Pages comparison. See [hosting comparison](HOSTING_COMPARISON.md).
+The instructions below describe the alternate guarded Next.js deployment target.
+
+## Alternate Next.js deployment
 
 Import this repository into the authorised Vercel account, using the reviewed demo branch/commit.
 The root directory is the repository root. `vercel.json` selects Next.js, `npm ci`, `npm run build`

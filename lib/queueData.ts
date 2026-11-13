@@ -1,3 +1,4 @@
+import { withinReviewWindow } from "@/lib/triage/reviewWindow";
 import { contextVersion } from "@/lib/approval/context";
 import businessFacts from "@/data/fixtures/businessFacts.json";
 import { approvalRepo } from "@/lib/store/approvalRepo";
@@ -52,8 +53,8 @@ export function loadQueueRows(): QueueRowData[] {
         RISK_ORDER[a.triage.riskLevel] - RISK_ORDER[b.triage.riskLevel];
       if (riskDiff !== 0) return riskDiff;
       return (
-        new Date(b.review.updateTime).getTime() -
-        new Date(a.review.updateTime).getTime()
+        new Date(b.review.createTime).getTime() -
+        new Date(a.review.createTime).getTime()
       );
     });
 }
@@ -61,10 +62,8 @@ export function loadQueueRows(): QueueRowData[] {
 export function countPending(rows: QueueRowData[]): number {
   return rows.filter(
     (row) =>
-      !row.approval ||
-      ["pending", "publish_failed", "publishing", "publish_unknown"].includes(
-        row.approval.status,
-      ),
+      ["publishing", "publish_unknown"].includes(row.approval?.status ?? "") ||
+      (withinReviewWindow(row.review) && (!row.approval || ["pending", "publish_failed"].includes(row.approval.status))),
   ).length;
 }
 

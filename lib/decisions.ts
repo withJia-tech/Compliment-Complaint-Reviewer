@@ -256,6 +256,28 @@ export async function reconcileReply(
   }
 }
 
+/** An explicit reviewed decision; never use this to resolve an uncertain send. */
+export function noResponseRequired(reviewId: string, confirmation?: SendConfirmation): DecisionResult {
+  const release = acquireStoreLock();
+  if (!release) return { ok: false, reason: "in_progress" };
+  try {
+    const context = requireContext(reviewId);
+    const blocked = refusal(reviewId);
+    if (blocked) return blocked;
+    if (confirmation?.reviewed !== true) return { ok: false, reason: "confirmation_required" };
+    if (confirmation.contextVersion !== contextVersion(context, facts) ||
+        context.draft.sourceVersion !== fingerprint(context.review) ||
+        context.draft.factsVersion !== fingerprint(facts)) return { ok: false, reason: "stale_context" };
+    const approval: Approval = { reviewId, status: "no_response_required", actor: STUB_OWNER_ACTOR,
+      contextVersion: confirmation.contextVersion, confirmedAt: new Date().toISOString(),
+      decidedAt: new Date().toISOString(), reason: "Discovery completed; no public response required.",
+      remedy: approvalRepo.getByReviewId(reviewId)?.remedy };
+    appendAudit(context, "no_response_required", approval, null);
+    approvalRepo.upsert(approval);
+    return { ok: true };
+  } finally { release(); }
+}
+
 export function rejectReply(reviewId: string, reason?: string): DecisionResult {
   const release = acquireStoreLock();
   if (!release) return { ok: false, reason: "in_progress" };

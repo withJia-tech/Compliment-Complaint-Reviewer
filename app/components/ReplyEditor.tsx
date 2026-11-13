@@ -4,7 +4,7 @@ import { useState, useTransition } from "react";
 import {
   sendReplyAction,
   reconcileReplyAction,
-  rejectInlineAction,
+  noResponseRequiredAction,
 } from "@/app/queue/actions";
 import { refusalMessage, statusLabel } from "@/lib/approval/presentation";
 import type { DecisionResult } from "@/lib/decisions";
@@ -30,7 +30,7 @@ export function ReplyEditor({
   const [notice, setNotice] = useState<string | null>(null);
   const uncertain =
     approval?.status === "publishing" || approval?.status === "publish_unknown";
-  const settled = ["approved", "edited_approved", "rejected"].includes(
+  const settled = ["approved", "edited_approved", "rejected", "no_response_required"].includes(
     approval?.status ?? "",
   );
   function run(action: () => Promise<DecisionResult>) {
@@ -96,9 +96,9 @@ export function ReplyEditor({
               disabled={pending}
               onChange={(event) => setConfirmed(event.target.checked)}
             />
-            I checked this review and exact reply: factual claims are supported,
-            and it contains no private staff details, blame or unverified
-            promises.
+            I have completed discovery: checked the review and available facts,
+            and removed unsupported promises, blame and private staff information
+            from any reply.
           </label>
           <div className="inline-actions">
             <button
@@ -118,10 +118,10 @@ export function ReplyEditor({
             <button
               type="button"
               className="btn-secondary"
-              disabled={pending}
-              onClick={() => run(() => rejectInlineAction(reviewId))}
+              disabled={pending || !confirmed}
+              onClick={() => run(() => noResponseRequiredAction(reviewId, { contextVersion: version, reviewed: confirmed }))}
             >
-              Skip
+              No response required
             </button>
           </div>
         </>

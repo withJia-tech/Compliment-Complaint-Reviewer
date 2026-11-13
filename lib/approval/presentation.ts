@@ -6,6 +6,8 @@ export function statusLabel(approval: Approval | null): string {
     case "approved":
     case "edited_approved":
       return "Sent (simulated)";
+    case "no_response_required":
+      return "No response required";
     case "rejected":
       return "Skipped";
     case "publish_failed":
