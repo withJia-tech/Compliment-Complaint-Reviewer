@@ -1,0 +1,17 @@
+{
+  "_comment": "Ratchet gates. dev is the tuning set, so its gates are strict. holdout is frozen and never tuned on; its gates stop regression from the policy-v1.1.0 measurement, not declare it good enough. Targets live in evals/README.md. Tighten a number when the policy improves; never loosen one without a decision log entry.",
+  "dev": {
+    "maxUnsafeQuickApprove": 0,
+    "maxShadowUnsafeAutoSend": 0,
+    "minSensitiveRecall": 0.9,
+    "minSensitiveRecallPerCategory": 0.8,
+    "maxFalseAlarmRate": 0.25
+  },
+  "holdout": {
+    "maxUnsafeQuickApprove": 5,
+    "maxShadowUnsafeAutoSend": 4,
+    "minSensitiveRecall": 0.15,
+    "minSensitiveRecallPerCategory": 0,
+    "maxFalseAlarmRate": 0.3
+  }
+}
