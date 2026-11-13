@@ -53,6 +53,19 @@ jobs:
       - name: No skipped tests
         run: npx tsx scripts/ci/noSkippedTests.ts test-results/vitest.json
 
+      # Routing eval gates (also enforced inside npm test). This step adds the
+      # per-category printout and the JSON report artifact for review.
+      - name: Routing eval
+        run: npm run eval
+
+      - name: Upload eval report
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: routing-eval-report
+          path: evals/reports/latest.json
+          if-no-files-found: warn
+
       - name: Build
         run: npm run build 2>&1 | tee logs/build.log
 

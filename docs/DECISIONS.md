@@ -26,8 +26,9 @@ here is judged by one question — *if we are wrong, what does it cost to undo?*
 | 12 | Golden dataset versions are immutable once approved | Two-way | Pinned by checksum. A change is a new version file, so past evaluation runs stay comparable. |
 | 14 | **Triage behaviour is release-gated** | Two-way | `npm run eval:gate` fails CI when a metric in `eval/thresholds.json` regresses, when the evaluation run is missing or stale, or when a limit is loosened without a stated reason. CI holds no key: it replays the committed run, so results reproduce from a clean checkout. |
 | 13 | Gaps are fixed, not catalogued | Two-way | The handover proposed `knownGap` markers. The owner chose to make the classifier reason through them instead, so the dataset states the target and the second reader is the fix. |
-| 15 | **Haiku reads every review; code routes the uncertain ones to Sonnet** (B11, `routing-v1`) | Two-way | The owner asked for Haiku by default with "another agent" routing to Sonnet when needed. The router is deterministic code, not a model: a model router would be another paid call, another thing that can fail or be talked round by the review it routes, and it could not be replayed exactly in CI. The rules are in `lib/triage/reader/cascade.ts`; changing them bumps `ROUTING_VERSION`, which makes the saved evaluation run stale. Escalation can only raise, and a failed escalation read holds the review. Swapping models is an environment variable. |
+| 15 | **Haiku reads every review; code routes the uncertain ones to Sonnet** (B13, `routing-v1`) | Two-way | The owner asked for Haiku by default with "another agent" routing to Sonnet when needed. The router is deterministic code, not a model: a model router would be another paid call, another thing that can fail or be talked round by the review it routes, and it could not be replayed exactly in CI. The rules are in `lib/triage/reader/cascade.ts`; changing them bumps `ROUTING_VERSION`, which makes the saved evaluation run stale. Escalation can only raise, and a failed escalation read holds the review. Swapping models is an environment variable. |
 | 16 | **Cost is release-gated at one cent per review** | Two-way | The owner set US$0.01 per review read on 2026-11-13, before any evaluation run, so the limit was not fitted to a result. It is measured from recorded token usage, priced from `lib/triage/reader/pricing.ts`. An unknown price or an empty run fails. With Haiku and Sonnet the worst case is about 0.6¢, so today it catches misconfiguration (a pricier model, runaway thinking tokens) rather than shaping the choice. |
+| 18 | **PR #6 and PR #8 combined as `policy-v1.2.0`** (2026-11-13) | Two-way | Both PRs had shipped different rules as `policy-v1.1.0`. The combined rules keep PR #8's fail-closed quick approve and PR #6's normalised matching, guards and reader. PR #8's shadow auto-send flag is now cleared whenever a guard or the reader holds a review, so B1 evidence never claims it would send a held review. On golden v1, rules alone now give 1 unsafe quick approve (was 6) but 4 false alarms (was 1): 5-star praise the rules cannot confirm in readable English (RC-003, RC-512 Singlish, RC-520 Chinese, RC-531 Malay) is held, and the reader can only raise, so 4 is a floor in both modes; `falseAlarm` limits moved 1 → 4 with a written `loosening_reason`. **Open owner question:** may a reader that reads such a review as plain praise confirm it to quick approve? That would be the first time a reader *lowers* a result (decision 10), so it needs its own decision, tests and golden evidence. |
 | 17 | Golden dataset v1 **approved** by the owner (2026-11-13) | Two-way (by decision 12) | From now on `risk_classifier_v1.jsonl` is frozen; any change, including to RC-300 and RC-408, means a `v2` file and a new evaluation run. One person labelled and approved it, so its high-risk labels are not independently adjudicated (see `docs/LEARNING_LOOP_PLAN.md`). |
 
 The three to watch are **6, 7 and 8**. Everything else can be changed in an afternoon.
@@ -80,6 +81,13 @@ approved **unedited**, and the golden set holds a negative case for each way it 
 (sarcasm, "5 stars but…", an owner-visible edit). That evidence is the way out: if shadow mode
 disagrees with the owner, we have lost nothing.
 
+**Shadow status (policy-v1.1.0).** `TriageResult.shadow.wouldAutoSend` records the triage-side
+conditions (5 stars, praise present, no complaint, contrast, sensitive or unreadable-language
+signal) on every result, and `npm run eval` reports how many must-review cases it would have
+sent. On the holdout it would have sent **4**, so B1 stays parked. The existing-reply (B4) and
+owner-switch conditions are not computed yet. Comparing shadow decisions with what the owner
+actually sent needs B7.
+
 ### B2 — Validation stage (partial implementation)
 
 Implemented in the verified-send slice: source/draft/facts freshness checks, explicit human
@@ -118,24 +126,42 @@ Low-level repository methods must remain behind the guarded entry points.
 Record the draft-versus-sent difference as structured data, then replay stored cases through the
 current policy and drafter to report routing agreement and edit rate.
 
-### B8 — Promotion gate
+### B8 — Promotion gate (implemented)
 
-CI fails if the rules change without a `POLICY_VERSION` bump and a passing golden set.
+`lib/__tests__/policy.promotionGate.test.ts` fails when `lib/triage/{rules,match,policy}.ts`
+change (comments and whitespace excluded) without a matching `lib/triage/policyManifest.json`.
+`npm run policy:stamp` refuses to stamp an unbumped `POLICY_VERSION`. Golden and eval gates
+run in the same `npm test`. What is not covered: the stamp records no reviewer identity or eval
+evidence, so it is a tripwire, not the authorised promotion in CONTROLLED_LEARNING_PLAN.md.
 
 ### B9 — Prior-case retrieval
 
 Read from Google at the moment of need. No local archive. Needs B7's data to be worth building.
+
+### B11 — Classifier behind `TriagePolicy`
+
+Holdout sensitive recall is 15% with keyword rules, and dev-tuned phrases moved it by zero.
+Paraphrased claims share no words with the lexicon. A classifier (model or embedding) that
+implements `TriagePolicy` can be scored on the same harness with no caller changes. Entry gate:
+a fresh holdout labelled by someone other than the rule author, 150+ cases, and double-labelled
+agreement reported. Exit gate: holdout unsafe quick approvals 0, per-category recall at an agreed
+floor, false alarms within the owner's stated workload.
 
 ### B10 — Tenant key
 
 Before live OAuth, add a tenant key to the repos so multi-location is a migration, not a rewrite.
 This is what keeps decision 8 a two-way door.
 
-### B11 — Cheaper reader model  *(built; waiting on the owner's evaluation run)*
+### B13 — Cheaper reader model  *(built; waiting on the owner's evaluation run)*
+
+Numbered B13 because PR #8 used B11 for a classifier behind `TriagePolicy`. The two are related:
+this reader sits on top of the rules and can only raise; B11 would replace or join the rules
+behind `TriagePolicy` and be scored on the routing harness (`npm run eval`), which does not yet
+score the reader.
 
 Done in code: Haiku first, Sonnet on escalation (decision 15); the gate checks the exact reader
-(models, routing version, prompt fingerprint) and cost per review (decision 16); the
-`rules_plus_reader` quality thresholds are unchanged. **Not yet shown to work:** that needs
+(models, routing version, prompt fingerprint) and cost per review (decision 16). The
+`rules_plus_reader` quality thresholds are unchanged except false alarms (decision 18). **Not yet shown to work:** that needs
 `npm run read:golden -- --yes` with the owner's key. If the cascade misses the quality limits,
 the fix is routing or prompt, never looser thresholds. Worth one comparison run before settling:
 Sonnet alone at low effort (`CCR_READER_MODEL=claude-sonnet-5-5 CCR_READER_ESCALATION_MODEL=off

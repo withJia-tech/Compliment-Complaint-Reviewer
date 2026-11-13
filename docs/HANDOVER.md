@@ -1,4 +1,4 @@
-# Handover — prove the cheaper reader (B11), then decide the learning-loop and Google questions
+# Handover — prove the cheaper reader (B13), then decide the learning-loop and Google questions
 
 Written 2026-11-13. Read `CLAUDE.md`, `SPEC.md`, `docs/DECISIONS.md` and
 `docs/LEARNING_LOOP_PLAN.md` first. Delete this file when the items below are done.
@@ -17,9 +17,11 @@ Written 2026-11-13. Read `CLAUDE.md`, `SPEC.md`, `docs/DECISIONS.md` and
   into branch `claude/golden-risk-classifier-v1` (pushed, **no PR yet**): typecheck, 259 tests (none
   skipped), build, scan idempotency and the log-leak check pass. `npm run eval:gate` **fails on
   purpose** until the owner commits an evaluation run.
-- **B11 built, not yet proven.** Haiku 5.5 reads every review; code (`routing-v1`) escalates the
-  uncertain ones to Sonnet 5.5 (decision 15). The gate checks the exact reader id and cost per
-  review, max 1¢ (decision 16). Quality thresholds unchanged.
+- **B13 (was B11) built, not yet proven.** `main` (PR #8) is merged in; rules are now
+  `policy-v1.2.0` (decision 18), so the evaluation run can be recorded now and will stay valid.
+  Haiku 5.5 reads every review; code (`routing-v1`) escalates the uncertain ones to Sonnet 5.5
+  (decision 15). The gate checks the exact reader id and cost per review, max 1¢ (decision 16).
+  Quality thresholds are unchanged except false alarms, now at most 4 (decision 18).
 - **Golden v1 approved** (decision 17). Frozen: changes need a v2.
 - **OAuth token storage:** assessed, recommendation recorded as *proposed* in `DECISIONS.md`.
 - **Learning loop:** reconciled plan in `docs/LEARNING_LOOP_PLAN.md`, planning only, with

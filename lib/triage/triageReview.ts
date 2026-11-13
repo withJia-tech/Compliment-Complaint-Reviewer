@@ -1,5 +1,5 @@
 import type { TriagePolicy } from "@/lib/interfaces/triagePolicy";
-import { applyNoReaderGuard } from "@/lib/triage/guards";
+import { applyNoReaderGuard, holdShadow } from "@/lib/triage/guards";
 import { SENSITIVE_SEVERITY_ORDER, type SensitiveReasonCode } from "@/lib/triage/rules";
 import type { ReviewReader, ReviewReading } from "@/lib/triage/reader/types";
 import type { ReasonCode, Review, RiskLevel, TriageResult } from "@/lib/types";
@@ -55,7 +55,7 @@ export function applyReading(rules: TriageResult, reading: ReviewReading, reader
   );
   const needsReview = sensitive || riskLevel !== "low" || rules.recommendedAction === "needs_review";
 
-  return {
+  return holdShadow({
     ...rules,
     policyVersion: `${rules.policyVersion}+${readerId}`,
     riskLevel,
@@ -70,12 +70,12 @@ export function applyReading(rules: TriageResult, reading: ReviewReading, reader
       containsPersonalInfo: reading.contains_personal_info,
       rationale: reading.rationale,
     },
-  };
+  });
 }
 
 /** A reader was configured but could not read the review: hold it for the owner. */
 export function failClosed(rules: TriageResult, readerId: string): TriageResult {
-  return {
+  return holdShadow({
     ...rules,
     policyVersion: `${rules.policyVersion}+${readerId}`,
     riskLevel: atLeast(rules.riskLevel, "medium"),
@@ -84,7 +84,7 @@ export function failClosed(rules: TriageResult, readerId: string): TriageResult 
       rules.recommendedAction === "quick_approve"
         ? ["reader_failed", ...rules.reasonCodes.filter((code) => code !== "positive_no_complaint")]
         : [...rules.reasonCodes, "reader_failed"],
-  };
+  });
 }
 
 /**

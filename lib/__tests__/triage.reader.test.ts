@@ -48,7 +48,8 @@ describe("triageReview", () => {
 
   it("raises a complaint the rules missed to medium", async () => {
     const result = await triageReview(
-      review(5, "Oh wonderful, waited an hour. Best service ever."),
+      // The combined rules quick-approve this; a reader that hears sarcasm raises it.
+      review(5, "Best service ever, truly unforgettable."),
       policy,
       readerOf(reading({ concern: "complaint" })),
     );
@@ -67,8 +68,15 @@ describe("triageReview", () => {
   });
 
   it("keeps quick approve for praise the reader agrees is praise", async () => {
-    const result = await triageReview(review(5, "Shiok! Sure come back one."), policy, readerOf(reading()));
+    const result = await triageReview(review(5, "Amazing coffee and lovely staff!"), policy, readerOf(reading()));
     expect(result.recommendedAction).toBe("quick_approve");
+  });
+
+  it("cannot clear praise the rules could not confirm (fail-closed rules, a reader that only raises)", async () => {
+    // Singlish praise: the rules hold it (unconfirmed_praise) and a reader that agrees it is
+    // praise still cannot lower it. Changing this needs an owner decision (see DECISIONS).
+    const result = await triageReview(review(5, "Shiok! Sure come back one."), policy, readerOf(reading({ language: "en-SG" })));
+    expect(result.recommendedAction).toBe("needs_review");
   });
 
   it("fails closed when the reader errors", async () => {
@@ -86,7 +94,7 @@ describe("triageReview", () => {
   it("without a reader, a review in a script the rules can't read is not quick approve", async () => {
     const result = await triageReview(review(5, "食物很好吃，服务员很友善。"), policy, null);
     expect(result.recommendedAction).toBe("needs_review");
-    expect(result.reasonCodes[0]).toBe("unreadable");
+    expect(result.reasonCodes[0]).toBe("unreadable_language");
   });
 
   it("gives the reader the keyword result, so routing can see what the rules found", async () => {

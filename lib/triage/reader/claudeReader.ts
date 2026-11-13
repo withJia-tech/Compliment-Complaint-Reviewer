@@ -12,7 +12,7 @@ import {
 } from "@/lib/triage/reader/types";
 import type { Review } from "@/lib/types";
 
-/** Reads every review. Cheap enough to read all of them (B11). */
+/** Reads every review. Cheap enough to read all of them (B13). */
 export const DEFAULT_READER_MODEL = "claude-haiku-5-5";
 /** Reads only the reviews the routing rules escalate. */
 export const DEFAULT_ESCALATION_MODEL = "claude-sonnet-5-5";

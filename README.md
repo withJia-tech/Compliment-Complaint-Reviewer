@@ -99,6 +99,10 @@ risk flagged `sensitive`: they are never offered as quick approve, at any star r
 their own reply wording. Everything else follows the star bands, with complaint language pulling
 a 4-5 star review down to "needs review".
 
+Quick approve is **fail-closed**: a 4-5 star review only gets there when praise is present (not
+just complaints absent), no reservation like "but" or "however" appears, and the text is
+English the rules can read. Other languages, Singlish and praise-free text go to the owner.
+
 **Nothing is sent automatically.** The owner sends every reply. Auto-send for deterministic
 5-star positives is in the backlog behind a shadow-mode gate — see
 [docs/DECISIONS.md](docs/DECISIONS.md), which also logs which decisions are easy to reverse and
@@ -174,11 +178,23 @@ needs a read marked safe to clear: the costly miss), false alarms (praise held b
 failures and cost per review. **The model-evaluation evidence is still outstanding:** until the
 owner commits an evaluation run, the gate fails on purpose.
 
-What CI does not establish: per-category recall, semantic grounding coverage and broader
-policy-compliance gates are still planned (see [the learning-loop plan](docs/LEARNING_LOOP_PLAN.md)).
-Template and send-boundary tests do not prove semantic grounding or live-model prompt-injection
-robustness. Passing CI establishes the checks for that revision, not production readiness. See
-[verification limits](docs/VERIFIED_SEND.md) for the remaining release gates.
+**Routing evals** ([evals/README.md](evals/README.md)) score the policy on a 60-case dev set and a
+40-case holdout it was never tuned on: unsafe quick approvals, sensitive recall overall and per
+category, false alarms, and how often the parked auto-send rule would have sent a review a person
+must read. Ratchet gates run inside `npm test` and as a CI step that uploads the JSON report.
+On the holdout, PR #8's policy-v1.1.0 cut unsafe quick approvals from 15 to 5 but left sensitive recall
+at 15%: keyword rules don't generalise to paraphrased claims, which is the case for a classifier.
+
+A **promotion gate** (backlog B8) fails the build when the routing source changes without a
+`POLICY_VERSION` bump; `npm run policy:stamp` refuses to stamp until the version is bumped.
+
+Per-category recall in the golden gate, semantic grounding coverage and broader policy-compliance gates remain planned (see [the learning-loop plan](docs/LEARNING_LOOP_PLAN.md)). The two evaluations (`eval/`, golden; `evals/`, routing) are separate harnesses for now. Template and
+send-boundary tests do not establish semantic grounding coverage or live-model prompt-injection
+robustness.
+
+There is no standalone lint job yet.
+Passing CI establishes the checks implemented for that revision; it does not establish
+production readiness. See [verification limits](docs/VERIFIED_SEND.md) for remaining release gates.
 
 ## Scripts
 
@@ -188,7 +204,9 @@ robustness. Passing CI establishes the checks for that revision, not production 
 | `npm run build` | Production build |
 | `npm run start` | Run the production build |
 | `npm run scan` | Run the daily scan CLI over fixture reviews (re-runnable/idempotent) |
-| `npm test` | Run the Vitest suite (triage policy, drafter fact-safety, store round-trip) |
+| `npm test` | Run the Vitest suite, including golden routing, eval gates and the policy promotion gate |
+| `npm run eval` | Score routing on the dev and holdout sets; fail on a breached gate; write `evals/reports/latest.json` |
+| `npm run policy:stamp` | Record the routing source hash for the current `POLICY_VERSION` (refuses if unbumped) |
 | `npm run typecheck` | Type-check the project with `tsc --noEmit` |
 
 ## Architecture

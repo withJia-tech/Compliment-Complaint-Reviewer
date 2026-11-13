@@ -89,7 +89,7 @@ export function cascadeReaderId(primaryModel: string, escalationModel: string | 
 }
 
 /**
- * The second reader (B11): a cheap model reads every review; the routing
+ * The second reader (B13): a cheap model reads every review; the routing
  * rules send the uncertain ones to a stronger model. With no escalation model
  * it is a single-model reader.
  *

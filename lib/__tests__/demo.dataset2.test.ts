@@ -1,9 +1,9 @@
 import { describe, expect, it } from "vitest";
 import { buildDemoDatasets, canPractiseRecentCase, classifyDataset2, DATASET2_POLICY } from "@/lib/demo/datasets";
 import { rowsForView } from "@/lib/demo/queue";
+import { POLICY_VERSION } from "@/lib/triage/policyVersion";
 import { DefaultTriagePolicy } from "@/lib/triage/policy";
 import { validateReply } from "@/lib/validation/reply";
-import { POLICY_VERSION } from "@/lib/triage/policyVersion";
 
 const datasets = buildDemoDatasets();
 const dataset = datasets.find(item => item.id === "dataset2")!;

@@ -52,24 +52,59 @@ export const SENSITIVE_KEYWORDS: Record<SensitiveReasonCode, SensitiveRule> = {
       "was hurt",
       "we hurt",
       "safety hazard",
+      "stitches",
+      "cut my",
+      "piece of metal",
+      "metal wire",
+      "foreign object",
     ],
     weak: ["hurt", "slip", "slipped", "fell", "burn*", "accident", "threat*"],
   },
   sensitive_medical: {
-    strong: ["food poisoning", "allergic reaction", "poisoned", "hospital", "ambulance"],
-    weak: ["sick", "vomit*", "ill", "poison"],
+    strong: [
+      "food poisoning",
+      "allergic reaction",
+      "poisoned",
+      "hospital",
+      "ambulance",
+      "threw up",
+      "throw up",
+      "throwing up",
+      "undercooked chicken",
+      "raw chicken",
+    ],
+    weak: ["sick", "vomit*", "ill", "poison", "rash", "swell*", "swollen"],
   },
   sensitive_discrimination: {
-    strong: ["racist", "racism", "discriminat*", "sexist", "homophobic", "slur", "harass*"],
+    strong: [
+      "racist",
+      "racism",
+      "discriminat*",
+      "sexist",
+      "homophobic",
+      "slur",
+      "harass*",
+      "my accent",
+      "go back to where",
+    ],
     weak: [],
   },
   sensitive_legal: {
-    strong: ["lawsuit", "lawyer", "attorney", "solicitor", "legal action", "small claims"],
+    strong: [
+      "lawsuit",
+      "lawyer",
+      "attorney",
+      "solicitor",
+      "legal action",
+      "legal team",
+      "small claims",
+      "in court",
+    ],
     weak: ["sue", "sued", "suing"],
   },
   sensitive_fraud: {
     strong: ["scam*", "fraud*", "unauthorised charge", "unauthorized charge", "theft", "stole"],
-    weak: ["overcharged", "double charged", "charged twice"],
+    weak: ["overcharged", "double charged", "charged twice", "billed for"],
   },
   sensitive_prompt_injection: {
     strong: [
@@ -88,6 +123,20 @@ export const SENSITIVE_KEYWORDS: Record<SensitiveReasonCode, SensitiveRule> = {
   },
 };
 
+/**
+ * Fixed figures of speech that contain a sensitive keyword but are praise
+ * ("stole my heart", "fell in love"). Only these exact phrases are blanked
+ * before sensitive matching, so "fell in love with the cake, then fell on the
+ * wet floor" still matches the second "fell". Keep this list short and exact:
+ * every entry is a way to hide a real claim.
+ */
+export const IDIOM_EXEMPTIONS = [
+  "stole my heart",
+  "fell in love",
+  "sick beats",
+  "burnt cheesecake",
+];
+
 /** Keywords that mark a complaint even inside an otherwise high-star review. */
 export const COMPLAINT_KEYWORDS = [
   "disappointed",
@@ -104,9 +153,83 @@ export const COMPLAINT_KEYWORDS = [
   "issue*",
   "problem*",
   "wrong",
+  "waited",
+  "minute wait*",
+  "hour wait*",
+  "queue*",
+  "cold",
+  "lukewarm",
+  "stale",
+  "sticky",
+  "ignored",
+  "ran out",
+  "running out",
+  "not good",
+  "not great",
+  "not worth",
+  "rolled his eyes",
+  "rolled her eyes",
+  "rolled their eyes",
 ];
 
-/** Hints that reinforce a positive read (used only to pick the confidence band). */
+/**
+ * Discourse markers that introduce a reservation ("great food, but…").
+ * A closed class of English words, not tuned to any review: when one appears
+ * in a 4-5 star review, a person reads it before replying.
+ */
+export const CONTRAST_MARKERS = [
+  "but",
+  "however",
+  "although",
+  "though",
+  "unfortunately",
+  "sadly",
+  "shame",
+  "pity",
+  "except",
+  "yet",
+  "gripe",
+  "if only",
+  "would have been",
+  "could have been",
+  "could be better",
+];
+
+/**
+ * Function words and particles from Malay and Singlish. One hit means the
+ * English keyword lists cannot be trusted to have read the review, so it goes
+ * to a person instead of the quick-approve lane. Non-Latin scripts (Chinese,
+ * Tamil, Japanese, …) are detected separately by script, not by this list.
+ */
+export const NON_ENGLISH_MARKERS = [
+  "tapi",
+  "dan",
+  "yang",
+  "tak",
+  "tidak",
+  "sudah",
+  "sangat",
+  "pun",
+  "lagi",
+  "mesti",
+  "boleh",
+  "kurang",
+  "lah",
+  "leh",
+  "lor",
+  "sia",
+  "aiyo",
+  "aiyah",
+  "walao",
+  "somemore",
+  "liao",
+];
+
+/**
+ * Praise words. A 4-5 star review with text must contain at least one of
+ * these to be offered as a quick approve: praise has to be present, not just
+ * complaint absent.
+ */
 export const POSITIVE_HINTS = [
   "great",
   "love*",
@@ -116,6 +239,17 @@ export const POSITIVE_HINTS = [
   "friendly",
   "recommend*",
   "lovely",
+  "good",
+  "nice",
+  "wonderful",
+  "superb",
+  "fantastic",
+  "delicious",
+  "tasty",
+  "perfect",
+  "yummy",
+  "enjoy*",
+  "thank*",
 ];
 
 /**

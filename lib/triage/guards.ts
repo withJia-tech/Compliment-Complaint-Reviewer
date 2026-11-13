@@ -45,14 +45,24 @@ export function isNonLatinScript(text: string): boolean {
   return nonLatin / letters.length > 0.3;
 }
 
+/**
+ * B1 shadow evidence must agree with the final routing: a review held for the
+ * owner was never one the auto-send rule could have sent. Writes the flag only;
+ * nothing reads it to route or send.
+ */
+export function holdShadow(result: TriageResult): TriageResult {
+  if (result.recommendedAction === "quick_approve" || !result.shadow?.wouldAutoSend) return result;
+  return { ...result, shadow: { ...result.shadow, wouldAutoSend: false } };
+}
+
 function raise(result: TriageResult, code: ReasonCode): TriageResult {
   const raised = result.recommendedAction === "quick_approve";
-  return {
+  return holdShadow({
     ...result,
     riskLevel: result.riskLevel === "low" ? "medium" : result.riskLevel,
     recommendedAction: "needs_review",
     reasonCodes: raised ? [code, ...result.reasonCodes] : [...result.reasonCodes, code],
-  };
+  });
 }
 
 /** Guards that always apply, with or without a second reader. */

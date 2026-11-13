@@ -2,22 +2,44 @@
   "$comment": "Release gate for triage behaviour on tests/fixtures/golden/risk_classifier_v1.jsonl. CI fails if any metric breaches its limit, and on a pull request fails if any limit is loosened compared with the base branch. Tighten limits as the classifier improves; to loosen one deliberately, fill in loosening_reason and it is printed in the run summary. costPerReviewUsd is the mean measured model cost per review read, in US$ (owner's limit of one cent, set 2026-11-13 before any run).",
   "dataset": "tests/fixtures/golden/risk_classifier_v1.jsonl",
   "readings": "tests/fixtures/golden/readings/risk_classifier_v1.json",
-  "loosening_reason": "",
+  "loosening_reason": "2026-11-13, merging PR #8 into PR #6 (policy-v1.2.0): falseAlarm max goes 1 -> 4 in both modes. PR #8's fail-closed routing (merged by the owner) holds 5-star praise it cannot confirm in readable English (golden RC-003, RC-512, RC-520, RC-531), and the second reader can only raise, so 4 is a floor in both modes. In return, rules_only unsafe quick approves fall 6 -> 1 (limit tightened to 1), sensitive recall rises to 56.7% (min 0.56) and exact match to 30/49 (min 0.61). Whether a reader may confirm such praise is an open owner decision (DECISIONS 18).",
   "modes": {
     "rules_only": {
-      "exactMatchRate": { "min": 0.59 },
-      "sensitiveRecall": { "min": 0.5 },
-      "unsafeQuickApprove": { "max": 6 },
-      "falseAlarm": { "max": 1 },
-      "readerFailures": { "max": 0 }
+      "exactMatchRate": {
+        "min": 0.61
+      },
+      "sensitiveRecall": {
+        "min": 0.56
+      },
+      "unsafeQuickApprove": {
+        "max": 1
+      },
+      "falseAlarm": {
+        "max": 4
+      },
+      "readerFailures": {
+        "max": 0
+      }
     },
     "rules_plus_reader": {
-      "exactMatchRate": { "min": 0.9 },
-      "sensitiveRecall": { "min": 1 },
-      "unsafeQuickApprove": { "max": 0 },
-      "falseAlarm": { "max": 1 },
-      "readerFailures": { "max": 0 },
-      "costPerReviewUsd": { "max": 0.01 }
+      "exactMatchRate": {
+        "min": 0.9
+      },
+      "sensitiveRecall": {
+        "min": 1
+      },
+      "unsafeQuickApprove": {
+        "max": 0
+      },
+      "falseAlarm": {
+        "max": 4
+      },
+      "readerFailures": {
+        "max": 0
+      },
+      "costPerReviewUsd": {
+        "max": 0.01
+      }
     }
   }
 }

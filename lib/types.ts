@@ -40,6 +40,10 @@ export type ReasonCode =
   | "positive_no_complaint"
   | "neutral_mixed_sentiment"
   | "negative_issue"
+  /** 4-5 stars, but written in a language or style the English rules cannot read. */
+  | "unreadable_language"
+  /** 4-5 stars with text, but no praise detected: complaint absent is not praise present. */
+  | "unconfirmed_praise"
   | "sensitive_safety"
   | "sensitive_legal"
   | "sensitive_discrimination"
@@ -100,6 +104,12 @@ export interface TriageResult {
    * no reader is configured. The reader can only raise attention, never lower it.
    */
   reading?: TriageReading;
+  /**
+   * Shadow mode for backlog B1 (auto-send). Recorded only, never read by
+   * routing, the queue or the send path. Optional so older stored results and
+   * audit records stay valid (audit schema is additive only).
+   */
+  shadow?: ShadowAutoSend;
 }
 
 export interface TriageReading {
@@ -110,6 +120,13 @@ export interface TriageReading {
   containsPersonalInfo: boolean;
   /** One sentence, in English, explaining the reading. */
   rationale: string;
+}
+
+export interface ShadowAutoSend {
+  /** Rule identifier, so shadow evidence is tied to the exact rule measured. */
+  rule: string;
+  /** True only when every triage-side condition of the B1 rule holds. */
+  wouldAutoSend: boolean;
 }
 
 export interface Draft {
