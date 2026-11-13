@@ -370,3 +370,24 @@ it("records a no-response decision only after current evidence confirmation and 
   expect(noResponseRequired(review.id, confirmation)).toMatchObject({reason:"already_decided"});
   expect(publish).not.toHaveBeenCalled();
 });
+
+it("uses an injected provider and treats one that cannot reconcile as unknown", async () => {
+  const { draft, confirmation } = seed();
+  const calls: string[] = [];
+  const provider = {
+    listSince: async () => [],
+    getById: async () => null,
+    publishReply: async (id: string) => {
+      calls.push(id);
+      throw new Error("Lost response");
+    },
+  };
+  expect(await sendReply(review.id, draft.text, confirmation, { provider, facts })).toMatchObject({
+    reason: "publish_unknown",
+  });
+  expect(calls).toEqual([review.id]);
+  // No reconcileReply on this provider: the outcome stays unknown, nothing is resent.
+  expect(await reconcileReply(review.id, { provider, facts })).toEqual({ ok: false, reason: "publish_unknown" });
+  expect(calls).toEqual([review.id]);
+  expect(approvalRepo.getByReviewId(review.id)?.status).toBe("publish_unknown");
+});

@@ -6,6 +6,7 @@ import {
   type ReplyContext,
   type SendConfirmation,
 } from "@/lib/approval/context";
+import type { ReviewProvider } from "@/lib/interfaces/reviewProvider";
 import { FixtureReviewProvider } from "@/lib/providers/fixtureReviewProvider";
 import { approvalRepo } from "@/lib/store/approvalRepo";
 import { auditRepo } from "@/lib/store/auditRepo";
@@ -24,9 +25,23 @@ import {
   STUB_OWNER_ACTOR,
 } from "@/lib/types";
 
-// Deliberately fixture-only: authenticated identity and a live provider are separate release gates.
-const provider = new FixtureReviewProvider();
-const facts = businessFacts as ApprovedBusinessFacts;
+/**
+ * What a decision needs from outside: where replies are published, and the
+ * approved facts the draft was pinned to. Injected the same way the scan
+ * injects its dependencies, so a live provider is a wiring change, not an
+ * edit to this file.
+ */
+export interface DecisionDeps {
+  provider: ReviewProvider;
+  facts: ApprovedBusinessFacts;
+}
+
+// Default wiring is deliberately fixture-only: authenticated identity and a
+// live provider are separate release gates.
+const DEFAULT_DEPS: DecisionDeps = {
+  provider: new FixtureReviewProvider(),
+  facts: businessFacts as ApprovedBusinessFacts,
+};
 
 function requireContext(reviewId: string): ReplyContext {
   const review = reviewRepo.getById(reviewId);
@@ -96,7 +111,9 @@ export async function sendReply(
   reviewId: string,
   finalText: string,
   confirmation?: SendConfirmation,
+  deps: DecisionDeps = DEFAULT_DEPS,
 ): Promise<DecisionResult> {
+  const { provider, facts } = deps;
   const release = acquireStoreLock();
   if (!release) return { ok: false, reason: "in_progress" };
   try {
@@ -182,7 +199,9 @@ export async function sendReply(
 /** Read-only provider reconciliation. Never republishes. Only authoritative non-publication permits retry. */
 export async function reconcileReply(
   reviewId: string,
+  deps: DecisionDeps = DEFAULT_DEPS,
 ): Promise<DecisionResult> {
+  const { provider } = deps;
   const release = acquireStoreLock();
   if (!release) return { ok: false, reason: "in_progress" };
   try {
@@ -202,6 +221,9 @@ export async function reconcileReply(
           r.approval.attemptId === approval.attemptId,
       );
     if (!request) return { ok: false, reason: "publish_unknown" };
+    // A provider that cannot establish the outcome leaves it unknown. Never
+    // fall back to resending.
+    if (!provider.reconcileReply) return { ok: false, reason: "publish_unknown" };
     let result;
     try {
       result = await provider.reconcileReply(reviewId, approval.attemptId);
@@ -257,7 +279,12 @@ export async function reconcileReply(
 }
 
 /** An explicit reviewed decision; never use this to resolve an uncertain send. */
-export function noResponseRequired(reviewId: string, confirmation?: SendConfirmation): DecisionResult {
+export function noResponseRequired(
+  reviewId: string,
+  confirmation?: SendConfirmation,
+  deps: DecisionDeps = DEFAULT_DEPS,
+): DecisionResult {
+  const { facts } = deps;
   const release = acquireStoreLock();
   if (!release) return { ok: false, reason: "in_progress" };
   try {
