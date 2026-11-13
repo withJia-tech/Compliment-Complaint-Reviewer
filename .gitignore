@@ -13,3 +13,6 @@ next-env.d.ts
 # Patches exported from git history (e.g. to hand work over when a push is
 # blocked). The commits themselves are the source of truth.
 *.patch
+
+# Isolated synthetic sessions; each demo launch starts fresh.
+/data/demo-sessions/

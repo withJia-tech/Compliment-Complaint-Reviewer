@@ -187,3 +187,12 @@ describe("runDailyScan", () => {
     }
   });
 });
+
+
+it("bounds initial retrieval and discards an old review edited today", async () => {
+  provider.reviews = [{ ...POSITIVE, createTime:"2020-01-01T00:00:00Z", updateTime:ago(1) }, MIXED];
+  const result = await runDailyScan(deps());
+  expect(Date.parse(result.since)).toBeGreaterThan(Date.now() - 185*86400000);
+  expect(result.scanned).toBe(1);
+  expect(approvalRepo.getByReviewId(POSITIVE.id)).toBeNull();
+});

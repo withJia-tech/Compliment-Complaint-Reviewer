@@ -1,4 +1,4 @@
-import type { TriagePolicy } from "@/lib/interfaces/triagePolicy";
+import type { ClassificationInput, TriagePolicy } from "@/lib/interfaces/triagePolicy";
 import type { Review, ReviewTheme, RiskLevel, TriageResult } from "@/lib/types";
 import { findComplaintHits, findHits } from "@/lib/triage/match";
 import {
@@ -73,7 +73,7 @@ function starBandRisk(stars: Review["stars"]): RiskLevel {
  * with a real score without changing any caller.
  */
 export class DefaultTriagePolicy implements TriagePolicy {
-  classify(review: Review): TriageResult {
+  classify(review: ClassificationInput): TriageResult {
     const text = review.text;
     const themes = detectThemes(text);
     const base = {

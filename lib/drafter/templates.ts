@@ -23,6 +23,13 @@ export function displayName(review: Review): string {
   return review.author.trim().replace(/\.+$/, "");
 }
 
+function contact(cite: Cite): string {
+  const value = cite("contact.phone") ?? cite("contact.email");
+  return value
+    ? `Please contact us at ${value} so we can follow up directly.`
+    : "";
+}
+
 export interface ReplyTemplate {
   id: string;
   build(review: Review, cite: Cite): string;
@@ -31,31 +38,25 @@ export interface ReplyTemplate {
 export const POSITIVE_TEMPLATE: ReplyTemplate = {
   id: "positive_thanks",
   build: (review, cite) =>
-    `Thank you for the kind words, ${displayName(review)}! We're thrilled you enjoyed your visit to ${
-      cite("business_name") ?? "us"
-    }. We hope to see you again soon.`,
+    `Thank you for taking the time to rate ${
+      cite("business_name") ?? "our business"
+    }, ${displayName(review)}. We appreciate your feedback.`,
 };
 
 export const MIXED_TEMPLATE: ReplyTemplate = {
   id: "mixed_acknowledge",
   build: (review, cite) =>
-    `Thank you for your honest feedback, ${displayName(review)}. We're glad parts of your experience went well, and we take the rest seriously. Please reach us at ${
-      cite("contact.phone") ?? cite("contact.email") ?? "our front desk"
-    } so we can follow up directly.`,
+    `Thank you for your honest feedback, ${displayName(review)}. We take your feedback seriously. ${contact(cite)}`,
 };
 
 export const NEGATIVE_TEMPLATE: ReplyTemplate = {
   id: "negative_acknowledge_no_promise",
   build: (review, cite) =>
-    `We're sorry to hear about your experience, ${displayName(review)}. This isn't the standard we hold ourselves to, and we'd like to understand what happened. Please contact us at ${
-      cite("contact.phone") ?? cite("contact.email") ?? "our front desk"
-    } so our team can look into this.`,
+    `We're sorry to hear about your experience, ${displayName(review)}. This isn't the standard we hold ourselves to, and we'd like to understand what happened. ${contact(cite)}`,
 };
 
 export const SENSITIVE_TEMPLATE: ReplyTemplate = {
   id: "sensitive_personal_response",
   build: (review, cite) =>
-    `Thank you for bringing this to our attention, ${displayName(review)}. This is a serious matter and we want to look into it properly. Please contact us at ${
-      cite("contact.phone") ?? cite("contact.email") ?? "our front desk"
-    } so we can follow up with you directly.`,
+    `Thank you for bringing this to our attention, ${displayName(review)}. This is a serious matter and we want to look into it properly. ${contact(cite)}`,
 };

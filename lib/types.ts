@@ -91,13 +91,20 @@ export interface Draft {
   factsUsed: string[];
   templateId: string;
   generatedAt: string;
+  /** Pinned inputs; legacy drafts must be regenerated before sending. */
+  sourceVersion?: string;
+  factsVersion?: string;
 }
 
 export type ApprovalStatus =
   | "pending"
   | "approved"
   | "edited_approved"
-  | "rejected";
+  | "no_response_required"
+  | "rejected"
+  | "publishing"
+  | "publish_failed"
+  | "publish_unknown";
 
 /**
  * Channels a goodwill remedy is settled through. These are deliberately
@@ -120,6 +127,10 @@ export interface Approval {
   status: ApprovalStatus;
   actor: string;
   finalText?: string;
+  attemptId?: string;
+  contextVersion?: string;
+  validationVersion?: string;
+  confirmedAt?: string;
   decidedAt?: string;
   reason?: string;
   /** Internal-only record of an out-of-band goodwill remedy. Never published. */
@@ -135,8 +146,14 @@ export interface ProviderPublishResult {
 
 export type AuditAction =
   | "approved_published"
+  | "no_response_required"
   | "rejected"
   | "pending_approval"
+  | "publish_requested"
+  | "publish_failed"
+  | "publish_unknown"
+  | "publish_reconciled"
+  | "publish_not_published"
   /** An out-of-band goodwill remedy was noted. Nothing was published. */
   | "remedy_recorded";
 
@@ -169,3 +186,14 @@ export interface LocationSettings {
 
 export const DEFAULT_LOCATION_ID = "loc_001";
 export const STUB_OWNER_ACTOR = "business-owner";
+
+/** Provider must prove non-publication before permitting retry. A missing reply alone is insufficient. */
+export type PublishReconciliation =
+  | {
+      status: "published";
+      text: string;
+      providerReplyId: string;
+      publishedAt: string;
+    }
+  | { status: "not_published" }
+  | { status: "unknown" };

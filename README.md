@@ -3,7 +3,10 @@
 A fixture-backed prototype for a governed daily review desk for Google Business Profile teams. It
 demonstrates the narrow first workflow: scan new or updated reviews, classify risk, draft a
 grounded response, and queue every reply for the owner to approve and send. Nothing is sent
-automatically; low-risk reviews are marked quick approve so they clear in one click.
+automatically. Every send requires a factual-review confirmation and current source/draft versions.
+The interface labels all sends as simulated.
+
+See [verified-send controls and recovery](docs/VERIFIED_SEND.md) for failure states, acceptance evidence and remaining release gates.
 
 ## Current boundary
 
@@ -18,6 +21,24 @@ See [SPEC.md](./SPEC.md) for the product boundary, non-goals, and production-sha
 This is a fresh implementation inspired by the product scope and architecture of OpenReply. It
 does not copy OpenReply source code and is not presented as a fork. If source code is reused in a
 future version, retain OpenReply's MIT license and attribution.
+
+## Hosted comparison demonstration
+
+The same browser demo is prepared for Vercel, ChatGPT Sites and GitHub Pages.
+Run `npm run build:comparison` to generate `comparison/dist`. See
+[hosting status and comparison procedure](docs/HOSTING_COMPARISON.md).
+Reviews are limited to the past six calendar months. Human decisions move items out
+of Active into Completed; **No response required** is an explicit reviewed decision.
+The hosted demo uses tab memory, with no external publication. Dataset 2 (the default)
+contains five supplied real review-and-owner-reply pairs; Dataset 1 retains synthetic reviews.
+See [Dataset 2 provenance, dates and classifier boundary](docs/DATASET_2.md).
+
+## Client demonstration
+
+Run `npm run demo` after installing dependencies, then open `http://127.0.0.1:3000/demo`.
+Each launch creates a fresh, isolated synthetic queue. All sends remain simulated.
+See [the five-minute walkthrough](docs/CLIENT_DEMO.md) for setup, reset behaviour and limits.
+The local demo is not authenticated and must not be exposed publicly.
 
 ## Getting started
 
@@ -85,6 +106,29 @@ rubrics; `data/fixtures/golden.json` holds the labelled cases that hold them to 
 Goodwill remedies — vouchers and the like — are settled outside this app over email or
 WhatsApp. The detail page records that one was offered so the audit trail is complete, but
 nothing is sent from here and no remedy is ever mentioned in the published reply.
+
+## CI & evaluation
+
+The [current CI workflow](.github/workflows/ci.yml) runs TypeScript checks, unit and policy
+tests (including deterministic golden routing cases), a production build, and a repeated-scan
+check on pull requests. The verified-send change in
+[PR #5](https://github.com/withJia-tech/Compliment-Complaint-Reviewer/pull/5) adds regression
+coverage for stale approvals, edited replies, failed publication and uncertain delivery.
+
+The separate, unmerged
+[classifier branch](https://github.com/withJia-tech/Compliment-Complaint-Reviewer/tree/9e28eeefd02fcc26ed7b15d1b8961cabf1eca238)
+adds expanded golden-set evaluation, adversarial fixtures, dependency and secret scanning,
+and evaluation artifact uploads. Its required model-evaluation evidence is still outstanding.
+Those checks are not part of this branch's workflow.
+
+Per-category recall, semantic grounding coverage and broader policy-compliance gates remain
+planned. The classifier branch's existing metrics are exact match rate, aggregate sensitive
+recall, unsafe quick approvals, false alarms and reader failures. Template and send-boundary
+tests do not establish semantic grounding coverage or live-model prompt-injection robustness.
+
+There is no standalone lint job or test/evaluation artifact upload step in the current workflow.
+Passing CI establishes the checks implemented for that revision; it does not establish
+production readiness. See [verification limits](docs/VERIFIED_SEND.md) for remaining release gates.
 
 ## Scripts
 
