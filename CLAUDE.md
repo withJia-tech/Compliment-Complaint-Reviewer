@@ -31,6 +31,10 @@ npm run dev         # http://localhost:3000
 - `lib/triage/match.ts` — **all** keyword matching. Word boundaries; `foo*` = prefix. Never use
   `text.includes(keyword)`: substring matching once made "issue" match "sue".
 - `lib/triage/policy.ts` — deterministic routing; bump `POLICY_VERSION` when rules change
+- `lib/triage/normalize.ts`, `guards.ts` — normalised matching; personal-info, link and gibberish guards
+- `lib/triage/reader/` — the optional second reader (Claude, cached replay); `triageReview.ts` combines
+  it with the rules. **It can only raise, and fails closed.** BYOK: `ANTHROPIC_API_KEY`, never stored.
+- `tests/fixtures/golden/` — versioned, checksum-pinned golden dataset; never edit an approved version
 - `lib/drafter/` — templates filled only from approved facts; `factsUsed` records citations
 - `lib/decisions.ts` — send / skip / remedy; one decision per review (in-process claim)
 - `lib/scan/runDailyScan.ts` — the daily worker; idempotent, never publishes

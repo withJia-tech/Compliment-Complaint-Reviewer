@@ -2,6 +2,8 @@ import type { ApprovalChannel } from "@/lib/interfaces/approvalChannel";
 import type { ReplyDrafter } from "@/lib/interfaces/replyDrafter";
 import type { ReviewProvider } from "@/lib/interfaces/reviewProvider";
 import type { TriagePolicy } from "@/lib/interfaces/triagePolicy";
+import type { ReviewReader } from "@/lib/triage/reader/types";
+import { triageReview } from "@/lib/triage/triageReview";
 import { approvalRepo } from "@/lib/store/approvalRepo";
 import { auditRepo } from "@/lib/store/auditRepo";
 import { draftRepo } from "@/lib/store/draftRepo";
@@ -21,6 +23,8 @@ const EPOCH = new Date(0).toISOString();
 export interface DailyScanDeps {
   provider: ReviewProvider;
   policy: TriagePolicy;
+  /** Optional second reader. Can only raise attention; failures fail closed. */
+  reader?: ReviewReader | null;
   drafter: ReplyDrafter;
   approvalChannel: ApprovalChannel;
   facts: ApprovedBusinessFacts;
@@ -62,7 +66,7 @@ export async function runDailyScan(deps: DailyScanDeps): Promise<DailyScanResult
   for (const review of reviews) {
     reviewRepo.upsert(review);
 
-    const triage = deps.policy.classify(review);
+    const triage = await triageReview(review, deps.policy, deps.reader ?? null);
     triageRepo.upsert(triage);
 
     const draft = deps.drafter.draft(review, triage, deps.facts);

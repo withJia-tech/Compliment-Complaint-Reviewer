@@ -3,7 +3,9 @@ import { readFileSync } from "node:fs";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
 import { DefaultTriagePolicy } from "@/lib/triage/policy";
-import type { RecommendedAction, Review, RiskLevel } from "@/lib/types";
+import { CachedReviewReader, loadReadingCache } from "@/lib/triage/reader/cachedReader";
+import { triageReview } from "@/lib/triage/triageReview";
+import type { RecommendedAction, Review, RiskLevel, TriageResult } from "@/lib/types";
 
 /**
  * Versioned golden dataset for the risk classifier.
@@ -15,6 +17,12 @@ import type { RecommendedAction, Review, RiskLevel } from "@/lib/types";
  */
 const DIR = path.resolve(__dirname, "../../tests/fixtures/golden");
 const FILE = "risk_classifier_v1.jsonl";
+/**
+ * Saved model readings for this dataset: one evaluation run, produced by
+ * `npm run read:golden` with the owner's own key. Replaying them makes the
+ * test deterministic and free. Absent until that run has been done.
+ */
+const READINGS = path.join(DIR, "readings", "risk_classifier_v1.json");
 
 const CATEGORIES = [
   "safety",
@@ -113,23 +121,59 @@ describe("risk classifier golden dataset — integrity", () => {
   });
 });
 
-describe("risk classifier golden dataset — routing", () => {
-  const policy = new DefaultTriagePolicy();
-
-  it.each(fixtures)("$fixture_id [$family] $notes", (fixture) => {
-    const result = policy.classify(toReview(fixture));
-    expect({
-      action: result.recommendedAction,
-      riskLevel: result.riskLevel,
-      sensitive: result.sensitive,
-    }).toEqual({
-      action: fixture.expected_primary_action,
-      riskLevel: fixture.expected_risk_level,
-      sensitive: fixture.expected_sensitive,
-    });
-    if (fixture.expected_sensitive) {
-      const category = result.reasonCodes[0].replace("sensitive_", "");
-      expect(fixture.expected_categories).toContain(category);
-    }
+function expectMatches(fixture: Fixture, result: TriageResult) {
+  expect({
+    action: result.recommendedAction,
+    riskLevel: result.riskLevel,
+    sensitive: result.sensitive,
+  }).toEqual({
+    action: fixture.expected_primary_action,
+    riskLevel: fixture.expected_risk_level,
+    sensitive: fixture.expected_sensitive,
   });
+  if (fixture.expected_sensitive) {
+    const category = result.reasonCodes[0].replace("sensitive_", "");
+    expect(fixture.expected_categories).toContain(category);
+  }
+}
+
+const policy = new DefaultTriagePolicy();
+const cache = loadReadingCache(READINGS);
+
+/**
+ * The headline: keyword rules plus the second reader, replayed from the saved
+ * evaluation run. Every fixture must match. Skipped (not failed) until the
+ * owner has run `npm run read:golden` once with their key.
+ */
+describe.skipIf(cache === null)("risk classifier golden dataset — rules + reader", () => {
+  const reader = cache ? new CachedReviewReader(cache) : null;
+
+  it.each(fixtures)("$fixture_id [$family] $notes", async (fixture) => {
+    expectMatches(fixture, await triageReview(toReview(fixture), policy, reader));
+  });
+});
+
+/**
+ * Keyword rules and deterministic guards alone, with no reader (the mode
+ * anyone runs without a key). It must never mark a review quick approve when
+ * the dataset says it needs a read, except the ones listed here, which only
+ * a reader that understands meaning can catch.
+ */
+const NEEDS_A_READER = new Set<string>([
+  "RC-002", // "two hours late" inside a polite 4-star review: no complaint keyword
+  "RC-200", // "felt unwell", "piece of plastic": paraphrase of illness and a foreign object
+  "RC-202", // cultural misrepresentation described without any discrimination keyword
+  "RC-311", // a staff member's full name: no pattern can tell a name from other words
+  "RC-407", // sarcasm: praise words wrapped around a complaint
+  "RC-503", // Spanish food poisoning, Latin script, so the script guard can't see it
+]);
+
+describe("risk classifier golden dataset — rules only (no key)", () => {
+  it.each(fixtures.filter((f) => f.expected_primary_action === "needs_review" && !NEEDS_A_READER.has(f.fixture_id)))(
+    "$fixture_id is not quick approve without a reader",
+    async (fixture) => {
+      const result = await triageReview(toReview(fixture), policy, null);
+      expect(result.recommendedAction).toBe("needs_review");
+    },
+  );
 });

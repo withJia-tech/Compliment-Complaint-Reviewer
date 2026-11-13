@@ -3,6 +3,7 @@ import { TemplateReplyDrafter } from "@/lib/drafter/replyDrafter";
 import { FixtureReviewProvider } from "@/lib/providers/fixtureReviewProvider";
 import type { DailyScanDeps } from "@/lib/scan/runDailyScan";
 import { DefaultTriagePolicy } from "@/lib/triage/policy";
+import { readerFromEnv } from "@/lib/triage/reader/fromEnv";
 import type { ApprovedBusinessFacts } from "@/lib/types";
 import businessFacts from "@/data/fixtures/businessFacts.json";
 
@@ -11,6 +12,7 @@ export function buildDefaultScanDeps(): DailyScanDeps {
   return {
     provider: new FixtureReviewProvider(),
     policy: new DefaultTriagePolicy(),
+    reader: readerFromEnv(),
     drafter: new TemplateReplyDrafter(),
     approvalChannel: new EmailApprovalChannel(),
     facts: businessFacts as ApprovedBusinessFacts,

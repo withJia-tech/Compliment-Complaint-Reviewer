@@ -114,6 +114,42 @@ all"), unless the same term also appears un-negated. Sensitive terms are never
 negation-filtered: missing a real safety claim costs more than carrying one
 over-cautious flag.
 
+Terms are also matched against a **normalised copy** of the text with zero-width
+characters removed, spaced or dotted letters joined ("l a w y e r", "s.u.e") and digits
+between letters read as letters ("f00d p0isoning"). The stored text is never changed.
+
+### Deterministic guards
+
+Without any keyword list or model, a review is never quick approve when it contains:
+a phone number, email, street address, or card or order number (`personal_info`); a link
+(`contains_link`); gibberish (`unreadable`). Instructions aimed at software ("ignore previous
+instructions") are a sensitive category of their own (`sensitive_prompt_injection`).
+
+### Second reader (optional, bring your own key)
+
+A language model reads each review in any language, including Singlish, Malay, Chinese and
+slang, and returns a structured reading: concern (none, complaint, sensitive), the sensitive
+category, whether it contains personal details, and a one-sentence rationale.
+
+- **It can only raise attention.** It never lowers a risk level, clears a sensitive flag, or turns
+  needs review into quick approve. A reading of sensitive sets high risk.
+- **It fails closed.** A refusal, an API error or a missing cached reading puts the review in
+  needs review (`reader_failed`).
+- **Without a reader**, a review mostly in a non-Latin script is never quick approve
+  (`unreadable`): nothing could read it.
+- The review text is passed as data inside tags; instructions inside it are reported, never followed.
+- Each owner uses their own Anthropic key (`ANTHROPIC_API_KEY`). The app never stores a key.
+
+### Golden dataset
+
+`tests/fixtures/golden/risk_classifier_v<N>.jsonl` states what triage should decide for each
+review, in families: baseline, routine complaint, sensitive, mixed signal, PII, adversarial,
+multilingual and edge case. A version is pinned by checksum in `MANIFEST.json` and never edited
+once approved; a change means a new version and a new evaluation run. An evaluation run
+(`npm run read:golden`) saves the model's readings so the test replays them for free. The test
+also checks the no-key mode never quick-approves a review the dataset says needs a read, apart
+from a short, named list that only a reader can catch.
+
 ### Grounding rubric
 
 The drafter may use exactly two inputs: the review itself, and the approved business

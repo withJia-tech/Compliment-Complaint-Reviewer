@@ -21,6 +21,10 @@ here is judged by one question — *if we are wrong, what does it cost to undo?*
 | 7 | **Audit record schema** | **One-way (additive only)** | Records are history. Add fields freely; never repurpose or remove one. `remedy_recorded` was added rather than overloading `approved_published`, which would have falsified past records. |
 | 8 | Single owner, single location (`STUB_OWNER_ACTOR`, `DEFAULT_LOCATION_ID`) | Two-way now; **quietly hardens** | `locationId` is already on reviews and audit records, but the owner is a string and the repos have no tenant key. Every table added without one makes multi-location more expensive. **Decide the tenant key before live Google OAuth lands (B10).** |
 | 9 | No escalation tier | Two-way | A solo owner has nobody to escalate to. Sensitive claims are flagged and sorted first instead. |
+| 10 | **Second reader can only raise, and fails closed** | Two-way | A model reading is added on top of the keyword result; it can never lower one. Any failure holds the review. So the worst a bad model does is cost the owner a read, never mark a dangerous review safe. Removing the reader returns to rules only. |
+| 11 | **Bring your own key**; keys live only in each owner's environment | Two-way | No hosted service, no stored secrets, no tenant model needed for keys. A hosted version that stores other people's keys would need encryption and a tenant key (see 8), so it waits for real demand. |
+| 12 | Golden dataset versions are immutable once approved | Two-way | Pinned by checksum. A change is a new version file, so past evaluation runs stay comparable. |
+| 13 | Gaps are fixed, not catalogued | Two-way | The handover proposed `knownGap` markers. The owner chose to make the classifier reason through them instead, so the dataset states the target and the second reader is the fix. |
 
 The three to watch are **6, 7 and 8**. Everything else can be changed in an afternoon.
 

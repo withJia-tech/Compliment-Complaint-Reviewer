@@ -88,6 +88,37 @@ unambiguous claim goes straight to high, while an ambiguous one is softened to m
 still flagged sensitive. [SPEC.md](./SPEC.md) carries the full routing, grounding and theme
 rubrics; `data/fixtures/golden.json` holds the labelled cases that hold them to it.
 
+### The second reader (bring your own key)
+
+Keywords can't read sarcasm, paraphrase ("my friend felt unwell afterwards") or a review in
+Singlish, Malay or Chinese. An optional second reader can: Claude reads each review and can
+**raise** it to needs review or sensitive. It can never clear a review the rules flagged, and if
+it fails for any reason the review is held for you to read.
+
+It runs on **your own Anthropic API key**. Nothing is hosted for you and no key is stored by the
+app.
+
+1. Create a key in the [Anthropic Console](https://console.anthropic.com/) just for this app, and
+   set a monthly spend limit on it.
+2. `cp .env.example .env.local` and put the key in `ANTHROPIC_API_KEY`. `.env.local` and `.env`
+   are git-ignored; never commit a key.
+3. `npm run scan` now uses the reader. Without a key the app still works on rules alone.
+
+Each review sent to the reader includes its text, so customers' words (and any details they
+posted) go to Anthropic. Reviews are public on Google already, but check Anthropic's data terms
+for your account.
+
+**Cost.** The default model is Claude Opus 5.5. `npm run read:golden` (dry run) prints an
+estimate: about $0.55 for the 47 golden reviews with text, so roughly a cent per review.
+`CCR_READER_MODEL=claude-haiku-5-5` costs far less; re-run the golden dataset before trusting it.
+
+**Demo without a key.** `npm run read:demo -- --yes` (once, with your key) saves readings for
+the demo reviews to `data/readings/demo.json`. Commit that file, then anyone can run the demo
+with `CCR_READER=cache npm run scan` at no cost and with no key.
+
+**Evaluate it.** `npm run read:golden -- --yes` runs the golden dataset through the reader,
+prints how many of the 49 cases match, and saves the readings so `npm test` replays them.
+
 Goodwill remedies — vouchers and the like — are settled outside this app over email or
 WhatsApp. The detail page records that one was offered so the audit trail is complete, but
 nothing is sent from here and no remedy is ever mentioned in the published reply.

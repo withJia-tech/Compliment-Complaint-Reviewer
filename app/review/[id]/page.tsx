@@ -82,6 +82,13 @@ export default async function ReviewDetailPage({ params }: { params: Promise<{ i
           {triage.matchedKeywords.length > 0 && (
             <p>Matched keywords: {triage.matchedKeywords.join(", ")}</p>
           )}
+          {triage.reading && (
+            <p>
+              Second reader ({triage.reading.language}): {triage.reading.rationale}
+              {triage.reading.concern === "sensitive" && ` Flagged as ${triage.reading.category}.`}{" "}
+              <em>It can only raise attention, never clear a review.</em>
+            </p>
+          )}
           <p>
             Rule strength: {confidenceBand(triage.confidence)} &middot; Policy version:{" "}
             {triage.policyVersion}
