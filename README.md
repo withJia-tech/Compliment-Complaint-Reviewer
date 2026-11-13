@@ -108,16 +108,23 @@ Each review sent to the reader includes its text, so customers' words (and any d
 posted) go to Anthropic. Reviews are public on Google already, but check Anthropic's data terms
 for your account.
 
-**Cost.** The default model is Claude Opus 5.5. `npm run read:golden` (dry run) prints an
-estimate: about $0.55 for the 47 golden reviews with text, so roughly a cent per review.
-`CCR_READER_MODEL=claude-haiku-5-5` costs far less; re-run the golden dataset before trusting it.
+**Which model, and cost.** Claude Haiku 5.5 reads every review. Fixed routing rules (code, not a
+model) send the uncertain ones to Claude Sonnet 5.5 for a second read: a concern, personal
+details, three stars or fewer, a language other than English, a link, or anything the keyword
+rules already flagged. A plain, happy English review stays on Haiku. The second read can only
+add attention, never remove it. `npm run read:golden` (dry run) prints a ceiling: under $0.30
+for the 47 golden reviews with text even if every one escalated, so well under a cent per
+review. The evaluation gate fails above one cent per review. To try another set-up, set
+`CCR_READER_MODEL` and `CCR_READER_ESCALATION_MODEL` (or `off`) and pass `--out <file>`.
 
 **Demo without a key.** `npm run read:demo -- --yes` (once, with your key) saves readings for
 the demo reviews to `data/readings/demo.json`. Commit that file, then anyone can run the demo
 with `CCR_READER=cache npm run scan` at no cost and with no key.
 
 **Evaluate it.** `npm run read:golden -- --yes` runs the golden dataset through the reader,
-prints how many of the 49 cases match, and saves the readings so `npm test` replays them.
+prints how many of the 49 cases match, how many escalated and what it cost, and saves every model
+attempt so the evaluation gate replays them. The gate only accepts a run made by exactly the
+default reader (same models, routing and prompt).
 
 Goodwill remedies — vouchers and the like — are settled outside this app over email or
 WhatsApp. The detail page records that one was offered so the audit trail is complete, but

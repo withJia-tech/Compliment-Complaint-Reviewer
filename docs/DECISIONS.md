@@ -26,8 +26,35 @@ here is judged by one question — *if we are wrong, what does it cost to undo?*
 | 12 | Golden dataset versions are immutable once approved | Two-way | Pinned by checksum. A change is a new version file, so past evaluation runs stay comparable. |
 | 14 | **Triage behaviour is release-gated** | Two-way | `npm run eval:gate` fails CI when a metric in `eval/thresholds.json` regresses, when the evaluation run is missing or stale, or when a limit is loosened without a stated reason. CI holds no key: it replays the committed run, so results reproduce from a clean checkout. |
 | 13 | Gaps are fixed, not catalogued | Two-way | The handover proposed `knownGap` markers. The owner chose to make the classifier reason through them instead, so the dataset states the target and the second reader is the fix. |
+| 15 | **Haiku reads every review; code routes the uncertain ones to Sonnet** (B11, `routing-v1`) | Two-way | The owner asked for Haiku by default with "another agent" routing to Sonnet when needed. The router is deterministic code, not a model: a model router would be another paid call, another thing that can fail or be talked round by the review it routes, and it could not be replayed exactly in CI. The rules are in `lib/triage/reader/cascade.ts`; changing them bumps `ROUTING_VERSION`, which makes the saved evaluation run stale. Escalation can only raise, and a failed escalation read holds the review. Swapping models is an environment variable. |
+| 16 | **Cost is release-gated at one cent per review** | Two-way | The owner set US$0.01 per review read on 2026-11-13, before any evaluation run, so the limit was not fitted to a result. It is measured from recorded token usage, priced from `lib/triage/reader/pricing.ts`. An unknown price or an empty run fails. With Haiku and Sonnet the worst case is about 0.6¢, so today it catches misconfiguration (a pricier model, runaway thinking tokens) rather than shaping the choice. |
+| 17 | Golden dataset v1 **approved** by the owner (2026-11-13) | Two-way (by decision 12) | From now on `risk_classifier_v1.jsonl` is frozen; any change, including to RC-300 and RC-408, means a `v2` file and a new evaluation run. One person labelled and approved it, so its high-risk labels are not independently adjudicated (see `docs/LEARNING_LOOP_PLAN.md`). |
 
 The three to watch are **6, 7 and 8**. Everything else can be changed in an afternoon.
+
+### Proposed, not yet decided: where Google OAuth refresh tokens live (for B12)
+
+The owner asked for the secured option, assessed. A Business Profile refresh token with
+`business.manage` lets whoever holds it post, edit and delete replies and edit the profile as the
+business, without a password, until it is revoked. Treat it as the business's public voice.
+
+| Option | Protects against | Weak spot | Fit for one person, self-hosted |
+|---|---|---|---|
+| A. Plain `.env.local` or env var | Nothing at rest | Any process, backup or careless commit exposes it | Rejected |
+| B. Encrypted file, key in an env var | A copied file on its own | Key and file sit on the same machine | Bare minimum |
+| C. Encrypted file, key in the OS keychain (macOS Keychain, Windows Credential Manager, libsecret) | Disk theft, backups, other user accounts | Weak on a headless Linux server with no keychain; needs a native module or the OS CLI | **Recommended while it runs on the owner's own computer** |
+| D. Cloud secret manager (e.g. Google Secret Manager in the same Google Cloud project as the API) | A stolen disk; also gives an access log and rotation | Another account and a network dependency | **Recommended once it runs on a server** |
+| E. Store nothing; owner signs in each session | No standing secret | The daily scan cannot run unattended | Only for a manual-only phase |
+
+**Recommendation:** put a `TokenVault` interface in front (a two-way door), and implement C first:
+AES-256-GCM, one record per tenant, the tenant key (B10) and scope bound in as additional
+authenticated data so a record cannot be replayed for another tenant, the file outside the repo
+and outside `data/store/`. Swap to D when hosting. Around it: access tokens in memory only; the
+scheduled scan uses read calls only (send stays an owner click, as today); revoke at Google on
+disconnect; never log a token, and add a canary token to the CI log-leak check. To verify before
+building: Google's current rules for apps whose OAuth consent screen is in "Testing" status (refresh
+tokens have expired after 7 days) and whether `business.manage` needs app verification. The owner
+has not yet applied for Business Profile API access; that approval is the long pole for B12.
 
 ## Backlog
 
@@ -65,7 +92,9 @@ shown — the owner's words are not silently rewritten. Port the deterministic c
 
 `sendReply` marks a review approved even if the provider returns `success: false`. Impossible with
 the fixture, certain with Google. Needs a failure audit action and a retry path. Do it with the
-provider contract tests (B4's neighbour), not before.
+provider contract tests (B4's neighbour), not before. *Status:* draft PR #5
+(`codex/verified-approval-send`) implements this for the fixture boundary, plus a cross-process
+writer lock (B6). It is not merged, and it conflicts with this branch in seven files.
 
 ### B4 — Existing-reply awareness
 
@@ -103,17 +132,20 @@ Read from Google at the moment of need. No local archive. Needs B7's data to be 
 Before live OAuth, add a tenant key to the repos so multi-location is a migration, not a rewrite.
 This is what keeps decision 8 a two-way door.
 
-### B11 — Cheaper reader model  *(next)*
+### B11 — Cheaper reader model  *(built; waiting on the owner's evaluation run)*
 
-Switch the second reader's default from Claude Opus 5.5 (about a cent per review) to a cheaper
-model such as Claude Sonnet 5.5 (about half) or Claude Haiku 5.5 (far less). Only if the
-evaluation gate still passes with unchanged `rules_plus_reader` thresholds. First close the gate
-gap: it checks the readings' prompt version but not their model, so it must also fail when the
-committed run was made with a different model from the configured default.
+Done in code: Haiku first, Sonnet on escalation (decision 15); the gate checks the exact reader
+(models, routing version, prompt fingerprint) and cost per review (decision 16); the
+`rules_plus_reader` quality thresholds are unchanged. **Not yet shown to work:** that needs
+`npm run read:golden -- --yes` with the owner's key. If the cascade misses the quality limits,
+the fix is routing or prompt, never looser thresholds. Worth one comparison run before settling:
+Sonnet alone at low effort (`CCR_READER_MODEL=claude-sonnet-5-5 CCR_READER_ESCALATION_MODEL=off
+npm run read:golden -- --yes --out /tmp/sonnet.json`), since one model is simpler than two.
 
 ### B12 — Live Google reviews  *(after B10)*
 
 Read the owner's real reviews through Google's Business Profile API with OAuth (scope
 `business.manage`), or through an MCP connector if one fits. Needs the tenant key (B10) first,
-and a decision on where OAuth refresh tokens live, since storing them is a one-way door. MCP stays
-a way to read, never the scheduler or system of record (SPEC non-goal).
+and a decision on where OAuth refresh tokens live, since storing them is a one-way door (assessed
+above: proposed, not decided). MCP stays a way to read, never the scheduler or system of record
+(SPEC non-goal). The owner is still choosing between the API and an MCP connector.

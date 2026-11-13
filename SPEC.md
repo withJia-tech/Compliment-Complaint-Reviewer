@@ -139,6 +139,12 @@ category, whether it contains personal details, and a one-sentence rationale.
   (`unreadable`): nothing could read it.
 - The review text is passed as data inside tags; instructions inside it are reported, never followed.
 - Each owner uses their own Anthropic key (`ANTHROPIC_API_KEY`). The app never stores a key.
+- **Two models, routed by code** (`routing-v1`). A cheap model (Claude Haiku 5.5) reads every
+  review. Its reading is final only when it is sensitive, or when the review is plainly easy: no
+  concern, no personal details, the rules would quick-approve it, 4–5 stars, English, no link,
+  mostly Latin script. Anything else is read again by a stronger model (Claude Sonnet 5.5) and the
+  two readings are merged so the more serious one wins. If that second read fails, the review is
+  held. No model decides the routing.
 
 ### Golden dataset
 
