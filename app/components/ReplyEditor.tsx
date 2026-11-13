@@ -8,7 +8,8 @@ import {
 } from "@/app/queue/actions";
 import { refusalMessage, statusLabel } from "@/lib/approval/presentation";
 import type { DecisionResult } from "@/lib/decisions";
-import type { Approval, Draft } from "@/lib/types";
+import type { Approval, ApprovedBusinessFacts, Draft } from "@/lib/types";
+import { ReplyEvidence } from "@/app/components/ReplyEvidence";
 
 /** Shared by queue and detail. Parent keys this component by the rendered context version. */
 export function ReplyEditor({
@@ -16,11 +17,15 @@ export function ReplyEditor({
   draft,
   approval,
   version,
+  reviewText,
+  facts,
 }: {
   reviewId: string;
   draft: Draft;
   approval: Approval | null;
   version: string;
+  reviewText: string;
+  facts: ApprovedBusinessFacts;
 }) {
   const router = useRouter();
   const [stale, setStale] = useState(false);
@@ -54,7 +59,7 @@ export function ReplyEditor({
     });
   }
   return (
-    <>
+    <div className="reply-with-evidence"><div>
       <p className="page-sub">
         Demo data only. Replies are simulated; no external message is sent.
       </p>
@@ -77,10 +82,6 @@ export function ReplyEditor({
           />
         </>
       )}
-      <p className="facts-cited">
-        Draft facts cited: {draft.factsUsed.join(", ") || "none"}. Edits require
-        your factual review.
-      </p>
       {approval && (
         <p className="decided-note">
           {statusLabel(approval)}
@@ -113,7 +114,7 @@ export function ReplyEditor({
                 )
               }
             >
-              {pending ? "Saving…" : "Approve and simulate send"}
+              {pending ? "Saving…" : text !== draft.text ? "Send edited reply · simulated" : "Approve & send · simulated"}
             </button>
             <button
               type="button"
@@ -145,6 +146,6 @@ export function ReplyEditor({
           {notice}
         </p>
       )}
-    </>
+    </div><ReplyEvidence reviewText={reviewText} draft={draft} facts={facts} /></div>
   );
 }
