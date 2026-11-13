@@ -4,7 +4,15 @@
 
 The prototype represents one business with one Google Business Profile location. It runs a daily
 scan over new or updated reviews, applies deterministic triage rules, drafts a reply from approved
-business facts, and routes the result to either automatic publishing or human approval.
+business facts, and queues the result for the owner, who sends every reply themselves.
+
+## Stage: prove the logic for one person first
+
+The first goal is to prove the triage, drafting and approval logic for a single owner running a
+single business. Scaling to many locations or agencies is deliberately deferred, and each
+decision is made so it can be changed cheaply later — a two-way door. Decisions that cannot be
+undone cheaply are called out as one-way doors, with the reasoning, in
+[docs/DECISIONS.md](docs/DECISIONS.md), which also holds the backlog.
 
 ## Prototype mode
 
@@ -12,14 +20,41 @@ This first slice is fixture-backed. It does not connect to Google, send email, p
 expose MCP tools. The interface is designed around the production contracts those integrations
 will later implement.
 
+## Sending
+
+**Nothing is ever sent automatically.** Every reply — including a clean five-star thank-you — waits
+in the queue until the owner sends it. Low-risk reviews are marked **quick approve**, so clearing
+one takes a single click, but a person still clicks.
+
+Auto-send is in the backlog as a much narrower rule than the consent toggle it replaces: only a
+5-star review that is *deterministically* positive. See docs/DECISIONS.md for the conditions it
+would have to meet before being built.
+
+## Data residency
+
+This design assumes live Google reviews, where the owner's data stays in the owner's Google
+account:
+
+- **Google is the system of record** for review text and for published replies. This app holds
+  only its own working state: how each review was triaged, the draft, the owner's decision, any
+  remedy note, and the audit trail.
+- **"Has this review been answered?" is ultimately a question for Google**, not for the local
+  store. The local approval status is a cache of that fact plus the owner's intent.
+- **Prior cases are read from Google at the moment they are needed.** There is no local archive of
+  review history, which keeps the "no long-term review-content storage" non-goal intact.
+- **Known gap:** audit records still embed a snapshot of the review text as evidence. That is
+  fine while the provider is a fixture; with a live provider the audit should reference the
+  review id and a content hash, and fetch the text from Google when it is displayed.
+
 ## Primary workflow
 
 1. Business owner connects one verified location through Google OAuth.
 2. A daily worker fetches reviews created or updated since the previous successful scan.
 3. Triage assigns a risk level, reason codes, recommended action, and confidence.
 4. The drafting step uses only approved business facts and the review content.
-5. Low-risk positive reviews may be auto-published only after explicit consent.
-6. Mixed, negative, or sensitive reviews create an approval task.
+5. Every review waits for the owner. Low-risk ones are marked quick approve.
+6. The owner sends, edits-and-sends, or skips each reply; mixed, negative and sensitive reviews
+   are flagged for a closer read.
 7. Every decision records the policy version, evidence, draft, approval, and provider result.
 
 ## Default policy
@@ -35,17 +70,18 @@ Evaluated in order; the first rule that matches decides. Implemented in
 
 | # | Condition | Risk | Sensitive | Action |
 |---|---|---|---|---|
-| 1 | Matches a **strong** sensitive term | high | yes | approval required |
-| 2 | Matches only a **weak** sensitive term | max(medium, star band) | yes | approval required |
-| 3 | 1–2 stars | high | no | approval required |
-| 4 | 3 stars, or 4–5 stars with a complaint term | medium | no | approval required |
-| 5 | 4–5 stars, no complaint term | low | no | auto-publish eligible |
+| 1 | Matches a **strong** sensitive term | high | yes | needs review |
+| 2 | Matches only a **weak** sensitive term | max(medium, star band) | yes | needs review |
+| 3 | 1–2 stars | high | no | needs review |
+| 4 | 3 stars, or 4–5 stars with a complaint term | medium | no | needs review |
+| 5 | 4–5 stars, no complaint term | low | no | quick approve |
 
 Star band alone (used by rule 2): 1–2 stars → high, 3 stars → medium, 4–5 → low.
 
-**Nothing sensitive is ever auto-published**, at any star rating, under any consent
-setting. Rule 1 and rule 2 both end in approval required, and that invariant is
-asserted directly in the golden test.
+**Nothing sensitive is ever offered as quick approve**, at any star rating. Rules 1 and 2 both
+end in needs review, and that invariant is asserted directly in the golden test. Because nothing
+is auto-sent, this decides how much attention a review gets, not whether a human sees it — a
+human sees all of them.
 
 ### Sensitive categories, by severity
 
@@ -63,7 +99,7 @@ any category outranks a weak match in every category.
 **Strong** terms are unambiguous in a review ("food poisoning", "lawsuit", "racist").
 **Weak** terms are real signals that also carry ordinary meanings ("sick of waiting",
 "burnt toast"). Weak terms still mark the review sensitive — so it is never
-auto-published — but only floor it at medium, so ambiguous hits don't crowd genuine
+offered as a quick approve — but only floor it at medium, so ambiguous hits don't crowd genuine
 claims out of the top of the queue.
 
 ### Matching rules
@@ -118,7 +154,8 @@ changes no approval status.
 - Long-term storage of review content. Weekly and monthly rollups aggregate reviews
   already ingested; they add no new retention.
 - MCP as the scheduler or system of record.
-- Automatic publishing without explicit business consent.
+- Automatic sending of any reply. (Backlog: a narrow rule for deterministic 5-star positives —
+  see docs/DECISIONS.md.)
 - Issuing, sending, or tracking the fulfilment of vouchers or refunds.
 
 ## Production-shaped interfaces to preserve
@@ -132,7 +169,7 @@ changes no approval status.
 ## Success criteria for the next validation
 
 - A reviewer can understand the daily queue in under one minute.
-- The interface makes automation versus human review obvious.
+- The interface makes it obvious how much attention each review needs, and that the owner sends every reply.
 - The draft is useful without inventing facts, by the grounding rubric above.
 - The user can explain why a review was flagged sensitive, and which category.
 - The prototype is suitable for a live Google integration without redesigning the core workflow.

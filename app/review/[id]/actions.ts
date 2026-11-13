@@ -12,6 +12,10 @@ function revalidate(reviewId: string) {
   revalidatePath("/insights");
 }
 
+// A plain <form> action cannot show a returned value, so a refused submit (the
+// review was already decided, say from another tab) is not reported here. It
+// still revalidates, and the page re-renders showing the settled decision,
+// which is the whole message the owner needs.
 export async function sendReplyFromDetailAction(reviewId: string, formData: FormData) {
   await sendReply(reviewId, String(formData.get("replyText") ?? ""));
   revalidate(reviewId);

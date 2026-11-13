@@ -1,8 +1,8 @@
 import type { RecommendedAction } from "@/lib/types";
 
 const LABELS: Record<RecommendedAction, string> = {
-  auto_publish_eligible: "Auto",
-  approval_required: "Needs approval",
+  quick_approve: "Quick approve",
+  needs_review: "Needs review",
 };
 
 export function ActionBadge({ action }: { action: RecommendedAction }) {

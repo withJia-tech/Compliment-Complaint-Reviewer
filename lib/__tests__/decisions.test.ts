@@ -1,9 +1,10 @@
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { recordRemedy, rejectReply, sendReply } from "@/lib/decisions";
 import { TemplateReplyDrafter } from "@/lib/drafter/replyDrafter";
+import { FixtureReviewProvider } from "@/lib/providers/fixtureReviewProvider";
 import { DefaultTriagePolicy } from "@/lib/triage/policy";
 import { approvalRepo } from "@/lib/store/approvalRepo";
 import { auditRepo } from "@/lib/store/auditRepo";
@@ -46,6 +47,7 @@ beforeEach(() => {
 });
 
 afterEach(() => {
+  vi.restoreAllMocks();
   delete process.env.CCR_STORE_DIR;
   fs.rmSync(tmpDir, { recursive: true, force: true });
 });
@@ -156,5 +158,85 @@ describe("recordRemedy", () => {
     const published = auditRepo.listByReviewId("rev_1").at(-1);
     expect(published?.draft.text).not.toContain("voucher");
     expect(published?.approval.finalText ?? published?.draft.text).not.toContain("voucher");
+  });
+});
+
+describe("a decided review cannot be decided again", () => {
+  // Server actions are a public HTTP surface, so hiding the buttons in the UI
+  // is not a guard. Two tabs, or the queue and the detail page, can both submit.
+  it("sends once and refuses a second send, without a second publish or audit entry", async () => {
+    const { draft } = seed();
+    const publish = vi.spyOn(FixtureReviewProvider.prototype, "publishReply");
+
+    const first = await sendReply("rev_1", draft.text);
+    const second = await sendReply("rev_1", `${draft.text} (edited)`);
+
+    expect(first.ok).toBe(true);
+    expect(second).toEqual({ ok: false, reason: "already_decided", status: "approved" });
+    expect(publish).toHaveBeenCalledTimes(1);
+    expect(auditRepo.listByReviewId("rev_1")).toHaveLength(1);
+    expect(approvalRepo.getByReviewId("rev_1")?.finalText).toBeUndefined();
+  });
+
+  // The race lives in the gap between "check status" and "record decision":
+  // publishReply is awaited in between, so a second send arriving in that
+  // window still sees the review as pending.
+  it("publishes once when two sends race", async () => {
+    const { draft } = seed();
+    const publish = vi.spyOn(FixtureReviewProvider.prototype, "publishReply");
+
+    const results = await Promise.all([
+      sendReply("rev_1", draft.text),
+      sendReply("rev_1", draft.text),
+    ]);
+
+    expect(results.filter((r) => r.ok)).toHaveLength(1);
+    expect(publish).toHaveBeenCalledTimes(1);
+    expect(auditRepo.listByReviewId("rev_1")).toHaveLength(1);
+  });
+
+  it("refuses to send a review the owner already skipped", async () => {
+    const { draft } = seed();
+    const publish = vi.spyOn(FixtureReviewProvider.prototype, "publishReply");
+
+    rejectReply("rev_1", "Handled offline");
+    const result = await sendReply("rev_1", draft.text);
+
+    expect(result).toEqual({ ok: false, reason: "already_decided", status: "rejected" });
+    expect(publish).not.toHaveBeenCalled();
+    expect(approvalRepo.getByReviewId("rev_1")?.status).toBe("rejected");
+  });
+
+  it("refuses to skip a review that has already been sent", async () => {
+    const { draft } = seed();
+    await sendReply("rev_1", draft.text);
+
+    const result = rejectReply("rev_1", "changed my mind");
+
+    expect(result).toEqual({ ok: false, reason: "already_decided", status: "approved" });
+    expect(approvalRepo.getByReviewId("rev_1")?.status).toBe("approved");
+    expect(auditRepo.listByReviewId("rev_1")).toHaveLength(1);
+  });
+
+  it("does not treat a recorded remedy as a decision", async () => {
+    const { draft } = seed();
+    recordRemedy("rev_1", { note: "Offered a coffee on the house", channel: "email" });
+
+    const result = await sendReply("rev_1", draft.text);
+
+    expect(result.ok).toBe(true);
+  });
+
+  it("releases its claim when publishing throws, so the owner can retry", async () => {
+    const { draft } = seed();
+    vi.spyOn(FixtureReviewProvider.prototype, "publishReply").mockRejectedValueOnce(
+      new Error("network down"),
+    );
+
+    await expect(sendReply("rev_1", draft.text)).rejects.toThrow("network down");
+    expect(approvalRepo.getByReviewId("rev_1")?.status ?? "pending").toBe("pending");
+    expect(auditRepo.listByReviewId("rev_1")).toHaveLength(0);
+
+    expect((await sendReply("rev_1", draft.text)).ok).toBe(true);
   });
 });

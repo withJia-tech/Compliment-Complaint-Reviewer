@@ -83,8 +83,8 @@ export class DefaultTriagePolicy implements TriagePolicy {
       computedAt: new Date().toISOString(),
     };
 
-    // 1. Sensitive claims mark the review sensitive and block auto-publish at
-    // any star rating. A strong match goes straight to high; a weak, ambiguous
+    // 1. Sensitive claims mark the review sensitive and always need the
+    // owner's personal attention, at any star rating. A strong match goes straight to high; a weak, ambiguous
     // match only floors at medium, though a bad rating can still lift it.
     const sensitive = findSensitive(text);
     if (sensitive) {
@@ -93,7 +93,7 @@ export class DefaultTriagePolicy implements TriagePolicy {
         ...base,
         riskLevel: higherRisk(floor, starBandRisk(review.stars)),
         reasonCodes: [sensitive.code],
-        recommendedAction: "approval_required",
+        recommendedAction: "needs_review",
         sensitive: true,
         confidence: sensitive.strength === "strong" ? 0.9 : 0.6,
         matchedKeywords: sensitive.hits,
@@ -109,7 +109,7 @@ export class DefaultTriagePolicy implements TriagePolicy {
         ...base,
         riskLevel: "high",
         reasonCodes: ["negative_issue"],
-        recommendedAction: "approval_required",
+        recommendedAction: "needs_review",
         sensitive: false,
         confidence: complaintHits.length > 0 ? 0.85 : 0.6,
         matchedKeywords: complaintHits,
@@ -122,19 +122,20 @@ export class DefaultTriagePolicy implements TriagePolicy {
         ...base,
         riskLevel: "medium",
         reasonCodes: ["neutral_mixed_sentiment"],
-        recommendedAction: "approval_required",
+        recommendedAction: "needs_review",
         sensitive: false,
         confidence: 0.7,
         matchedKeywords: complaintHits,
       };
     }
 
-    // 4. 4-5 stars, no complaint: eligible for automatic publishing after consent.
+    // 4. 4-5 stars, no complaint: low risk. Still sent by the owner, but a
+    // one-click approve of the draft as-is.
     return {
       ...base,
       riskLevel: "low",
       reasonCodes: ["positive_no_complaint"],
-      recommendedAction: "auto_publish_eligible",
+      recommendedAction: "quick_approve",
       sensitive: false,
       confidence: positiveHits.length > 0 ? 0.9 : 0.75,
       matchedKeywords: positiveHits,

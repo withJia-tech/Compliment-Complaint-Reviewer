@@ -6,15 +6,23 @@ import { ActionBadge } from "@/app/components/ActionBadge";
 import { RiskBadge } from "@/app/components/RiskBadge";
 import { sendReplyAction, rejectInlineAction } from "@/app/queue/actions";
 import { THEME_LABELS } from "@/lib/insights/aggregate";
+import type { DecisionResult } from "@/lib/decisions";
 import type { Approval, Draft, Review, TriageResult } from "@/lib/types";
+
+/** Plain-language account of a refused send or skip. */
+function refusalMessage(result: Extract<DecisionResult, { ok: false }>): string {
+  if (result.reason === "in_progress") {
+    return "A send for this review is already in progress.";
+  }
+  const done = result.status === "rejected" ? "skipped" : "sent";
+  return `This review was already ${done} — the queue has been refreshed.`;
+}
 
 function statusLabel(approval: Approval | null): string {
   switch (approval?.status) {
     case "approved":
     case "edited_approved":
       return "Sent";
-    case "auto_published":
-      return "Auto-published";
     case "rejected":
       return "Rejected";
     default:
@@ -38,6 +46,19 @@ export function QueueRow({
   const [open, setOpen] = useState(false);
   const [text, setText] = useState(draft?.text ?? "");
   const [pending, startTransition] = useTransition();
+  const [notice, setNotice] = useState<string | null>(null);
+
+  function run(action: () => Promise<DecisionResult>) {
+    setNotice(null);
+    startTransition(async () => {
+      const result = await action();
+      if (result.ok) {
+        setOpen(false);
+      } else {
+        setNotice(refusalMessage(result));
+      }
+    });
+  }
 
   const decided = Boolean(approval && approval.status !== "pending");
   const edited = draft ? text.trim() !== draft.text.trim() : false;
@@ -98,12 +119,7 @@ export function QueueRow({
                     <button
                       type="button"
                       disabled={pending}
-                      onClick={() =>
-                        startTransition(async () => {
-                          await sendReplyAction(review.id, text);
-                          setOpen(false);
-                        })
-                      }
+                      onClick={() => run(() => sendReplyAction(review.id, text))}
                     >
                       {pending ? "Sending…" : edited ? "Send edited reply" : "Send reply"}
                     </button>
@@ -111,12 +127,7 @@ export function QueueRow({
                       type="button"
                       className="btn-secondary"
                       disabled={pending}
-                      onClick={() =>
-                        startTransition(async () => {
-                          await rejectInlineAction(review.id);
-                          setOpen(false);
-                        })
-                      }
+                      onClick={() => run(() => rejectInlineAction(review.id))}
                     >
                       Skip
                     </button>
@@ -124,6 +135,11 @@ export function QueueRow({
                       Full detail &amp; audit →
                     </Link>
                   </div>
+                )}
+                {notice && (
+                  <p className="notice" role="status">
+                    {notice}
+                  </p>
                 )}
               </>
             ) : (

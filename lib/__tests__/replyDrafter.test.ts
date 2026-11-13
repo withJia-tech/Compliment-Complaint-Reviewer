@@ -113,3 +113,30 @@ describe("TemplateReplyDrafter", () => {
     expect(draft.text).toContain(facts.businessName);
   });
 });
+
+describe("reviewer names that end in an initial", () => {
+  // Google shows names like "Elena R.", and the templates add their own
+  // punctuation after the name, which produced "Elena R.. We're glad…" in
+  // text that is published to a customer.
+  const authors = ["Elena R.", "Aaliyah J.", "Priya S.", "Jamie"];
+  const reviews: Array<[Review["stars"], string]> = [
+    [5, "Loved the coffee, staff were so friendly!"],
+    [3, "Food was good but service was slow."],
+    [1, "Rude staff, worst experience, never again."],
+    [1, "I slipped on a wet floor and got hurt."],
+  ];
+
+  it.each(authors)("never doubles punctuation for %s, in any template", (author) => {
+    for (const [stars, text] of reviews) {
+      const r = review({ author, stars, text });
+      const draft = drafter.draft(r, policy.classify(r), facts);
+      expect(draft.text, `${author} / ${stars}★`).not.toMatch(/[.,!?][.,!?]/);
+    }
+  });
+
+  it("still greets the reviewer by name", () => {
+    const r = review({ author: "Elena R.", stars: 3, text: "Food was good but service was slow." });
+    const draft = drafter.draft(r, policy.classify(r), facts);
+    expect(draft.text).toContain("Elena R");
+  });
+});

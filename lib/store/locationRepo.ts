@@ -7,7 +7,6 @@ function defaultSettings(locationId: string): LocationSettings {
   return {
     locationId,
     connected: true,
-    autoPublishConsent: false,
     lastSuccessfulScanAt: null,
   };
 }

@@ -1,5 +1,4 @@
 import { AppHeader } from "@/app/components/AppHeader";
-import { toggleConsentAction } from "@/app/settings/actions";
 import { loadHeaderData, loadQueueRows } from "@/lib/queueData";
 
 export const dynamic = "force-dynamic";
@@ -33,22 +32,15 @@ export default function SettingsPage() {
         </section>
 
         <section>
-          <h2>Auto-publish consent</h2>
+          <h2>Sending</h2>
           <p>
-            When on, 4-5 star reviews with no complaints detected are published automatically. Every
-            mixed, negative, or sensitive review always waits for you, regardless of this setting.
+            Replies are never sent automatically. Every reply — including a clean five-star
+            thank-you — waits in the queue until you send it. Low-risk reviews are marked{" "}
+            <strong>Quick approve</strong>, so clearing them takes one click.
           </p>
-          <form action={toggleConsentAction}>
-            <input type="hidden" name="next" value={(!location.autoPublishConsent).toString()} />
-            <button type="submit">
-              Turn auto-publish {location.autoPublishConsent ? "OFF" : "ON"}
-            </button>
-          </form>
-          <p>
-            Current state:{" "}
-            <strong className={location.autoPublishConsent ? "state-on" : "state-off"}>
-              {location.autoPublishConsent ? "ON" : "OFF"}
-            </strong>
+          <p className="page-sub">
+            Your reviews and replies live in your Google Business Profile. This app keeps only its
+            working notes: how each review was triaged, the draft, and what you decided.
           </p>
         </section>
       </main>
