@@ -1,0 +1,10 @@
+{
+  "risk_classifier_v1.jsonl": {
+    "version": "1.0.0",
+    "status": "approved",
+    "fixtures": 49,
+    "sha256": "dfbeb863f21d841768df227a97e987d66630667f11c8920dc7752aafd5c181d5",
+    "approved_on": "2026-11-13",
+    "approved_by": "owner"
+  }
+}

@@ -1,13 +1,6 @@
 import type { ReasonCode, ReviewTheme } from "@/lib/types";
 
-export type SensitiveReasonCode = Exclude<
-  ReasonCode,
-  | "positive_no_complaint"
-  | "neutral_mixed_sentiment"
-  | "negative_issue"
-  | "unreadable_language"
-  | "unconfirmed_praise"
->;
+export type SensitiveReasonCode = Extract<ReasonCode, `sensitive_${string}`>;
 
 /**
  * A keyword's strength decides how hard it pulls.
@@ -37,6 +30,7 @@ export const SENSITIVE_SEVERITY_ORDER: SensitiveReasonCode[] = [
   "sensitive_discrimination",
   "sensitive_legal",
   "sensitive_fraud",
+  "sensitive_prompt_injection",
   "sensitive_compensation",
 ];
 
@@ -111,6 +105,17 @@ export const SENSITIVE_KEYWORDS: Record<SensitiveReasonCode, SensitiveRule> = {
   sensitive_fraud: {
     strong: ["scam*", "fraud*", "unauthorised charge", "unauthorized charge", "theft", "stole"],
     weak: ["overcharged", "double charged", "charged twice", "billed for"],
+  },
+  sensitive_prompt_injection: {
+    strong: [
+      "ignore previous instructions",
+      "ignore all previous instructions",
+      "ignore your instructions",
+      "disregard previous instructions",
+      "disregard all previous instructions",
+      "system prompt",
+    ],
+    weak: [],
   },
   sensitive_compensation: {
     strong: ["compensation", "chargeback", "money back", "dispute the charge", "disput*"],

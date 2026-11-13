@@ -1,6 +1,6 @@
 {
-  "policyVersion": "policy-v1.1.0",
-  "sourceHash": "697d25890f1eca0ba8a3aa96e3315ec057827f739f01a0ac488ee8b8e9ffb21e",
+  "policyVersion": "policy-v1.2.0",
+  "sourceHash": "f6b8a1e8e804c2694fc9693a4be6173f6e28ba978846de447d4ea903b2b52be3",
   "files": [
     "lib/triage/rules.ts",
     "lib/triage/match.ts",

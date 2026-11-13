@@ -49,7 +49,20 @@ export type ReasonCode =
   | "sensitive_discrimination"
   | "sensitive_medical"
   | "sensitive_fraud"
-  | "sensitive_compensation";
+  | "sensitive_compensation"
+  // Added in policy v1.1.0 (additive only).
+  /** Instructions aimed at the system rather than the business, e.g. "ignore previous instructions". */
+  | "sensitive_prompt_injection"
+  /** The review contains a phone number, email, address, card or order number, or names a person. */
+  | "personal_info"
+  /** The review contains a link. */
+  | "contains_link"
+  /** Gibberish, or a script the keyword rules cannot read and no reader was available. */
+  | "unreadable"
+  /** The second reader found a complaint the keyword rules missed. */
+  | "reader_concern"
+  /** A second reader was configured but could not read this review, so it fails closed. */
+  | "reader_failed";
 
 /**
  * How much attention the owner should give a review. Nothing is ever sent
@@ -87,11 +100,26 @@ export interface TriageResult {
   matchedKeywords: string[];
   computedAt: string;
   /**
+   * What the optional second reader (a language model) concluded. Absent when
+   * no reader is configured. The reader can only raise attention, never lower it.
+   */
+  reading?: TriageReading;
+  /**
    * Shadow mode for backlog B1 (auto-send). Recorded only, never read by
    * routing, the queue or the send path. Optional so older stored results and
    * audit records stay valid (audit schema is additive only).
    */
   shadow?: ShadowAutoSend;
+}
+
+export interface TriageReading {
+  readerId: string;
+  language: string;
+  concern: "none" | "complaint" | "sensitive";
+  category: string;
+  containsPersonalInfo: boolean;
+  /** One sentence, in English, explaining the reading. */
+  rationale: string;
 }
 
 export interface ShadowAutoSend {

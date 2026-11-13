@@ -22,6 +22,12 @@ This is a fresh implementation inspired by the product scope and architecture of
 does not copy OpenReply source code and is not presented as a fork. If source code is reused in a
 future version, retain OpenReply's MIT license and attribution.
 
+## License and credit
+
+MIT licensed. Created by [withJia-tech](https://github.com/withJia-tech). The licence requires
+keeping the copyright notice in `LICENSE` in any copy or fork. If you build on this, please also
+credit the project and link back to this repository.
+
 ## Hosted comparison demonstration
 
 The same browser demo is prepared for Vercel, ChatGPT Sites and GitHub Pages.
@@ -107,35 +113,82 @@ unambiguous claim goes straight to high, while an ambiguous one is softened to m
 still flagged sensitive. [SPEC.md](./SPEC.md) carries the full routing, grounding and theme
 rubrics; `data/fixtures/golden.json` holds the labelled cases that hold them to it.
 
+### The second reader (bring your own key)
+
+Keywords can't read sarcasm, paraphrase ("my friend felt unwell afterwards") or a review in
+Singlish, Malay or Chinese. An optional second reader can: Claude reads each review and can
+**raise** it to needs review or sensitive. It can never clear a review the rules flagged, and if
+it fails for any reason the review is held for you to read.
+
+It runs on **your own Anthropic API key**. Nothing is hosted for you and no key is stored by the
+app.
+
+1. Create a key in the [Anthropic Console](https://console.anthropic.com/) just for this app, and
+   set a monthly spend limit on it.
+2. `cp .env.example .env.local` and put the key in `ANTHROPIC_API_KEY`. `.env.local` and `.env`
+   are git-ignored; never commit a key.
+3. `npm run scan` now uses the reader. Without a key the app still works on rules alone.
+
+Each review sent to the reader includes its text, so customers' words (and any details they
+posted) go to Anthropic. Reviews are public on Google already, but check Anthropic's data terms
+for your account.
+
+**Which model, and cost.** Claude Haiku 5.5 reads every review. Fixed routing rules (code, not a
+model) send the uncertain ones to Claude Sonnet 5.5 for a second read: a concern, personal
+details, three stars or fewer, a language other than English, a link, or anything the keyword
+rules already flagged. A plain, happy English review stays on Haiku. The second read can only
+add attention, never remove it. `npm run read:golden` (dry run) prints a ceiling: under $0.30
+for the 47 golden reviews with text even if every one escalated, so well under a cent per
+review. The evaluation gate fails above one cent per review. To try another set-up, set
+`CCR_READER_MODEL` and `CCR_READER_ESCALATION_MODEL` (or `off`) and pass `--out <file>`.
+
+**Demo without a key.** `npm run read:demo -- --yes` (once, with your key) saves readings for
+the demo reviews to `data/readings/demo.json`. Commit that file, then anyone can run the demo
+with `CCR_READER=cache npm run scan` at no cost and with no key.
+
+**Evaluate it.** `npm run read:golden -- --yes` runs the golden dataset through the reader,
+prints how many of the 49 cases match, how many escalated and what it cost, and saves every model
+attempt so the evaluation gate replays them. The gate only accepts a run made by exactly the
+default reader (same models, routing and prompt).
+
 Goodwill remedies — vouchers and the like — are settled outside this app over email or
 WhatsApp. The detail page records that one was offered so the audit trail is complete, but
 nothing is sent from here and no remedy is ever mentioned in the published reply.
 
-## CI & evaluation
+## Release gates in CI
 
-The [current CI workflow](.github/workflows/ci.yml) runs TypeScript checks, unit and policy
-tests (including deterministic golden routing cases), a production build, and a repeated-scan
-check on pull requests. The verified-send change in
-[PR #5](https://github.com/withJia-tech/Compliment-Complaint-Reviewer/pull/5) adds regression
-coverage for stale approvals, edited replies, failed publication and uncertain delivery.
+AI behaviour is treated as a release-gated capability, not just code. Every pull request runs:
 
-The separate, unmerged
-[classifier branch](https://github.com/withJia-tech/Compliment-Complaint-Reviewer/tree/9e28eeefd02fcc26ed7b15d1b8961cabf1eca238)
-adds expanded golden-set evaluation, adversarial fixtures, dependency and secret scanning,
-and evaluation artifact uploads. Its required model-evaluation evidence is still outstanding.
-Those checks are not part of this branch's workflow.
+| Check | What fails it |
+|---|---|
+| **Golden evaluation gate** | Any metric in [`eval/thresholds.json`](eval/thresholds.json) regresses, in either mode: keyword rules only, or rules plus the second reader replayed from the committed evaluation run. A missing run, or one made by any reader other than the configured default (models, routing, prompt), fails; it is never a pass. Cost above one cent per review fails. A threshold loosened against the base branch fails unless a reason is written down. The report (fixture ids only, never review text) is attached to the run and shown in its summary. |
+| **Typecheck, tests, build** | Any failure, or **any skipped test**: a green check means every test ran. Includes the golden routing cases and the verified-send regressions (stale approvals, edited replies, failed and uncertain publication). |
+| **Scan idempotency** | A second daily scan finds anything new. |
+| **Secret scan** | gitleaks (checksum-verified binary) finds a credential anywhere in git history. |
+| **Dependency audit** | `npm audit` finds a moderate or worse vulnerability, or a package fails registry signature checks. |
+| **CodeQL** | Static analysis of the TypeScript and the workflow files themselves. |
+| **Log leak check** | A log or report contains an API key, a token, a golden review's text or a planted personal detail. |
+
+Workflows run with read-only permissions (only CodeQL may write security alerts), every action
+is pinned to a full commit SHA, and Dependabot proposes pin updates. CI never holds an API key:
+the reader is replayed from saved readings, so any run reproduces from a clean checkout.
+
+Metrics the gate tracks: exact match rate, sensitive recall, unsafe quick approves (a review that
+needs a read marked safe to clear: the costly miss), false alarms (praise held back), reader
+failures and cost per review. **The model-evaluation evidence is still outstanding:** until the
+owner commits an evaluation run, the gate fails on purpose.
 
 **Routing evals** ([evals/README.md](evals/README.md)) score the policy on a 60-case dev set and a
 40-case holdout it was never tuned on: unsafe quick approvals, sensitive recall overall and per
 category, false alarms, and how often the parked auto-send rule would have sent a review a person
 must read. Ratchet gates run inside `npm test` and as a CI step that uploads the JSON report.
-On the holdout, policy-v1.1.0 cut unsafe quick approvals from 15 to 5 but left sensitive recall
+On the holdout, PR #8's policy-v1.1.0 cut unsafe quick approvals from 15 to 5 but left sensitive recall
 at 15%: keyword rules don't generalise to paraphrased claims, which is the case for a classifier.
 
 A **promotion gate** (backlog B8) fails the build when the routing source changes without a
 `POLICY_VERSION` bump; `npm run policy:stamp` refuses to stamp until the version is bumped.
 
-Semantic grounding coverage and broader policy-compliance gates remain planned. Template and
+Per-category recall in the golden gate, semantic grounding coverage and broader policy-compliance gates remain planned (see [the learning-loop plan](docs/LEARNING_LOOP_PLAN.md)). The two evaluations (`eval/`, golden; `evals/`, routing) are separate harnesses for now. Template and
 send-boundary tests do not establish semantic grounding coverage or live-model prompt-injection
 robustness.
 

@@ -23,4 +23,16 @@ export const REASON_CODE_EXPLANATIONS: Record<ReasonCode, string> = {
     "Mentions possible fraud — answer this one personally.",
   sensitive_compensation:
     "Asks for a refund or compensation — answer this one personally. Settle any goodwill offer outside the app and record it below.",
+  sensitive_prompt_injection:
+    "Contains instructions aimed at software rather than at you — treat it as suspicious and answer it personally, if at all.",
+  personal_info:
+    "Contains personal details (a phone number, email, address, account number, or a person's name) — read it before replying publicly, and never repeat them in the reply.",
+  contains_link:
+    "Contains a link — check it isn't spam or a scam before replying. Don't open it unless you trust it.",
+  unreadable:
+    "The keyword rules couldn't read this review (gibberish, or a language they don't cover) — read it yourself.",
+  reader_concern:
+    "The second reader found a complaint the keyword rules missed — see its note below.",
+  reader_failed:
+    "The second reader couldn't read this review, so it's held for you to read rather than marked safe.",
 };

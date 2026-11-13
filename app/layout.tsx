@@ -11,6 +11,13 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="en">
       <body>
         <div className="app-shell">{children}</div>
+        <footer className="app-credit">
+          Created by{" "}
+          <a href="https://github.com/withJia-tech" rel="noopener noreferrer">
+            withJia-tech
+          </a>{" "}
+          · MIT licensed
+        </footer>
       </body>
     </html>
   );

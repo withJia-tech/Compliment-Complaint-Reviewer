@@ -10,7 +10,8 @@ remains open. This is partial enforcement of the v0.6 principle, not a productio
   details, blame and unverified promises. This confirmation is an attestation, not proof of truth.
 - Code checks the pinned source, draft, triage and approved facts. It validates the final text and
   stores the exact submitted text and attempt ID before invoking the fixture provider.
-- There is no model in this path. The classifier branch is independent and remains unmerged.
+- There is no model in this path. The classifier and second reader only triage reviews; nothing they
+  return can publish, approve or edit a reply.
 - Identity is still `STUB_OWNER_ACTOR`. A checkbox, context hash or client flag is not authentication.
   Do not expose this prototype with real review, staff or customer data. A live integration needs
   server-authenticated owner/manager identity and per-location authorisation.

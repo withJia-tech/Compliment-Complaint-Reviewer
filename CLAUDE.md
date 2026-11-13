@@ -20,8 +20,9 @@ rubrics) and `docs/DECISIONS.md` (decision log + backlog) before changing behavi
 
 ```bash
 npm install
-npm run typecheck && npm test && npm run build   # all three must pass; CI runs the same + eval + an idempotency gate
+npm run typecheck && npm test && npm run build   # all three must pass; CI runs the same + both evals + an idempotency gate
 npm run eval        # routing eval: dev + holdout, gated by evals/routing/thresholds.json
+npm run eval:gate   # golden evaluation gate: rules only, and rules + the replayed second reader (eval/thresholds.json)
 npm run policy:stamp  # after bumping POLICY_VERSION for any change to lib/triage/{rules,match,policy}.ts
 npm run scan        # seed data/store/*.json from fixtures (store is gitignored)
 npm run dev         # http://localhost:3000
@@ -33,6 +34,11 @@ npm run dev         # http://localhost:3000
 - `lib/triage/match.ts` — **all** keyword matching. Word boundaries; `foo*` = prefix. Never use
   `text.includes(keyword)`: substring matching once made "issue" match "sue".
 - `lib/triage/policy.ts` — deterministic routing; bump `POLICY_VERSION` when rules change
+- `lib/triage/normalize.ts`, `guards.ts` — normalised matching; personal-info, link and gibberish guards
+- `lib/triage/reader/` — the optional second reader: Haiku on every review, code-routed escalation to
+  Sonnet (`cascade.ts`, bump `ROUTING_VERSION` when routing changes), cached replay; `triageReview.ts`
+  combines it with the rules. **It can only raise, and fails closed.** BYOK: `ANTHROPIC_API_KEY`, never stored.
+- `tests/fixtures/golden/` — versioned, checksum-pinned golden dataset; never edit an approved version
 - `lib/drafter/` — templates filled only from approved facts; `factsUsed` records citations
 - `lib/decisions.ts` — send / skip / remedy / reconciliation; persistent attempt plus local writer lock
 - `lib/scan/runDailyScan.ts` — the daily worker; idempotent, never publishes
@@ -45,6 +51,9 @@ npm run dev         # http://localhost:3000
 - Tests that touch the store set `process.env.CCR_STORE_DIR` to a temp dir (see existing tests).
 - Scan tests use timestamps **relative to `Date.now()`** — `listSince` compares against the real
   clock, so fixed dates silently stop being "new" and assertions pass against an empty scan.
+- Never skip a test to get green: CI fails on any skipped test. Never loosen `eval/thresholds.json`
+  without filling in `loosening_reason`; only tighten it as results improve.
+- Never print review text, personal details or keys in logs; CI scans logs and reports for them.
 - Write the failing test first; for a fix, confirm the test fails without it (mutation check).
 - Every bug becomes a golden or unit case before the fix lands.
 

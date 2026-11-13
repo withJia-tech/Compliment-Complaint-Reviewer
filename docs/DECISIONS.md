@@ -21,8 +21,41 @@ here is judged by one question — *if we are wrong, what does it cost to undo?*
 | 7 | **Audit record schema** | **One-way (additive only)** | Records are history. Add fields freely; never repurpose or remove one. `remedy_recorded` was added rather than overloading `approved_published`, which would have falsified past records. |
 | 8 | Single owner, single location (`STUB_OWNER_ACTOR`, `DEFAULT_LOCATION_ID`) | Two-way now; **quietly hardens** | `locationId` is already on reviews and audit records, but the owner is a string and the repos have no tenant key. Every table added without one makes multi-location more expensive. **Decide the tenant key before live Google OAuth lands (B10).** |
 | 9 | No escalation tier | Two-way | A solo owner has nobody to escalate to. Sensitive claims are flagged and sorted first instead. |
+| 10 | **Second reader can only raise, and fails closed** | Two-way | A model reading is added on top of the keyword result; it can never lower one. Any failure holds the review. So the worst a bad model does is cost the owner a read, never mark a dangerous review safe. Removing the reader returns to rules only. |
+| 11 | **Bring your own key**; keys live only in each owner's environment | Two-way | No hosted service, no stored secrets, no tenant model needed for keys. A hosted version that stores other people's keys would need encryption and a tenant key (see 8), so it waits for real demand. |
+| 12 | Golden dataset versions are immutable once approved | Two-way | Pinned by checksum. A change is a new version file, so past evaluation runs stay comparable. |
+| 14 | **Triage behaviour is release-gated** | Two-way | `npm run eval:gate` fails CI when a metric in `eval/thresholds.json` regresses, when the evaluation run is missing or stale, or when a limit is loosened without a stated reason. CI holds no key: it replays the committed run, so results reproduce from a clean checkout. |
+| 13 | Gaps are fixed, not catalogued | Two-way | The handover proposed `knownGap` markers. The owner chose to make the classifier reason through them instead, so the dataset states the target and the second reader is the fix. |
+| 15 | **Haiku reads every review; code routes the uncertain ones to Sonnet** (B13, `routing-v1`) | Two-way | The owner asked for Haiku by default with "another agent" routing to Sonnet when needed. The router is deterministic code, not a model: a model router would be another paid call, another thing that can fail or be talked round by the review it routes, and it could not be replayed exactly in CI. The rules are in `lib/triage/reader/cascade.ts`; changing them bumps `ROUTING_VERSION`, which makes the saved evaluation run stale. Escalation can only raise, and a failed escalation read holds the review. Swapping models is an environment variable. |
+| 16 | **Cost is release-gated at one cent per review** | Two-way | The owner set US$0.01 per review read on 2026-11-13, before any evaluation run, so the limit was not fitted to a result. It is measured from recorded token usage, priced from `lib/triage/reader/pricing.ts`. An unknown price or an empty run fails. With Haiku and Sonnet the worst case is about 0.6¢, so today it catches misconfiguration (a pricier model, runaway thinking tokens) rather than shaping the choice. |
+| 18 | **PR #6 and PR #8 combined as `policy-v1.2.0`** (2026-11-13) | Two-way | Both PRs had shipped different rules as `policy-v1.1.0`. The combined rules keep PR #8's fail-closed quick approve and PR #6's normalised matching, guards and reader. PR #8's shadow auto-send flag is now cleared whenever a guard or the reader holds a review, so B1 evidence never claims it would send a held review. On golden v1, rules alone now give 1 unsafe quick approve (was 6) but 4 false alarms (was 1): 5-star praise the rules cannot confirm in readable English (RC-003, RC-512 Singlish, RC-520 Chinese, RC-531 Malay) is held, and the reader can only raise, so 4 is a floor in both modes; `falseAlarm` limits moved 1 → 4 with a written `loosening_reason`. **Open owner question:** may a reader that reads such a review as plain praise confirm it to quick approve? That would be the first time a reader *lowers* a result (decision 10), so it needs its own decision, tests and golden evidence. |
+| 17 | Golden dataset v1 **approved** by the owner (2026-11-13) | Two-way (by decision 12) | From now on `risk_classifier_v1.jsonl` is frozen; any change, including to RC-300 and RC-408, means a `v2` file and a new evaluation run. One person labelled and approved it, so its high-risk labels are not independently adjudicated (see `docs/LEARNING_LOOP_PLAN.md`). |
 
 The three to watch are **6, 7 and 8**. Everything else can be changed in an afternoon.
+
+### Proposed, not yet decided: where Google OAuth refresh tokens live (for B12)
+
+The owner asked for the secured option, assessed. A Business Profile refresh token with
+`business.manage` lets whoever holds it post, edit and delete replies and edit the profile as the
+business, without a password, until it is revoked. Treat it as the business's public voice.
+
+| Option | Protects against | Weak spot | Fit for one person, self-hosted |
+|---|---|---|---|
+| A. Plain `.env.local` or env var | Nothing at rest | Any process, backup or careless commit exposes it | Rejected |
+| B. Encrypted file, key in an env var | A copied file on its own | Key and file sit on the same machine | Bare minimum |
+| C. Encrypted file, key in the OS keychain (macOS Keychain, Windows Credential Manager, libsecret) | Disk theft, backups, other user accounts | Weak on a headless Linux server with no keychain; needs a native module or the OS CLI | **Recommended while it runs on the owner's own computer** |
+| D. Cloud secret manager (e.g. Google Secret Manager in the same Google Cloud project as the API) | A stolen disk; also gives an access log and rotation | Another account and a network dependency | **Recommended once it runs on a server** |
+| E. Store nothing; owner signs in each session | No standing secret | The daily scan cannot run unattended | Only for a manual-only phase |
+
+**Recommendation:** put a `TokenVault` interface in front (a two-way door), and implement C first:
+AES-256-GCM, one record per tenant, the tenant key (B10) and scope bound in as additional
+authenticated data so a record cannot be replayed for another tenant, the file outside the repo
+and outside `data/store/`. Swap to D when hosting. Around it: access tokens in memory only; the
+scheduled scan uses read calls only (send stays an owner click, as today); revoke at Google on
+disconnect; never log a token, and add a canary token to the CI log-leak check. To verify before
+building: Google's current rules for apps whose OAuth consent screen is in "Testing" status (refresh
+tokens have expired after 7 days) and whether `business.manage` needs app verification. The owner
+has not yet applied for Business Profile API access; that approval is the long pole for B12.
 
 ## Backlog
 
@@ -68,7 +101,7 @@ branch unchanged.
 Confirmed provider failure records `publish_failed`; exceptions or incomplete receipts record
 `publish_unknown`. Persisted intent blocks duplicate retries after process restart. Reconciliation
 never sends and only conclusive non-publication allows human retry. The stateless fixture cannot
-resolve an interrupted send. Live provider semantics and operational testing remain unverified.
+resolve an interrupted send. Live provider semantics and operational testing remain unverified. Merged in PR #5 (2026-11-13), with a cross-process writer lock (part of B6).
 
 ### B4 — Existing-reply awareness
 
@@ -118,3 +151,26 @@ floor, false alarms within the owner's stated workload.
 
 Before live OAuth, add a tenant key to the repos so multi-location is a migration, not a rewrite.
 This is what keeps decision 8 a two-way door.
+
+### B13 — Cheaper reader model  *(built; waiting on the owner's evaluation run)*
+
+Numbered B13 because PR #8 used B11 for a classifier behind `TriagePolicy`. The two are related:
+this reader sits on top of the rules and can only raise; B11 would replace or join the rules
+behind `TriagePolicy` and be scored on the routing harness (`npm run eval`), which does not yet
+score the reader.
+
+Done in code: Haiku first, Sonnet on escalation (decision 15); the gate checks the exact reader
+(models, routing version, prompt fingerprint) and cost per review (decision 16). The
+`rules_plus_reader` quality thresholds are unchanged except false alarms (decision 18). **Not yet shown to work:** that needs
+`npm run read:golden -- --yes` with the owner's key. If the cascade misses the quality limits,
+the fix is routing or prompt, never looser thresholds. Worth one comparison run before settling:
+Sonnet alone at low effort (`CCR_READER_MODEL=claude-sonnet-5-5 CCR_READER_ESCALATION_MODEL=off
+npm run read:golden -- --yes --out /tmp/sonnet.json`), since one model is simpler than two.
+
+### B12 — Live Google reviews  *(after B10)*
+
+Read the owner's real reviews through Google's Business Profile API with OAuth (scope
+`business.manage`), or through an MCP connector if one fits. Needs the tenant key (B10) first,
+and a decision on where OAuth refresh tokens live, since storing them is a one-way door (assessed
+above: proposed, not decided). MCP stays a way to read, never the scheduler or system of record
+(SPEC non-goal). The owner is still choosing between the API and an MCP connector.

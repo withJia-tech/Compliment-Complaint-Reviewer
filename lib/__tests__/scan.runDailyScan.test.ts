@@ -7,6 +7,7 @@ import { runDailyScan, type DailyScanDeps } from "@/lib/scan/runDailyScan";
 import { TemplateReplyDrafter } from "@/lib/drafter/replyDrafter";
 import { DefaultTriagePolicy } from "@/lib/triage/policy";
 import { approvalRepo } from "@/lib/store/approvalRepo";
+import { triageRepo } from "@/lib/store/triageRepo";
 import { auditRepo } from "@/lib/store/auditRepo";
 import { locationRepo } from "@/lib/store/locationRepo";
 import { writeJson } from "@/lib/store/jsonStore";
@@ -188,6 +189,58 @@ describe("runDailyScan", () => {
   });
 });
 
+describe("runDailyScan with a second reader", () => {
+  it("fails closed: a reader that cannot read leaves nothing marked quick approve", async () => {
+    const broken = {
+      id: "broken-reader",
+      read: async () => {
+        throw new Error("network down");
+      },
+    };
+    await runDailyScan({ ...deps(), reader: broken });
+    const positive = triageRepo.getByReviewId("rev_pos");
+    expect(positive?.recommendedAction).toBe("needs_review");
+    expect(positive?.reasonCodes[0]).toBe("reader_failed");
+    expect(provider.publishes).toEqual([]);
+  });
+
+  it("records the reading and lets it raise a review the rules passed", async () => {
+    const reader = {
+      id: "fake-reader",
+      read: async (r: Review) => ({
+        language: "en",
+        concern: r.id === "rev_pos" ? ("complaint" as const) : ("none" as const),
+        category: "none" as const,
+        contains_personal_info: false,
+        rationale: "test",
+      }),
+    };
+    await runDailyScan({ ...deps(), reader });
+    const positive = triageRepo.getByReviewId("rev_pos");
+    expect(positive?.recommendedAction).toBe("needs_review");
+    expect(positive?.reading?.readerId).toBe("fake-reader");
+    // The 1-star sensitive review stays high and sensitive although the reader saw nothing.
+    const sensitive = triageRepo.getByReviewId("rev_sens");
+    expect(sensitive?.riskLevel).toBe("high");
+    expect(sensitive?.sensitive).toBe(true);
+  });
+
+  it("runs the reader on every scanned review with text (the merge must keep triageReview)", async () => {
+    const seen: string[] = [];
+    const reader = {
+      id: "counting-reader",
+      read: async (r: Review) => {
+        seen.push(r.id);
+        return { language: "en", concern: "none" as const, category: "none" as const, contains_personal_info: false, rationale: "t" };
+      },
+    };
+    const result = await runDailyScan({ ...deps(), reader });
+    const withText = provider.reviews.filter((r) => r.text.trim() !== "" && triageRepo.getByReviewId(r.id) !== null);
+    expect(result.scanned).toBeGreaterThan(0);
+    expect(seen.sort()).toEqual(withText.map((r) => r.id).sort());
+    for (const r of withText) expect(triageRepo.getByReviewId(r.id)?.reading?.readerId).toBe("counting-reader");
+  });
+});
 
 it("bounds initial retrieval and discards an old review edited today", async () => {
   provider.reviews = [{ ...POSITIVE, createTime:"2020-01-01T00:00:00Z", updateTime:ago(1) }, MIXED];

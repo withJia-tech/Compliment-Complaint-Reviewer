@@ -106,7 +106,14 @@ const REASON: Record<ReasonCode, true> = {
   sensitive_medical: true,
   sensitive_fraud: true,
   sensitive_compensation: true,
+  sensitive_prompt_injection: true,
+  personal_info: true,
+  contains_link: true,
+  unreadable: true,
+  reader_concern: true,
+  reader_failed: true,
 };
+const READING_CONCERN: Record<"none" | "complaint" | "sensitive", true> = { none: true, complaint: true, sensitive: true };
 const STATUS: Record<ApprovalStatus, true> = {
   pending: true,
   approved: true,
@@ -154,6 +161,16 @@ export const triageCheck = object({
   matchedKeywords: arrayOf(str),
   computedAt: str,
   shadow: optional(object({ rule: str, wouldAutoSend: bool })),
+  reading: optional(
+    object({
+      readerId: str,
+      language: str,
+      concern: oneOf(READING_CONCERN),
+      category: str,
+      containsPersonalInfo: bool,
+      rationale: str,
+    }),
+  ),
 });
 
 export const draftCheck = object({
