@@ -1,3 +1,4 @@
+import { assertLocalStore } from "@/lib/demo/hosting";
 import fs from "node:fs";
 import path from "node:path";
 
@@ -7,6 +8,7 @@ import path from "node:path";
  * `data/store` under the project root as normal.
  */
 function storeDir(): string {
+  assertLocalStore();
   return process.env.CCR_STORE_DIR ?? path.join(process.cwd(), "data", "store");
 }
 

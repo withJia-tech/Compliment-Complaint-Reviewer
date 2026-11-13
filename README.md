@@ -22,6 +22,13 @@ This is a fresh implementation inspired by the product scope and architecture of
 does not copy OpenReply source code and is not presented as a fork. If source code is reused in a
 future version, retain OpenReply's MIT license and attribution.
 
+## Hosted demonstration on Vercel
+
+The Vercel configuration serves an isolated synthetic browser demo at `/hosted-demo`.
+Edits and simulated decisions remain in tab memory; refreshing resets them. Server-side
+mutations and file storage are disabled on Vercel. See [deployment and acceptance checks](docs/VERCEL_DEMO.md).
+This target is not the live production service.
+
 ## Client demonstration
 
 Run `npm run demo` after installing dependencies, then open `http://127.0.0.1:3000/demo`.

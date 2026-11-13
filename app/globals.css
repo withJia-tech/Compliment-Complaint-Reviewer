@@ -445,3 +445,12 @@ input[type="text"] {
 .demo-step p { line-height: 1.6; }
 .demo-step a, .demo-notice a { color: var(--accent); font-weight: 600; }
 @media (max-width: 720px) { .demo-steps { grid-template-columns: 1fr; } .app-header-row { flex-wrap: wrap; gap: .5rem; } .app-nav { margin-left: 0; flex-wrap: wrap; } }
+
+.hosted-grid { display: grid; grid-template-columns: minmax(220px, 1fr) minmax(0, 2fr); gap: 1.5rem; align-items: start; }
+.hosted-review { width: 100%; display: grid; gap: .5rem; text-align: left; padding: 1rem; margin-bottom: .65rem; border: 1px solid var(--border); border-radius: 8px; background: white; color: var(--text); cursor: pointer; font: inherit; }
+.hosted-review.selected { border: 2px solid var(--accent); background: #edf2f8; }
+.hosted-review span { font-size: .9rem; line-height: 1.45; }
+.hosted-check { display: flex; align-items: flex-start; gap: .6rem; margin: 1rem 0; line-height: 1.5; }
+#hosted-reply { width: 100%; margin-top: .5rem; padding: .8rem; font: inherit; line-height: 1.6; }
+.demo-shortcuts { display: flex; flex-wrap: wrap; gap: .5rem; }
+@media (max-width: 720px) { .hosted-grid { grid-template-columns: 1fr; } }
