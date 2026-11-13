@@ -16,7 +16,8 @@
     "demo:prepare": "node scripts/demo.mjs --prepare-only",
     "build:comparison": "node --import tsx scripts/buildComparison.ts",
     "eval": "tsx scripts/evalRouting.ts",
-    "eval:report": "tsx scripts/evalRouting.ts --report-only"
+    "eval:report": "tsx scripts/evalRouting.ts --report-only",
+    "policy:stamp": "tsx scripts/stampPolicy.ts"
   },
   "dependencies": {
     "next": "^15.1.0",

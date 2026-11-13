@@ -20,7 +20,9 @@ rubrics) and `docs/DECISIONS.md` (decision log + backlog) before changing behavi
 
 ```bash
 npm install
-npm run typecheck && npm test && npm run build   # all three must pass; CI runs the same + an idempotency gate
+npm run typecheck && npm test && npm run build   # all three must pass; CI runs the same + eval + an idempotency gate
+npm run eval        # routing eval: dev + holdout, gated by evals/routing/thresholds.json
+npm run policy:stamp  # after bumping POLICY_VERSION for any change to lib/triage/{rules,match,policy}.ts
 npm run scan        # seed data/store/*.json from fixtures (store is gitignored)
 npm run dev         # http://localhost:3000
 ```
@@ -35,6 +37,8 @@ npm run dev         # http://localhost:3000
 - `lib/decisions.ts` — send / skip / remedy / reconciliation; persistent attempt plus local writer lock
 - `lib/scan/runDailyScan.ts` — the daily worker; idempotent, never publishes
 - `data/fixtures/golden.json` + `lib/__tests__/golden.routing.test.ts` — the routing rubric as data
+- `evals/routing/` — labelled dev (tune here) and holdout (never tune here) sets; see `evals/README.md`
+- `lib/store/schema.ts` — runtime shape checks every store read must pass; add new union members here
 
 ## Test conventions (learned the hard way)
 
@@ -43,6 +47,15 @@ npm run dev         # http://localhost:3000
   clock, so fixed dates silently stop being "new" and assertions pass against an empty scan.
 - Write the failing test first; for a fix, confirm the test fails without it (mutation check).
 - Every bug becomes a golden or unit case before the fix lands.
+
+## Routing changes (learned the hard way)
+
+- Quick approve is fail-closed. Don't add a branch that reaches `quick_approve` on the absence
+  of a signal; praise must be present.
+- Never read holdout failures to choose a rule. Once you do, the holdout is burned: move it into
+  dev and write a fresh one (ideally labelled by someone else).
+- Tighten `evals/routing/thresholds.json` when a number improves; loosening needs a DECISIONS entry.
+- `shadow.wouldAutoSend` is recorded only. Nothing may read it to route or send (B1).
 
 ## Gotchas
 
