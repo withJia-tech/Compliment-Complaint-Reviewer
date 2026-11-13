@@ -48,6 +48,13 @@ approved **unedited**, and the golden set holds a negative case for each way it 
 (sarcasm, "5 stars but…", an owner-visible edit). That evidence is the way out: if shadow mode
 disagrees with the owner, we have lost nothing.
 
+**Shadow status (policy-v1.1.0).** `TriageResult.shadow.wouldAutoSend` records the triage-side
+conditions (5 stars, praise present, no complaint, contrast, sensitive or unreadable-language
+signal) on every result, and `npm run eval` reports how many must-review cases it would have
+sent. On the holdout it would have sent **4**, so B1 stays parked. The existing-reply (B4) and
+owner-switch conditions are not computed yet. Comparing shadow decisions with what the owner
+actually sent needs B7.
+
 ### B2 — Validation stage (partial implementation)
 
 Implemented in the verified-send slice: source/draft/facts freshness checks, explicit human
@@ -86,13 +93,26 @@ Low-level repository methods must remain behind the guarded entry points.
 Record the draft-versus-sent difference as structured data, then replay stored cases through the
 current policy and drafter to report routing agreement and edit rate.
 
-### B8 — Promotion gate
+### B8 — Promotion gate (implemented)
 
-CI fails if the rules change without a `POLICY_VERSION` bump and a passing golden set.
+`lib/__tests__/policy.promotionGate.test.ts` fails when `lib/triage/{rules,match,policy}.ts`
+change (comments and whitespace excluded) without a matching `lib/triage/policyManifest.json`.
+`npm run policy:stamp` refuses to stamp an unbumped `POLICY_VERSION`. Golden and eval gates
+run in the same `npm test`. What is not covered: the stamp records no reviewer identity or eval
+evidence, so it is a tripwire, not the authorised promotion in CONTROLLED_LEARNING_PLAN.md.
 
 ### B9 — Prior-case retrieval
 
 Read from Google at the moment of need. No local archive. Needs B7's data to be worth building.
+
+### B11 — Classifier behind `TriagePolicy`
+
+Holdout sensitive recall is 15% with keyword rules, and dev-tuned phrases moved it by zero.
+Paraphrased claims share no words with the lexicon. A classifier (model or embedding) that
+implements `TriagePolicy` can be scored on the same harness with no caller changes. Entry gate:
+a fresh holdout labelled by someone other than the rule author, 150+ cases, and double-labelled
+agreement reported. Exit gate: holdout unsafe quick approvals 0, per-category recall at an agreed
+floor, false alarms within the owner's stated workload.
 
 ### B10 — Tenant key
 

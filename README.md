@@ -93,6 +93,10 @@ risk flagged `sensitive`: they are never offered as quick approve, at any star r
 their own reply wording. Everything else follows the star bands, with complaint language pulling
 a 4-5 star review down to "needs review".
 
+Quick approve is **fail-closed**: a 4-5 star review only gets there when praise is present (not
+just complaints absent), no reservation like "but" or "however" appears, and the text is
+English the rules can read. Other languages, Singlish and praise-free text go to the owner.
+
 **Nothing is sent automatically.** The owner sends every reply. Auto-send for deterministic
 5-star positives is in the backlog behind a shadow-mode gate — see
 [docs/DECISIONS.md](docs/DECISIONS.md), which also logs which decisions are easy to reverse and
@@ -121,12 +125,21 @@ adds expanded golden-set evaluation, adversarial fixtures, dependency and secret
 and evaluation artifact uploads. Its required model-evaluation evidence is still outstanding.
 Those checks are not part of this branch's workflow.
 
-Per-category recall, semantic grounding coverage and broader policy-compliance gates remain
-planned. The classifier branch's existing metrics are exact match rate, aggregate sensitive
-recall, unsafe quick approvals, false alarms and reader failures. Template and send-boundary
-tests do not establish semantic grounding coverage or live-model prompt-injection robustness.
+**Routing evals** ([evals/README.md](evals/README.md)) score the policy on a 60-case dev set and a
+40-case holdout it was never tuned on: unsafe quick approvals, sensitive recall overall and per
+category, false alarms, and how often the parked auto-send rule would have sent a review a person
+must read. Ratchet gates run inside `npm test` and as a CI step that uploads the JSON report.
+On the holdout, policy-v1.1.0 cut unsafe quick approvals from 15 to 5 but left sensitive recall
+at 15%: keyword rules don't generalise to paraphrased claims, which is the case for a classifier.
 
-There is no standalone lint job or test/evaluation artifact upload step in the current workflow.
+A **promotion gate** (backlog B8) fails the build when the routing source changes without a
+`POLICY_VERSION` bump; `npm run policy:stamp` refuses to stamp until the version is bumped.
+
+Semantic grounding coverage and broader policy-compliance gates remain planned. Template and
+send-boundary tests do not establish semantic grounding coverage or live-model prompt-injection
+robustness.
+
+There is no standalone lint job yet.
 Passing CI establishes the checks implemented for that revision; it does not establish
 production readiness. See [verification limits](docs/VERIFIED_SEND.md) for remaining release gates.
 
@@ -138,7 +151,9 @@ production readiness. See [verification limits](docs/VERIFIED_SEND.md) for remai
 | `npm run build` | Production build |
 | `npm run start` | Run the production build |
 | `npm run scan` | Run the daily scan CLI over fixture reviews (re-runnable/idempotent) |
-| `npm test` | Run the Vitest suite (triage policy, drafter fact-safety, store round-trip) |
+| `npm test` | Run the Vitest suite, including golden routing, eval gates and the policy promotion gate |
+| `npm run eval` | Score routing on the dev and holdout sets; fail on a breached gate; write `evals/reports/latest.json` |
+| `npm run policy:stamp` | Record the routing source hash for the current `POLICY_VERSION` (refuses if unbumped) |
 | `npm run typecheck` | Type-check the project with `tsc --noEmit` |
 
 ## Architecture
