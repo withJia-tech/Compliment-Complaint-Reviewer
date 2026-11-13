@@ -154,6 +154,11 @@ untested plumbing.
 
 ## Open questions (recommended default in **bold**)
 
+**Answered 2026-11-13, recorded as G1–G8 in `docs/DECISIONS.md`:** Q1 model key in the owner's
+environment (as PR #6 builds it); Q2 each business owner's own Google project; Q3 separate app
+login; Q4 tenant key deferred (Step 1a waits); Q7 drop reviewer names; Q8 the owner's Anthropic
+account has zero data retention. **Still open:** Q5 (audit text) and Q6 (master key source).
+
 1. **What does BYOK mean?** (a) model key, (b) own Google client, (c) both. **Assumed (a).**
 2. **Whose Google Cloud project holds the OAuth client and the API access approval?**
    **The developer's project, applied for now, with an Organization account.** The owner's own
@@ -175,7 +180,7 @@ untested plumbing.
 
 ## Done when (this handover)
 
-- [ ] Q1–Q4 answered and recorded in `docs/DECISIONS.md`.
+- [x] Q1–Q4 answered and recorded in `docs/DECISIONS.md` (Q4 deferred by the owner).
 - [ ] Steps 1a–1e merged, each with tests that fail without the change; CI green.
 - [ ] Step 2 merged, then run once read-only against a real verified location by the owner on
       their own machine or staging. A cloud sandbox cannot complete Google consent. Evidence:

@@ -24,6 +24,22 @@ here is judged by one question — *if we are wrong, what does it cost to undo?*
 
 The three to watch are **6, 7 and 8**. Everything else can be changed in an afternoon.
 
+### Google OAuth and BYOK: the owner's Step 0 answers (2026-11-13)
+
+Numbered G1–G8 after the handover's open questions. Kept apart from the main log because open
+PR #6 already uses decision numbers 10–17.
+
+| # | Decision | Door | Consequence |
+|---|---|---|---|
+| G1 | **BYOK means bring your own *model* key, kept in the owner's environment.** The app never stores it. | Two-way | Same as PR #6's design (`ANTHROPIC_API_KEY` in `.env.local`). No key-entry screen; the handover's Step 4 shrinks to budgets, fail-closed behaviour and saying what is sent. A hosted, many-business version would revisit this. |
+| G2 | **Each business owner's own Google Cloud project** holds the OAuth client and the Business Profile API approval. | Two-way, slow | The business owner applies for API access in their project (0 requests a minute until Google approves; weeks, not guaranteed). The OAuth client id and secret are per-business configuration, not the developer's. |
+| G3 | **App login is separate** from the Google Business Profile connection. | Two-way | Revoking Google access never locks the owner out of their audit history. The login provider is chosen with hosting (ADR-001). |
+| G4 | **Tenant key (B10): deferred** ("skip first"). Step 1a waits. | Two-way | With G2, each business most likely runs its own deployment, so one store holds one business. Revisit before one store holds two businesses; decision 8's warning still applies. |
+| G5 | Review text in audit records (B5) | Open | Owner asked for the trade-offs before choosing. Blocks Step 2's first real scan. |
+| G6 | Master key for the secret store (env variable or managed KMS) | Open | Owner asked how they differ. Blocks Step 1e. |
+| G7 | **Replies never address the reviewer by name.** | Two-way | No reviewer profile data reaches drafting, and anonymous reviewers (empty `displayName`) need no special case. |
+| G8 | **The owner's Anthropic account has zero data retention** (owner's statement). | Owner's governance | The app should still say plainly what it sends to the model. If the account changes, this entry changes. |
+
 ## Backlog
 
 Ordered. Each item says what has to be true before it starts.
