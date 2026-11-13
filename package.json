@@ -1,6 +1,8 @@
 {
   "name": "compliment-complaint-reviewer",
   "version": "0.1.0",
+  "license": "MIT",
+  "author": "withJia-tech",
   "private": true,
   "engines": {
     "node": ">=22.13.0"

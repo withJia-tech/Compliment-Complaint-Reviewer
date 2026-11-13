@@ -19,6 +19,12 @@ This is a fresh implementation inspired by the product scope and architecture of
 does not copy OpenReply source code and is not presented as a fork. If source code is reused in a
 future version, retain OpenReply's MIT license and attribution.
 
+## License and credit
+
+MIT licensed. Created by [withJia-tech](https://github.com/withJia-tech). The licence requires
+keeping the copyright notice in `LICENSE` in any copy or fork. If you build on this, please also
+credit the project and link back to this repository.
+
 ## Getting started
 
 Requires Node.js >= 22.13.0.
