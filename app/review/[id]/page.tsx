@@ -9,7 +9,8 @@ import { THEME_LABELS } from "@/lib/insights/aggregate";
 import { confidenceBand } from "@/lib/triage/confidence";
 import { loadHeaderData, loadQueueRows } from "@/lib/queueData";
 import { auditRepo } from "@/lib/store/auditRepo";
-import { REASON_CODE_EXPLANATIONS } from "@/lib/triage/explain";
+import { decisionExplanation, isDecided } from "@/lib/desk/summary";
+import { needsOwnerReview } from "@/lib/triage/attention";
 import businessFacts from "@/data/fixtures/businessFacts.json";
 import type { ApprovedBusinessFacts } from "@/lib/types";
 
@@ -67,9 +68,9 @@ export default async function ReviewDetailPage({
               riskLevel={triage.riskLevel}
               sensitive={triage.sensitive}
             />{" "}
-            <ActionBadge action={triage.recommendedAction} />
+            <ActionBadge action={isDecided(row) ? triage.recommendedAction : needsOwnerReview(row) ? "needs_review" : "quick_approve"} />
           </p>
-          <p>{REASON_CODE_EXPLANATIONS[triage.reasonCodes[0]]}</p>
+          <p>{decisionExplanation(row)}</p>
           {triage.themes.length > 0 && (
             <p>
               Themes:{" "}

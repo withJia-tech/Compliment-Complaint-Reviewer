@@ -1,4 +1,6 @@
 import type { Approval, Draft, Review, TriageResult } from "@/lib/types";
+import { needsOwnerReview, ownerAttentionRank } from "@/lib/triage/attention";
+import { REASON_CODE_EXPLANATIONS } from "@/lib/triage/explain";
 
 export interface DeskRow {
   review: Pick<Review, "id" | "text" | "stars"> & Partial<Pick<Review, "createTime" | "updateTime">>;
@@ -9,6 +11,14 @@ export interface DeskRow {
 
 export const isDecided = (row: DeskRow) => ["approved", "edited_approved", "no_response_required", "rejected"].includes(row.approval?.status ?? "");
 export const deliveryUncertain = (row: DeskRow) => ["publishing", "publish_unknown"].includes(row.approval?.status ?? "");
+export const queuePriority = (row: DeskRow) => deliveryUncertain(row) ? -1 : ownerAttentionRank(row);
+
+export function decisionExplanation(row: DeskRow): string {
+  if (!isDecided(row) && row.review.stars < 5 && row.triage.recommendedAction === "quick_approve") {
+    return `${REASON_CODE_EXPLANATIONS.rating_below_five} The recorded classification used an earlier policy; its history is unchanged.`;
+  }
+  return REASON_CODE_EXPLANATIONS[row.triage.reasonCodes[0]];
+}
 const validDate = (value?: string) => value && Number.isFinite(Date.parse(value)) ? new Date(value) : null;
 const day = (date: Date, timeZone: string) => new Intl.DateTimeFormat("en-CA", { timeZone, year: "numeric", month: "2-digit", day: "2-digit" }).format(date);
 
@@ -30,20 +40,19 @@ export function decisionLabel(row: DeskRow): string {
   if (isDecided(row)) return "View decision";
   if (deliveryUncertain(row)) return "Check delivery outcome";
   if (!row.draft) return "View review";
-  return row.triage.riskLevel === "low" && !row.triage.sensitive ? "Review thank-you" : "Review & approve";
+  return needsOwnerReview(row) ? "Review & approve" : "Review thank-you";
 }
 
 export function decisionHeading(row: DeskRow): string {
   if (isDecided(row)) return "Decision recorded";
   if (deliveryUncertain(row)) return "Delivery unconfirmed · check outcome";
   if (row.triage.sensitive) return "Sensitive · approval required";
-  return row.triage.riskLevel === "low" ? "Positive · reply optional" : "Needs review";
+  return needsOwnerReview(row) ? "Needs review" : "Positive · reply optional";
 }
 
 export function dailyBrief(rows: DeskRow[], now = new Date(), timeZone = "Asia/Singapore") {
   const active = rows.filter(row => !isDecided(row));
-  const rank = (row: DeskRow) => deliveryUncertain(row) ? 0 : row.triage.sensitive ? 1 : row.triage.riskLevel === "high" ? 2 : row.triage.riskLevel === "medium" ? 3 : 4;
-  const priority = [...active].sort((a, b) => rank(a) - rank(b) || (validDate(b.review.createTime)?.getTime() ?? 0) - (validDate(a.review.createTime)?.getTime() ?? 0))[0];
+  const priority = [...active].sort((a, b) => queuePriority(a) - queuePriority(b) || (validDate(b.review.createTime)?.getTime() ?? 0) - (validDate(a.review.createTime)?.getTime() ?? 0))[0];
   let newToday = 0, updatedToday = 0, unknownDates = 0;
   for (const { review } of rows) {
     const created = validDate(review.createTime), updated = validDate(review.updateTime);
@@ -53,7 +62,7 @@ export function dailyBrief(rows: DeskRow[], now = new Date(), timeZone = "Asia/S
     else if (updated && updated <= now && updated > created && day(updated, timeZone) === day(now, timeZone)) updatedToday++;
   }
   const nowCount = active.filter(row => deliveryUncertain(row) || row.triage.sensitive || row.triage.riskLevel === "high").length;
-  const positives = active.filter(row => !deliveryUncertain(row) && !row.triage.sensitive && row.triage.riskLevel === "low").length;
+  const positives = active.filter(row => !deliveryUncertain(row) && !needsOwnerReview(row)).length;
   return { active: active.length, now: nowCount, review: active.length - nowCount - positives, positive: positives, priority,
     newToday, updatedToday, unknownDates, datedCount: rows.length - unknownDates };
 }

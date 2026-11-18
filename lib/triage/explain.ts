@@ -3,7 +3,9 @@ import type { ReasonCode } from "@/lib/types";
 /** Plain-language "why" text for each reason code, shown alongside the draft. */
 export const REASON_CODE_EXPLANATIONS: Record<ReasonCode, string> = {
   positive_no_complaint:
-    "4-5 stars with no complaint language detected — low risk; the draft can usually be approved as-is.",
+    "No complaint language was detected by the keyword rules. Check the wording before deciding; this does not rule out sarcasm or an unrecognised concern.",
+  rating_below_five:
+    "Rated below five stars — read the review and check the draft before deciding. This attention requirement does not establish a complaint or a sensitive incident.",
   neutral_mixed_sentiment:
     "3 stars, or a higher rating that still contains complaint language — needs your approval.",
   negative_issue: "1-2 star rating — needs your approval, with the issue classified below.",

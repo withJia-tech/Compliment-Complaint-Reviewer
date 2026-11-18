@@ -1,4 +1,5 @@
 import type { Review, ReviewTheme, TriageResult } from "@/lib/types";
+import { needsOwnerReview } from "@/lib/triage/attention";
 
 export type Period = "week" | "month";
 
@@ -6,7 +7,7 @@ export interface ThemeStats {
   theme: ReviewTheme;
   count: number;
   averageStars: number | null;
-  /** Reviews in this theme that needed a human decision (medium or high risk). */
+  /** Reviews requiring a closer read, including low-risk ratings below five. */
   needsAttention: number;
 }
 
@@ -97,7 +98,7 @@ export function aggregateByPeriod(
           theme,
           count: themed.length,
           averageStars: mean(themed.map((item) => item.review.stars)),
-          needsAttention: themed.filter((item) => item.triage.riskLevel !== "low").length,
+          needsAttention: themed.filter(needsOwnerReview).length,
         };
       }),
     }));

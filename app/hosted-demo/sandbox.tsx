@@ -10,13 +10,17 @@ import type { ApprovedBusinessFacts } from "@/lib/types";
 import type { DemoRow as Row, DemoDataset, DemoOutcome as Outcome, DemoView } from "@/lib/demo/datasets";
 import { rowsForView } from "@/lib/demo/queue";
 import { validateReply } from "@/lib/validation/reply";
+import { needsOwnerReview } from "@/lib/triage/attention";
 import { REASON_CODE_EXPLANATIONS } from "@/lib/triage/explain";
 
 const priorityLabel = (row: Row) => row.historical ? "Historical case" : decisionHeading(row);
+const priorityStyle = (row: Row) => row.triage.sensitive ? "sensitive" : row.triage.riskLevel === "low" && needsOwnerReview(row) ? "review" : row.triage.riskLevel;
 const recommendation = (row: Row) => row.triage.sensitive
   ? "Check the facts and review personally before deciding on a response."
   : row.triage.riskLevel === "high" ? "Review the concern and check the proposed response."
   : row.triage.riskLevel === "medium" ? "Acknowledge the concern while preserving the positive feedback."
+  : row.review.stars < 5 ? "This rating is below five stars. Read the review and check the draft before deciding."
+  : needsOwnerReview(row) ? "Read the review and check the draft before deciding."
   : "Check the thank-you draft, or close the review if no response is needed.";
 
 export function HostedDemo({ datasets, engineeringHref = "/demo-behindthehood" }: { datasets: DemoDataset[]; engineeringHref?: string }) {
@@ -67,7 +71,7 @@ export function HostedDemo({ datasets, engineeringHref = "/demo-behindthehood" }
           {visible.length === 0 && <p className="desk-empty">{view === "completed" ? "No completed decisions yet." : "All caught up. Your decisions are in Completed."}</p>}
           {visible.map(item => <button className={`hosted-review ${item.triage.sensitive && !outcomes[item.review.id] && !item.historical ? 'sensitive-rail' : ''} ${row?.review.id === item.review.id ? 'selected' : ''}`} key={item.review.id} onClick={() => { setSelected(item.review.id); requestAnimationFrame(() => document.getElementById('review-workspace')?.focus()); }} aria-pressed={row?.review.id === item.review.id}>
             <span className="desk-card-top"><span>{item.review.stars}★ · {item.dateLabel}</span></span>
-            <span className={`desk-priority priority-${item.triage.sensitive ? 'sensitive' : item.triage.riskLevel}`}>{outcomes[item.review.id] ? outcomes[item.review.id].status === 'approved' ? 'Response approved' : 'No response required' : priorityLabel(item)}</span>
+            <span className={`desk-priority priority-${priorityStyle(item)}`}>{outcomes[item.review.id] ? outcomes[item.review.id].status === 'approved' ? 'Response approved' : 'No response required' : priorityLabel(item)}</span>
             <span className="desk-excerpt">“{attentionExcerpt(item)}”</span><span className="desk-date">{item.review.author} · {item.triage.themes.map(theme => THEME_LABELS[theme]).join(" · ") || "Review"}</span>
             <span className="desk-date">{outcomes[item.review.id] ? "Decision saved" : item.historical ? "Reference only" : `Draft ready · ${item.draft.factsUsed.filter(key => facts.facts.some(fact => fact.key === key)).length} approved facts cited`}</span>
             <span className="card-action">{outcomes[item.review.id] ? "View decision" : item.historical ? "Read example" : decisionLabel(item)} <span aria-hidden="true">→</span></span>
@@ -77,7 +81,7 @@ export function HostedDemo({ datasets, engineeringHref = "/demo-behindthehood" }
       {row ? <section id="review-workspace" tabIndex={-1} className="desk-workspace" aria-label="Review workspace">
         <div className="desk-workspace-head"><div><p className="desk-eyebrow">{row.historical ? "HISTORICAL CASE" : outcomes[row.review.id] ? "COMPLETED DECISION" : "YOUR NEXT REVIEW"}</p><h2>{row.review.author}’s review</h2></div><span className="page-sub">{row.review.stars}/5 ★ · {row.dateLabel}</span></div>
         {(row.historical || outcomes[row.review.id]) && <blockquote className="desk-review-text" tabIndex={0} aria-label="Full customer review">{row.review.text}</blockquote>}{row.source?.subratings && <p className="desk-subratings">Food {row.source.subratings.food}/5 · Service {row.source.subratings.service}/5 · Atmosphere {row.source.subratings.atmosphere}/5</p>}
-        {!outcomes[row.review.id] && !row.historical && <section className="desk-recommendation"><span className={`desk-priority priority-${row.triage.sensitive ? 'sensitive' : row.triage.riskLevel}`}>{priorityLabel(row)}</span><h3>Recommended next step</h3><p>{row.triage.reasonCodes[0] === "sensitive_safety" ? "Check the reported safety hazard first, then review the service concern." : row.triage.reasonCodes[0] === "sensitive_compensation" ? "Clarify the missing items and check the order before deciding on recovery." : recommendation(row)}</p><details><summary>Why this recommendation?</summary><p>{REASON_CODE_EXPLANATIONS[row.triage.reasonCodes[0]]}</p><p>A customer’s account is not a verified finding about cause or employee conduct.</p></details></section>}
+        {!outcomes[row.review.id] && !row.historical && <section className="desk-recommendation"><span className={`desk-priority priority-${priorityStyle(row)}`}>{priorityLabel(row)}</span><h3>Recommended next step</h3><p>{row.triage.reasonCodes[0] === "sensitive_safety" ? "Check the reported safety hazard first, then review the service concern." : row.triage.reasonCodes[0] === "sensitive_compensation" ? "Clarify the missing items and check the order before deciding on recovery." : recommendation(row)}</p><details><summary>Why this recommendation?</summary><p>{REASON_CODE_EXPLANATIONS[row.triage.reasonCodes[0]]}</p><p>A customer’s account is not a verified finding about cause or employee conduct.</p></details></section>}
         {row.source && <details className="desk-facts"><summary>Discovery checks</summary><ul>{row.source.discoveryChecks.map(check => <li key={check}><em>{check}</em></li>)}</ul></details>}
         <details className="desk-facts"><summary>{row.source ? "Source and available evidence" : "Check approved business facts"}</summary>{row.source ? <><p>Customer review and owner reply transcribed from supplied Google Maps screenshots. Reviewer names are masked in these examples. Claims are attributed accounts, not verified findings.</p><p>Age shown: {row.dateLabel}. The capture date and exact review date are unavailable. Recent cases are a screenshot-based practice cohort, not a live intake.</p><p>No business-approved policies or contact channels have been supplied. The original reply is reference material only.</p></> : <><ul>{row.draft.factsUsed.map(key => <li key={key}>{facts.facts.find(fact => fact.key === key)?.value}</li>)}</ul>{row.draft.factsUsed.length === 0 && <p>No business facts are used in this draft.</p>}</>}</details>
         {row.source && <details className="desk-original-reply"><summary>Original owner reply · {row.source.ownerReply.dateLabel}</summary><blockquote>{row.source.ownerReply.text}</blockquote><p className="page-sub">Existing public reply shown for comparison. It does not establish that an investigation or improvement occurred.</p></details>}

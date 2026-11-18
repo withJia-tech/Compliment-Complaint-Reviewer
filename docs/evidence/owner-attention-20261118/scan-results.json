@@ -1,0 +1,16 @@
+{
+  "isolated_fixture_store": true,
+  "results": [
+    {
+      "run": 1,
+      "exit_code": 1,
+      "summary": null
+    },
+    {
+      "run": 2,
+      "exit_code": 1,
+      "summary": null
+    }
+  ],
+  "idempotent": false
+}

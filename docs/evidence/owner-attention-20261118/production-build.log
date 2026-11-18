@@ -1,0 +1,40 @@
+npm warn Unknown env config "http-proxy". This will stop working in the next major version of npm.
+
+> compliment-complaint-reviewer@0.1.0 build
+> next build
+
+   ▲ Next.js 15.5.23
+
+   Creating an optimized production build ...
+ ✓ Compiled successfully in 6.3s
+   Linting and checking validity of types ...
+   Collecting page data ...
+   Generating static pages (0/7) ...
+   Generating static pages (1/7)
+   Generating static pages (3/7)
+   Generating static pages (5/7)
+ ✓ Generating static pages (7/7)
+   Finalizing page optimization ...
+   Collecting build traces ...
+
+Route (app)                                 Size  First Load JS
+┌ ○ /                                      131 B         103 kB
+├ ○ /_not-found                            993 B         104 kB
+├ ƒ /api/scan                              131 B         103 kB
+├ ƒ /demo                                  165 B         106 kB
+├ ○ /demo-behindthehood                    131 B         103 kB
+├ ○ /hosted-demo                         8.81 kB         111 kB
+├ ƒ /insights                              165 B         106 kB
+├ ƒ /queue                               5.18 kB         111 kB
+├ ƒ /review/[id]                         2.85 kB         109 kB
+└ ƒ /settings                              162 B         106 kB
++ First Load JS shared by all             103 kB
+  ├ chunks/255-87552e6e05b8e3aa.js       46.4 kB
+  ├ chunks/4bd1b696-c023c6e3521b1417.js  54.2 kB
+  └ other shared chunks (total)          1.92 kB
+
+
+ƒ Middleware                               34 kB
+
+○  (Static)   prerendered as static content
+ƒ  (Dynamic)  server-rendered on demand

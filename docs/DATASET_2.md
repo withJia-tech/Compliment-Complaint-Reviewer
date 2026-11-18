@@ -40,8 +40,10 @@ continues to require the original date and enforce its existing rolling six-mont
 ## Classifier finding and controlled candidate
 
 The production keyword classifier misses “broken glass” as a sensitive safety signal.
-Dataset 2 uses `demo-candidate-v1.1.0`, which adds that phrase as a high-risk safety trigger.
-The default production `policy-v1.0.0` and its thresholds are unchanged. The classifier
+Dataset 2 retains the separate broken-glass safety trigger. Its current identity is
+`demo-broken-glass-v1+policy-v1.0.1-owner-attention.1`, explicitly including the updated
+base attention policy. The broken-glass rule itself is unchanged and has not been
+promoted into the baseline policy. See [the attention change](OWNER_ATTENTION_CHANGE.md). The classifier
 interface now accepts only id, stars and review text: absent dates need not be invented,
 and owner replies, names, profile status and metadata are not classification evidence.
 
@@ -95,12 +97,12 @@ quoted historical replies is retained under the existing reference-only boundary
 Original uploads and git history are unchanged. Earlier unmasked demo screenshots
 are omitted from this branch rather than presented as evidence for the new dataset.
 
-No deployed host was changed. This local branch does not remove names already present
-on previously deployed versions. Promotion/deployment is a separate instruction.
-The four-star routing rule and language interpretation/learning remain unchanged;
-those require the separately documented policy and architecture work.
+No deployed host was changed. This branch does not remove names already present
+on previously deployed versions. Deployment is a separate instruction. At the masking-only
+checkpoint, routing and language interpretation/learning were unchanged. The subsequent
+below-five-star rule is included in this draft; interpretation and learning remain unimplemented.
 
-### Local verification of the masked derivative
+### Historical local verification of the masked derivative, before the attention change
 
 Three new privacy tests failed against the original dataset, then passed after masking.
 The focused dataset/privacy/desk suite passed 21 tests; the full PR-head suite passed
@@ -110,5 +112,7 @@ their review text, rating, subratings, dates, source-file references and busines
 A known-name/id scan found no residual reviewer identifiers in current tracked text
 or the static bundle; two generic `foo*` matcher-comment hits were inspected and
 excluded. This is a bounded known-identifier check, not a universal anonymity claim.
-Routing code, its four-star test and golden expectations remain unchanged.
+At that masking-only checkpoint, routing code, its four-star test and golden expectations were unchanged.
 Browser/mobile rendering of this masked version has not been verified.
+
+The subsequent owner-attention implementation is documented separately in [OWNER_ATTENTION_CHANGE.md](OWNER_ATTENTION_CHANGE.md). The earlier 170-test masking checkpoint above is not the result for that later code.

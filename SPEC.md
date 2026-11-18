@@ -77,7 +77,16 @@ Evaluated in order; the first rule that matches decides. Implemented in
 | 2 | Matches only a **weak** sensitive term | max(medium, star band) | yes | needs review |
 | 3 | 1–2 stars | high | no | needs review |
 | 4 | 3 stars, or 4–5 stars with a complaint term | medium | no | needs review |
-| 5 | 4–5 stars, no complaint term | low | no | quick approve |
+| 5 | 4 stars, no detected complaint | low | no | needs review (`rating_below_five`) |
+| 6 | 5 stars, no detected complaint | low | no | quick approve (human review still required) |
+
+**18 November 2026 policy change:** all ratings below five require owner review.
+Attention is separate from severity: four-star praise remains low risk and non-sensitive.
+The new local PR #7 candidate is `policy-v1.0.1-owner-attention.1`; it is not a
+promotion or replacement of main’s separate policy-v1.1.0. See
+[the change record](docs/OWNER_ATTENTION_CHANGE.md) for superseded expectations,
+queue/insight behaviour, limitations and validation. Five-star interpretation is
+unchanged; no detected complaint does not prove sincere praise.
 
 Star band alone (used by rule 2): 1–2 stars → high, 3 stars → medium, 4–5 → low.
 

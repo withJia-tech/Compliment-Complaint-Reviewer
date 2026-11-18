@@ -98,3 +98,22 @@ Read from Google at the moment of need. No local archive. Needs B7's data to be 
 
 Before live OAuth, add a tenant key to the repos so multi-location is a migration, not a rewrite.
 This is what keeps decision 8 a two-way door.
+
+## 18 November 2026 — owner attention below five (local PR #7 candidate)
+
+The owner approved `needs_review` for every rating below five, including apparently
+positive four-star text. This supersedes the previous clean-four-star quick-approval
+expectation. Risk, sensitivity, detection and routing remain separate; no model is added.
+The candidate is `policy-v1.0.1-owner-attention.1`, based on PR #7 at `5cbb6c0`,
+with reviewer-name masking preserved. Main's separate policy-v1.1.0 must be reconciled
+before any integration; this does not replace or promote it.
+
+Queue labels, ordering, daily-brief groups and theme attention counts use the same
+attention requirement. Historic stored classifications/approvals are not rewritten.
+Current display requirements must not be presented as historical reclassification.
+See [the exact scope, test changes and evidence](OWNER_ATTENTION_CHANGE.md).
+
+The initial-release human-approval requirement remains. B1 is parked and is not
+authority to build auto-send. The v0.7 local-approval/no-external-action transition,
+semantic interpretation, owner-context workflow and controlled learning are separate
+unimplemented slices. No publishing behaviour is changed by this candidate.

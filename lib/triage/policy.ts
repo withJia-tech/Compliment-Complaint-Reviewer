@@ -68,9 +68,8 @@ function starBandRisk(stars: Review["stars"]): RiskLevel {
  * `confidence` is one of a small set of fixed values attached to each rule
  * branch — a rule-strength label, not a calibrated probability. The UI shows
  * it as a coarse band (see confidenceBand) rather than a percentage, so it
- * doesn't imply precision the keyword rules don't have. A future
- * model-based classifier implementing this same interface could replace it
- * with a real score without changing any caller.
+ * doesn't imply precision the keyword rules don't have. A future model may
+ * propose interpretations; application code must continue to own routing.
  */
 export class DefaultTriagePolicy implements TriagePolicy {
   classify(review: ClassificationInput): TriageResult {
@@ -129,8 +128,22 @@ export class DefaultTriagePolicy implements TriagePolicy {
       };
     }
 
-    // 4. 4-5 stars, no complaint: low risk. Still sent by the owner, but a
-    // one-click approve of the draft as-is.
+    // 4. The owner-attention requirement is independent of severity. Do not
+    // label four-star praise as a complaint or bypass the earlier safety checks.
+    if (review.stars === 4) {
+      return {
+        ...base,
+        riskLevel: "low",
+        reasonCodes: ["rating_below_five"],
+        recommendedAction: "needs_review",
+        sensitive: false,
+        confidence: positiveHits.length > 0 ? 0.9 : 0.75,
+        matchedKeywords: positiveHits,
+      };
+    }
+
+    // 5. Existing five-star heuristic retained in this scoped change. Absence
+    // of a detected complaint is not proof of sincere praise or semantic safety.
     return {
       ...base,
       riskLevel: "low",

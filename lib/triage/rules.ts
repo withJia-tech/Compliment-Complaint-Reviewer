@@ -2,7 +2,7 @@ import type { ReasonCode, ReviewTheme } from "@/lib/types";
 
 export type SensitiveReasonCode = Exclude<
   ReasonCode,
-  "positive_no_complaint" | "neutral_mixed_sentiment" | "negative_issue"
+  "positive_no_complaint" | "rating_below_five" | "neutral_mixed_sentiment" | "negative_issue"
 >;
 
 /**
