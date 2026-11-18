@@ -64,3 +64,5 @@ No real model calls occurred. Do not claim sarcasm recognition, learned slang, c
 ## Suggested first message in the new session
 
 > Continue ComplimentOrComplaint from branch `verification/pr7-mobile-navigation-20261118`. Read `docs/CODEX_NEXT_SESSION.md`, inspect current Git state and the linked evidence before changes. Preserve all existing work. Continue the authorised mobile verification and bounded fixes; keep the original return-link assertion visible. Explain the next diagnostic hypothesis and ask only for the product/storage decisions that materially change implementation. Do not merge, send review replies, introduce a provider/memory architecture or publish additional features without the applicable authorisation.
+
+Latest live-host caveat: Pages operational checks initially gave 5/12 expected 404 and 7/12 503. One bounded recheck yielded five more expected 404 observations; `/settings` GET and HEAD remain 503/inconclusive. Three companion URL variants loaded; five published files matched. Preserve these separate evidence levels and do not claim all live route checks pass.

@@ -1,0 +1,107 @@
+[
+  {
+    "path": "queue",
+    "method": "GET",
+    "status": 404,
+    "expected": 404,
+    "pass": true
+  },
+  {
+    "path": "queue",
+    "method": "HEAD",
+    "status": 404,
+    "expected": 404,
+    "pass": true
+  },
+  {
+    "path": "review/rev_001",
+    "method": "GET",
+    "status": 404,
+    "expected": 404,
+    "pass": true
+  },
+  {
+    "path": "review/rev_001",
+    "method": "HEAD",
+    "status": 404,
+    "expected": 404,
+    "pass": true
+  },
+  {
+    "path": "settings",
+    "method": "GET",
+    "status": 503,
+    "expected": 404,
+    "pass": false
+  },
+  {
+    "path": "settings",
+    "method": "HEAD",
+    "status": 503,
+    "expected": 404,
+    "pass": false
+  },
+  {
+    "path": "insights",
+    "method": "GET",
+    "status": 503,
+    "expected": 404,
+    "pass": false
+  },
+  {
+    "path": "insights",
+    "method": "HEAD",
+    "status": 503,
+    "expected": 404,
+    "pass": false
+  },
+  {
+    "path": "api/scan",
+    "method": "GET",
+    "status": 503,
+    "expected": 404,
+    "pass": false
+  },
+  {
+    "path": "api/scan",
+    "method": "HEAD",
+    "status": 503,
+    "expected": 404,
+    "pass": false
+  },
+  {
+    "path": "demo-behindthehood/audit",
+    "method": "GET",
+    "status": 503,
+    "expected": 404,
+    "pass": false
+  },
+  {
+    "path": "demo-behindthehood/audit",
+    "method": "HEAD",
+    "status": 404,
+    "expected": 404,
+    "pass": true
+  },
+  {
+    "path": "demo-behindthehood/",
+    "method": "GET",
+    "status": 200,
+    "expected": 200,
+    "pass": true
+  },
+  {
+    "path": "demo-behindthehood",
+    "method": "GET",
+    "status": 200,
+    "expected": 200,
+    "pass": true
+  },
+  {
+    "path": "demo-behindthehood/index.html",
+    "method": "GET",
+    "status": 200,
+    "expected": 200,
+    "pass": true
+  }
+]

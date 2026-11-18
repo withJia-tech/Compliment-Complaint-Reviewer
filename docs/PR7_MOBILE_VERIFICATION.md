@@ -59,6 +59,7 @@ On iPhone/Android additionally record OS/browser, normal tap and long press, tab
 | Pages source | `de98c2225d6e97e7241f3a23a48b8fc16c63e60a`; only app.js and build.json changed |
 | Pages deployment | [Run 44321942259](https://github.com/withJia-tech/Compliment-Complaint-Reviewer/actions/runs/44321942259) succeeded |
 | Live Pages bytes | Five of five files match the local privacy bundle; independently recomputed digest matches |
+| Fresh post-deployment HTTP boundaries | Initial check: 5/12 operational GET/HEAD requests returned expected 404; 7/12 returned 503. Three direct companion URL forms resolved with 200. The 503 cases do not establish intentional route denial. No mutation requests sent |
 | Live privacy hash | `6894a059e25de591320a27ee9c10d6b4c7460d76ae8744811b77fbf9b1c6f0ea` |
 | Vercel comparison host | HTTP 200 manifest still showed old `154fc78c…` during this turn; no Vercel update performed |
 | ChatGPT Sites | No update or fresh live verification; previous owner-only reads were blocked |
@@ -66,3 +67,7 @@ On iPhone/Android additionally record OS/browser, normal tap and long press, tab
 The first immediate post-push Pages read still returned the old bundle; after successful deployment, all five files matched the new bundle. Push success, deployment success and live byte identity are three separate observations. The verification wording/build has not been deployed. Main remains `cfe0daf`; historical Git versions still contain original names. Pseudonymisation is not erasure or complete anonymisation: searchable review wording and business remain.
 
 Evidence: `docs/evidence/pr7-mobile-20261118/`. Full logs preserve failures and final results. These finite examples provide no statistical population-error bound, model-quality result or mobile certificate.
+
+The portable source patch is valid unified diff data. Its blank context lines contain the required space marker, which a whole-tree whitespace scan reports as trailing whitespace. Product-source whitespace checks exclude only `docs/handoff/*.patch`; the patch independently passes `git apply --check` against its stated base. No whitespace rule or test gate was disabled.
+
+Bounded HTTP recheck: five of the seven initial 503 cases returned 404 on one retry. `/settings` GET and HEAD still returned 503. Across the two attempts, ten of twelve operational method/path pairs have an observed expected 404; two remain inconclusive. No additional retries or host configuration changes were made. The returned `envoy` header does not establish the origin of the failure. Direct companion loading (3/3) and byte equality (5/5) remain separate results.

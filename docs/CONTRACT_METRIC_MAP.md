@@ -54,7 +54,7 @@ Finite regression compliance is not population accuracy. The known development c
 
 1. **170 vs 184 vs 189 vs 201:** different branch contents or integration trees. 184 = 167 PR baseline + 3 privacy + 10 additional guard tests + 4 navigation contracts. 189 belongs to the separate owner-attention candidate. 201 is the CI temporary merge with main, not evidence that either local candidate has been merged.
 2. **Source vs generated output:** new wording initially existed only in source; one contract test failed. Regeneration fixed the artifact mismatch, not mobile lifecycle behaviour.
-3. **Source vs live deployment:** Pages briefly served old bytes immediately after the branch update; eventual deployment + downloads established the new identity. Vercel still showed the previous digest during this turn; Sites was not updated. Do not say all three hosts match now.
+3. **Source vs live deployment:** Pages briefly served old bytes immediately after the branch update; eventual deployment + downloads established the new identity. Vercel still showed the previous digest during this turn; Sites was not updated. Do not say all three hosts match now. Fresh Pages operational requests initially returned five expected 404s and seven 503s; the latter leave host-boundary evidence incomplete despite passing middleware tests.
 4. **PR metadata vs main:** PR metadata reported an older base SHA; direct `refs/heads/main` and CI checkout establish `cfe0daf`. Always name the exact checkout. The temporary merge is CI infrastructure, not a user-authorised merge into main.
 5. **v0.7 vs runtime:** H0–H5 are proposed specifications. Existing freshness guards and tests cover useful subsets; they do not complete T1 or G1. T0 inspection exists; T2–T4 vertical-slice obligations and G2–G4 remain uncompleted.
 6. **Anonymity vs masking:** five displayed names and embedded salutations are masked. Searchable text, business identity, old Git history and untouched hosts still permit linkage. No history rewrite was attempted.
@@ -101,3 +101,19 @@ For a later context-value experiment, freeze the cases and rubric first, compare
 3. Which context may be reused: only this case, approved business facts, or selected corrected examples? Identify the approver, allowed users and deletion expectation before choosing storage.
 
 These decisions shape the next implementation; they are not requests to approve actions already completed.
+
+
+### Proposed context-value measurements — not yet executed
+
+| Measurement | Numerator / denominator | Why it matters |
+|---|---|---|
+| Useful clarification | Answers that change a supported interpretation, urgency or permissible wording / answered questions | Avoid asking merely to reconfirm an already-required hold |
+| Unnecessary interruption | Questions adjudicated unnecessary / all questions asked | Owner workload and abandonment risk |
+| Context-induced error | Cases made wrong by supplied/retrieved context / context-using cases | More context can mislead; do not count only improvements |
+| Reuse benefit | Repeat cases resolved with less correction under the same rubric / eligible repeat cases | Establish value before adding retrieval infrastructure |
+| Retrieval authority | Out-of-scope, expired or disputed records admitted / attempted prohibited retrievals | Application boundary; finite tests must show each attempt and denial |
+| Total operating cost | Hosting + inference + storage + support + recovery effort per business and per handled case | Compare managed and dedicated options on total burden, not database price alone |
+
+Report paired case identities, rubric/dataset/context revisions, disagreements and missing data. All observed values here are `NOT_MEASURED`; numeric acceptance thresholds remain to be agreed before the experiment.
+
+Post-deployment HTTP follow-up: one bounded retry resolved five of seven 503 results to 404. `/settings` GET/HEAD remained 503, so current exact-denial evidence is incomplete for those two pairs. Do not represent this as 12/12 live boundary checks passing. Both raw result sets are retained.

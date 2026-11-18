@@ -1,0 +1,65 @@
+[
+  {
+    "path": "settings",
+    "method": "GET",
+    "status": 503,
+    "expected": 404,
+    "pass": false,
+    "server": "envoy",
+    "body_preview": "\n<!DOCTYPE html>\n<!--\n\nHello future GitHubber! I bet you're here to remove those nasty inline styles,\nDRY up these templates and make 'em nice and re-usable, right?\n\nPlease, don't. https://github.com/styleguide/templates/2.0\n\n-->\n<html>\n  <head>\n    "
+  },
+  {
+    "path": "settings",
+    "method": "HEAD",
+    "status": 503,
+    "expected": 404,
+    "pass": false,
+    "server": "envoy",
+    "body_preview": ""
+  },
+  {
+    "path": "insights",
+    "method": "GET",
+    "status": 404,
+    "expected": 404,
+    "pass": true,
+    "server": "envoy",
+    "body_preview": null
+  },
+  {
+    "path": "insights",
+    "method": "HEAD",
+    "status": 404,
+    "expected": 404,
+    "pass": true,
+    "server": "envoy",
+    "body_preview": null
+  },
+  {
+    "path": "api/scan",
+    "method": "GET",
+    "status": 404,
+    "expected": 404,
+    "pass": true,
+    "server": "envoy",
+    "body_preview": null
+  },
+  {
+    "path": "api/scan",
+    "method": "HEAD",
+    "status": 404,
+    "expected": 404,
+    "pass": true,
+    "server": "envoy",
+    "body_preview": null
+  },
+  {
+    "path": "demo-behindthehood/audit",
+    "method": "GET",
+    "status": 404,
+    "expected": 404,
+    "pass": true,
+    "server": "envoy",
+    "body_preview": null
+  }
+]
