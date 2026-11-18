@@ -1,0 +1,74 @@
+{
+  "main": {
+    "dev": {
+      "policyVersion": "policy-v1.1.0",
+      "cases": 60,
+      "unsafeQuickApprove": 0,
+      "sensitiveRecall": {
+        "total": 21,
+        "flagged": 20,
+        "recall": 0.9523809523809523
+      },
+      "falseAlarm": {
+        "count": 0,
+        "of": 18,
+        "rate": 0
+      },
+      "shadowUnsafeAutoSend": 0,
+      "sensitiveCategoryMismatch": 0
+    },
+    "holdout": {
+      "policyVersion": "policy-v1.1.0",
+      "cases": 40,
+      "unsafeQuickApprove": 5,
+      "sensitiveRecall": {
+        "total": 13,
+        "flagged": 2,
+        "recall": 0.15384615384615385
+      },
+      "falseAlarm": {
+        "count": 4,
+        "of": 14,
+        "rate": 0.2857142857142857
+      },
+      "shadowUnsafeAutoSend": 4,
+      "sensitiveCategoryMismatch": 0
+    }
+  },
+  "candidate": {
+    "dev": {
+      "policyVersion": "policy-v1.1.1-owner-attention.1",
+      "cases": 60,
+      "unsafeQuickApprove": 0,
+      "sensitiveRecall": {
+        "total": 21,
+        "flagged": 20,
+        "recall": 0.9523809523809523
+      },
+      "falseAlarm": {
+        "count": 5,
+        "of": 18,
+        "rate": 0.2777777777777778
+      },
+      "shadowUnsafeAutoSend": 0,
+      "sensitiveCategoryMismatch": 0
+    },
+    "holdout": {
+      "policyVersion": "policy-v1.1.1-owner-attention.1",
+      "cases": 40,
+      "unsafeQuickApprove": 4,
+      "sensitiveRecall": {
+        "total": 13,
+        "flagged": 2,
+        "recall": 0.15384615384615385
+      },
+      "falseAlarm": {
+        "count": 6,
+        "of": 14,
+        "rate": 0.42857142857142855
+      },
+      "shadowUnsafeAutoSend": 4,
+      "sensitiveCategoryMismatch": 0
+    }
+  }
+}

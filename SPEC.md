@@ -76,8 +76,21 @@ Evaluated in order; the first rule that matches decides. Implemented in
 | 1 | Matches a **strong** sensitive term | high | yes | needs review |
 | 2 | Matches only a **weak** sensitive term | max(medium, star band) | yes | needs review |
 | 3 | 1–2 stars | high | no | needs review |
-| 4 | 3 stars, or 4–5 stars with a complaint term | medium | no | needs review |
-| 5 | 4–5 stars, no complaint term | low | no | quick approve |
+| 4 | Text the English/script heuristics cannot read | medium | no | needs review (`unreadable_language`) |
+| 5 | 3 stars, or 4–5 stars with a complaint or contrast marker | medium | no | needs review |
+| 6 | 4–5 stars with words but no recognised praise | medium | no | needs review (`unconfirmed_praise`) |
+| 7 | 4 stars after the earlier checks | low | no | needs review (`rating_below_five`) |
+| 8 | 5 stars after the earlier checks | low | no | quick approve (human factual review still required) |
+
+**18 November 2026 compatibility candidate:** `policy-v1.1.1-owner-attention.1`
+combines main's v1.1.0 safeguards with PR #11's below-five-star attention floor and
+PR #7's Review Desk. Four-star praise remains low risk and non-sensitive; recognised
+complaints and interpretation uncertainty retain medium risk. The new reason is
+valid in both TypeScript and the runtime stored-record schema. Existing records
+are not rewritten. See [the compatibility record](docs/PR7_PR11_COMPATIBILITY.md)
+for superseded assertions, measured failures and integration limits. The original
+evaluation labels/thresholds remain unchanged; two workload gates fail. This is
+not a promotion, source PR merge or deployed build.
 
 Star band alone (used by rule 2): 1–2 stars → high, 3 stars → medium, 4–5 → low.
 

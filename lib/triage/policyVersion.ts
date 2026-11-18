@@ -1,5 +1,3 @@
-// v1.0.0: initial star-band + keyword-heuristic policy, no LLM classifier.
-// v1.1.0: fail-closed quick approve — 4-5 stars needs praise present, no
-//         contrast marker, and readable language; dev-derived sensitive
-//         phrases; idiom exemptions; shadow B1 wouldAutoSend.
-export const POLICY_VERSION = "policy-v1.1.0";
+// Compatibility candidate: main v1.1.0 safeguards plus PR #11 owner attention.
+// Not a deployment or promotion; see docs/PR7_PR11_COMPATIBILITY.md.
+export const POLICY_VERSION = "policy-v1.1.1-owner-attention.1";

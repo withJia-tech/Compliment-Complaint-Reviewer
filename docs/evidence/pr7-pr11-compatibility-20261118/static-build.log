@@ -1,0 +1,6 @@
+npm warn Unknown env config "http-proxy". This will stop working in the next major version of npm.
+
+> compliment-complaint-reviewer@0.1.0 build:comparison
+> node --import tsx scripts/buildComparison.ts
+
+Comparison build c44c15d91388daf4faab9c1ca0d7fe6ce747f2c61c55a6736360c26f1a6f1d7f; 2 datasets; /workspace/scratch/9758a9a4911b/compliment-pr7-pr11-compatibility/comparison/dist

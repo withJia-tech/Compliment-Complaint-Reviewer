@@ -7,8 +7,10 @@ import { TemplateReplyDrafter } from "@/lib/drafter/replyDrafter";
 import { withinReviewWindow } from "@/lib/triage/reviewWindow";
 import type { ApprovedBusinessFacts, Draft, Review, TriageResult } from "@/lib/types";
 import type { ClassificationInput } from "@/lib/interfaces/triagePolicy";
+import { ownerAttentionRank } from "@/lib/triage/attention";
+import { POLICY_VERSION } from "@/lib/triage/policyVersion";
 
-export const DATASET2_POLICY = "demo-candidate-v1.1.0";
+export const DATASET2_POLICY = `demo-broken-glass-v1+${POLICY_VERSION}`;
 export interface ScreenshotCase {
   id: string;
   businessName: string;
@@ -23,7 +25,7 @@ export interface ScreenshotCase {
   proposedReply: string;
 }
 export interface DemoRow {
-  review: ClassificationInput & { author: string };
+  review: ClassificationInput & { author: string; createTime?: string; updateTime?: string };
   dateLabel: string;
   historical: boolean;
   /** Ascending within each risk band. Never converted into an exact review timestamp. */
@@ -39,6 +41,7 @@ export interface DemoDataset {
   kind: "synthetic" | "screenshots";
   rows: DemoRow[];
   facts: ApprovedBusinessFacts;
+  asOf: string;
 }
 export type DemoView = "active" | "completed" | "historical";
 export type DemoOutcome = { status: "approved" | "no_response"; text: string; decidedAt: string };
@@ -57,8 +60,7 @@ export function canPractiseRecentCase(source: ScreenshotCase): boolean {
   return source.sourceDate.kind === "posted" && source.sourceDate.ageMonthsAtCapture >= 0 && source.sourceDate.ageMonthsAtCapture < 6;
 }
 function sortRows(rows: DemoRow[]) {
-  return rows.sort((a,b) => Number(b.triage.sensitive)-Number(a.triage.sensitive) ||
-    ({ high:0, medium:1, low:2 }[a.triage.riskLevel]-{ high:0, medium:1, low:2 }[b.triage.riskLevel]) || a.recencyOrder-b.recencyOrder);
+  return rows.sort((a,b) => ownerAttentionRank(a)-ownerAttentionRank(b) || a.recencyOrder-b.recencyOrder);
 }
 
 export function buildDemoDatasets(asOf = new Date("2026-11-13T00:00:00.000Z")): DemoDataset[] {
@@ -67,7 +69,7 @@ export function buildDemoDatasets(asOf = new Date("2026-11-13T00:00:00.000Z")): 
   const syntheticFacts = facts as ApprovedBusinessFacts;
   const syntheticRows: DemoRow[] = (reviews as Review[]).filter(review => withinReviewWindow(review, asOf)).map(review => {
     const triage = { ...policy.classify(review), computedAt: asOf.toISOString() };
-    return { review: { id:review.id, author:review.author, stars:review.stars, text:review.text }, triage,
+    return { review: { id:review.id, author:review.author, stars:review.stars, text:review.text, createTime:review.createTime, updateTime:review.updateTime }, triage,
       dateLabel:new Date(review.createTime).toLocaleDateString("en-GB", {day:"numeric",month:"short",year:"numeric",timeZone:"UTC"}),
       historical:false, recencyOrder:-Date.parse(review.createTime),
       draft:{...drafter.draft(review, triage, syntheticFacts),generatedAt:asOf.toISOString()} };
@@ -79,7 +81,7 @@ export function buildDemoDatasets(asOf = new Date("2026-11-13T00:00:00.000Z")): 
       draft:{reviewId:source.id,text:source.proposedReply,factsUsed:[],templateId:"dataset2-editorial-v1",generatedAt:asOf.toISOString()} };
   });
   return [
-    { id:"dataset1", label:"Dataset 1 · sample reviews", title:syntheticFacts.businessName, kind:"synthetic", facts:syntheticFacts, rows:sortRows(syntheticRows) },
-    { id:"dataset2", label:"Dataset 2 · real review examples", title:screenshotData.businessName, kind:"screenshots", facts:{locationId:"case-study-tiong-bahru",businessName:screenshotData.businessName,facts:[]}, rows:sortRows(screenshotRows) },
+    { id:"dataset1", label:"Dataset 1 · sample reviews", title:syntheticFacts.businessName, kind:"synthetic", asOf:asOf.toISOString(), facts:syntheticFacts, rows:sortRows(syntheticRows) },
+    { id:"dataset2", label:"Dataset 2 · name-masked real reviews", title:screenshotData.businessName, kind:"screenshots", asOf:asOf.toISOString(), facts:{locationId:"case-study-tiong-bahru",businessName:screenshotData.businessName,facts:[]}, rows:sortRows(screenshotRows) },
   ];
 }

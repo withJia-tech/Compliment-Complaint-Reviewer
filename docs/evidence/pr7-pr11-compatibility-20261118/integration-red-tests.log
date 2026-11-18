@@ -1,0 +1,148 @@
+npm warn Unknown env config "http-proxy". This will stop working in the next major version of npm.
+
+> compliment-complaint-reviewer@0.1.0 test
+> vitest run
+
+The CJS build of Vite's Node API is deprecated. See https://vite.dev/guide/troubleshooting.html#vite-cjs-node-api-deprecated for more details.
+
+ RUN  v2.1.9 /workspace/scratch/9758a9a4911b/compliment-pr7-pr11-compatibility
+
+ ✓ lib/__tests__/replyDrafter.test.ts (12 tests) 20ms
+ ✓ lib/__tests__/triage.policy.test.ts (28 tests) 23ms
+ ✓ lib/__tests__/demo.dataset2.test.ts (7 tests) 15ms
+ ✓ lib/__tests__/desk.summary.test.ts (11 tests) 74ms
+ ✓ lib/__tests__/scan.runDailyScan.test.ts (9 tests) 53ms
+ ✓ lib/__tests__/decisions.test.ts (17 tests) 82ms
+ ✓ lib/__tests__/store.jsonStore.test.ts (11 tests) 14ms
+ ✓ lib/__tests__/send.regressions.test.ts (4 tests) 26ms
+ ✓ lib/__tests__/send.boundary.test.ts (28 tests) 278ms
+ ❯ lib/__tests__/owner.attention.test.ts (18 tests | 1 failed) 113ms
+   × holds four-star "Great service—only waited fifty minutes." without asserting a sensitive incident 19ms
+     → expected { reviewId: 'four', …(10) } to match object { riskLevel: 'low', …(3) }
+(9 matching properties omitted from actual)
+ ✓ lib/__tests__/triage.failClosed.test.ts (8 tests) 47ms
+ ✓ lib/__tests__/golden.routing.test.ts (34 tests) 28ms
+ ✓ lib/__tests__/insights.aggregate.test.ts (7 tests) 30ms
+ ❯ lib/__tests__/evals.routing.test.ts (5 tests | 2 failed) 34ms
+   × routing eval gates > dev meets its thresholds 25ms
+     → expected [ 'false alarm rate 0.28 > 0.25' ] to deeply equal []
+   × routing eval gates > holdout meets its thresholds 4ms
+     → expected [ 'false alarm rate 0.43 > 0.3' ] to deeply equal []
+ ✓ lib/__tests__/hosted.demo.test.ts (11 tests) 16ms
+ ✓ lib/__tests__/review.window.test.ts (3 tests) 3ms
+ ❯ lib/__tests__/policy.promotionGate.test.ts (3 tests | 2 failed) 14ms
+   × policy promotion gate > the routing source matches the stamped manifest 11ms
+     → expected 'a0399b9c242a3db571b4aed2200044bb93660…' to be '697d25890f1eca0ba8a3aa96e3315ec057827…' // Object.is equality
+   × policy promotion gate > the stamped version is the live POLICY_VERSION 1ms
+     → expected 'policy-v1.1.0' to be 'policy-v1.1.1-owner-attention.1' // Object.is equality
+ ✓ lib/__tests__/queue.attention.test.ts (1 test) 12ms
+ ✓ lib/__tests__/demo.privacy.test.ts (3 tests) 32ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 5 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  lib/__tests__/evals.routing.test.ts > routing eval gates > dev meets its thresholds
+AssertionError: expected [ 'false alarm rate 0.28 > 0.25' ] to deeply equal []
+
+- Expected
++ Received
+
+- Array []
++ Array [
++   "false alarm rate 0.28 > 0.25",
++ ]
+
+ ❯ lib/__tests__/evals.routing.test.ts:20:84
+     18| describe("routing eval gates", () => {
+     19|   it.each(["dev", "holdout"] as const)("%s meets its thresholds", (spl…
+     20|     expect(checkThresholds(evaluateRouting(policy, splits[split]), lim…
+       |                                                                                    ^
+     21|   });
+     22|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/5]⎯
+
+ FAIL  lib/__tests__/evals.routing.test.ts > routing eval gates > holdout meets its thresholds
+AssertionError: expected [ 'false alarm rate 0.43 > 0.3' ] to deeply equal []
+
+- Expected
++ Received
+
+- Array []
++ Array [
++   "false alarm rate 0.43 > 0.3",
++ ]
+
+ ❯ lib/__tests__/evals.routing.test.ts:20:84
+     18| describe("routing eval gates", () => {
+     19|   it.each(["dev", "holdout"] as const)("%s meets its thresholds", (spl…
+     20|     expect(checkThresholds(evaluateRouting(policy, splits[split]), lim…
+       |                                                                                    ^
+     21|   });
+     22|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/5]⎯
+
+ FAIL  lib/__tests__/owner.attention.test.ts > holds four-star "Great service—only waited fifty minutes." without asserting a sensitive incident
+AssertionError: expected { reviewId: 'four', …(10) } to match object { riskLevel: 'low', …(3) }
+(9 matching properties omitted from actual)
+
+- Expected
++ Received
+
+  Object {
+    "reasonCodes": Array [
+-     "rating_below_five",
++     "neutral_mixed_sentiment",
+    ],
+    "recommendedAction": "needs_review",
+-   "riskLevel": "low",
++   "riskLevel": "medium",
+    "sensitive": false,
+  }
+
+ ❯ lib/__tests__/owner.attention.test.ts:27:41
+     25| it.each(["", "That croissant was dope—absolutely delicious.", "Great s…
+     26|   "holds four-star %j without asserting a sensitive incident", text =>…
+     27|     expect(row("four", 4, text).triage).toMatchObject({ riskLevel: "lo…
+       |                                         ^
+     28|       recommendedAction: "needs_review", reasonCodes: ["rating_below_f…
+     29|   },
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/5]⎯
+
+ FAIL  lib/__tests__/policy.promotionGate.test.ts > policy promotion gate > the routing source matches the stamped manifest
+AssertionError: expected 'a0399b9c242a3db571b4aed2200044bb93660…' to be '697d25890f1eca0ba8a3aa96e3315ec057827…' // Object.is equality
+
+Expected: "697d25890f1eca0ba8a3aa96e3315ec057827f739f01a0ac488ee8b8e9ffb21e"
+Received: "a0399b9c242a3db571b4aed2200044bb936600c3df1ec520755f1407113e6c87"
+
+ ❯ lib/__tests__/policy.promotionGate.test.ts:13:32
+     11| describe("policy promotion gate", () => {
+     12|   it("the routing source matches the stamped manifest", () => {
+     13|     expect(policySourceHash()).toBe(manifest.sourceHash);
+       |                                ^
+     14|   });
+     15|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/5]⎯
+
+ FAIL  lib/__tests__/policy.promotionGate.test.ts > policy promotion gate > the stamped version is the live POLICY_VERSION
+AssertionError: expected 'policy-v1.1.0' to be 'policy-v1.1.1-owner-attention.1' // Object.is equality
+
+Expected: "policy-v1.1.1-owner-attention.1"
+Received: "policy-v1.1.0"
+
+ ❯ lib/__tests__/policy.promotionGate.test.ts:17:36
+     15|
+     16|   it("the stamped version is the live POLICY_VERSION", () => {
+     17|     expect(manifest.policyVersion).toBe(POLICY_VERSION);
+       |                                    ^
+     18|   });
+     19|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/5]⎯
+
+ Test Files  3 failed | 16 passed (19)
+      Tests  5 failed | 215 passed (220)
+   Start at  22:59:02
+   Duration  1.51s (transform 1.81s, setup 0ms, collect 3.52s, tests 914ms, environment 5ms, prepare 1.70s)

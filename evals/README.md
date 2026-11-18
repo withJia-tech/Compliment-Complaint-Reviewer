@@ -1,3 +1,5 @@
+> The compatibility candidate retains these frozen labels and gates. Its two workload gates currently fail under the new below-five owner-attention rule. See [the exact comparison and required measurement-contract decision](../docs/PR7_PR11_COMPATIBILITY.md). Historical results below describe v1.1.0.
+
 # Routing evals
 
 `data/fixtures/golden.json` is the **regression rubric**: hand-picked cases that pin specific

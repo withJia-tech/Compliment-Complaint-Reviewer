@@ -1,4 +1,5 @@
 import type { Review, ReviewTheme, TriageResult } from "@/lib/types";
+import { needsOwnerReview } from "@/lib/triage/attention";
 
 export type Period = "week" | "month";
 
@@ -6,7 +7,7 @@ export interface ThemeStats {
   theme: ReviewTheme;
   count: number;
   averageStars: number | null;
-  /** Reviews in this theme that needed a human decision (medium or high risk). */
+  /** Reviews requiring a closer read, including low-risk ratings below five. */
   needsAttention: number;
 }
 
@@ -28,8 +29,9 @@ export const THEME_LABELS: Record<ReviewTheme, string> = {
   atmosphere: "Atmosphere",
 };
 
-function startOfPeriod(date: Date, period: Period): Date {
-  const d = new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate()));
+function startOfPeriod(date: Date, period: Period, timeZone: string): Date {
+  const localDay = new Intl.DateTimeFormat("en-CA", { timeZone, year:"numeric", month:"2-digit", day:"2-digit" }).format(date);
+  const d = new Date(`${localDay}T00:00:00Z`);
   if (period === "month") {
     d.setUTCDate(1);
     return d;
@@ -66,11 +68,13 @@ function mean(values: number[]): number | null {
 export function aggregateByPeriod(
   rows: Array<{ review: Review; triage: TriageResult }>,
   period: Period,
+  timeZone = "UTC",
 ): PeriodBucket[] {
   const buckets = new Map<string, Array<{ review: Review; triage: TriageResult }>>();
 
   for (const row of rows) {
-    const start = startOfPeriod(new Date(row.review.createTime), period);
+    if (!Number.isFinite(Date.parse(row.review.createTime))) continue;
+    const start = startOfPeriod(new Date(row.review.createTime), period, timeZone);
     const key = start.toISOString().slice(0, 10);
     const existing = buckets.get(key);
     if (existing) {
@@ -94,7 +98,7 @@ export function aggregateByPeriod(
           theme,
           count: themed.length,
           averageStars: mean(themed.map((item) => item.review.stars)),
-          needsAttention: themed.filter((item) => item.triage.riskLevel !== "low").length,
+          needsAttention: themed.filter(needsOwnerReview).length,
         };
       }),
     }));

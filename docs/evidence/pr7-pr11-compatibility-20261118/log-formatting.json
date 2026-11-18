@@ -1,0 +1,49 @@
+{
+  "normalisation": "Terminal colour codes and trailing whitespace removed; one final newline. No result lines or failures removed.",
+  "logs": {
+    "integration-red-tests.log": {
+      "rawSha256": "2307b1ee7fe0aa415d1761ff3f501a4e206403431db06ccdcea24c1147ac73b6",
+      "savedSha256": "f575b7e845a237cd30d6f51b4cdb65780b797ec8487f7e827f0b4c32ae888482"
+    },
+    "static-build.log": {
+      "rawSha256": "21cfc2d27705df05ff28d1ff4aa14a058291b26bd0840c38fcd6427b404ec559",
+      "savedSha256": "21cfc2d27705df05ff28d1ff4aa14a058291b26bd0840c38fcd6427b404ec559"
+    },
+    "main-baseline-tests.log": {
+      "rawSha256": "f8fb49cb7492cd79cf01446fd8b86449ddca7cc7f48efc45269b74e89cae7529",
+      "savedSha256": "cb3b18a55fd5ac27b96fc6c7cad26e754d29eec70aafe1bfe70befe1f3720761"
+    },
+    "scan-2.log": {
+      "rawSha256": "9cb99def43e7655a0fc9cec00f60f847dbd27bdc7ea03c44e81231ae4022eed3",
+      "savedSha256": "9cb99def43e7655a0fc9cec00f60f847dbd27bdc7ea03c44e81231ae4022eed3"
+    },
+    "integration-red-typecheck.log": {
+      "rawSha256": "e88ad937186fc38261d9b869c92df46c1c8876c4569aa9005fea3088aab6177b",
+      "savedSha256": "e88ad937186fc38261d9b869c92df46c1c8876c4569aa9005fea3088aab6177b"
+    },
+    "pr11-baseline-tests.log": {
+      "rawSha256": "954914613ee3cd4220fe5686c0204bf4f22e7f54d3797bc13284734674ac9945",
+      "savedSha256": "f639bc3d97ca05cfd5d3b8cedd4a20f48dacedbd804c26f039307e2acaa1aeff"
+    },
+    "final-typecheck.log": {
+      "rawSha256": "c68e9802b92e19046dfc567ababe22cea54fa9b6b1185b8361bdd85febbc7552",
+      "savedSha256": "296235eda8b8401bc022b8100087b2babddfafcb965f134c540f5325a353f07f"
+    },
+    "final-tests.log": {
+      "rawSha256": "45657756d2d5f09fb973f017ce22b2fd631c2d5844adeaf676f2eb8cdc169e19",
+      "savedSha256": "0c76937e0006e44c77d09ac91c3b8bd42a4f7f0b322ae591ff497bb1b5866ffe"
+    },
+    "production-build.log": {
+      "rawSha256": "be0f3ca419499a966a5a6e5372036462da331ca1ba04d2fe6d5594c22c863b29",
+      "savedSha256": "72b0aa0c9f193c406cdadcb48f2b4c2e0dae0b6a01edc875cf89c9a3459c6a05"
+    },
+    "contract-red-tests.log": {
+      "rawSha256": "44f6ffa84b7ac5cb0e947eed3092da67dc91c58506fcbca04b74342f674c3294",
+      "savedSha256": "432d2909ba2125feedda09ba5740ff5985b7100505b4ea9f8d67851ffb6c11b8"
+    },
+    "scan-1.log": {
+      "rawSha256": "4e3ad93ed6ad52ecbd36ab8a59274caa512ff12549238de7ba4afb6547a99299",
+      "savedSha256": "4e3ad93ed6ad52ecbd36ab8a59274caa512ff12549238de7ba4afb6547a99299"
+    }
+  }
+}

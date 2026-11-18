@@ -1,0 +1,20 @@
+{
+  "main": "cfe0daf7473a54c04fb54d53f14c746cce2b5b3b",
+  "pr7": "5d0cb9f1f32678327210bbad82b8f402bfa3d40b",
+  "pr11": "6420809a4c04ccbb0a332d42c0740a1ab917bc21",
+  "policy": "policy-v1.1.1-owner-attention.1",
+  "tests": {
+    "passed": 239,
+    "failed": 2,
+    "filesPassed": 20,
+    "filesFailed": 1
+  },
+  "typecheckExit": 0,
+  "buildExit": 0,
+  "staticBuildExit": 0,
+  "evalExit": 1,
+  "mobileBrowserScenarios": "NOT_RUN",
+  "sourcePRsModified": false,
+  "deployed": false,
+  "staticDigest": "c44c15d91388daf4faab9c1ca0d7fe6ce747f2c61c55a6736360c26f1a6f1d7f"
+}

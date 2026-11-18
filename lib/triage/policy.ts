@@ -194,8 +194,22 @@ export class DefaultTriagePolicy implements TriagePolicy {
       };
     }
 
-    // 6. Low risk: praise present (or a bare rating), nothing else detected.
-    // Still sent by the owner — a one-click approve of the draft as-is.
+    // 6. The owner-attention requirement is independent of severity. Do not
+    // label four-star praise as a complaint or bypass the earlier safety checks.
+    if (review.stars === 4) {
+      return {
+        ...base,
+        riskLevel: "low",
+        reasonCodes: ["rating_below_five"],
+        recommendedAction: "needs_review",
+        sensitive: false,
+        confidence: positiveHits.length > 0 ? 0.9 : 0.75,
+        matchedKeywords: positiveHits,
+      };
+    }
+
+    // 7. Five-star low risk: praise present (or a bare rating), nothing else detected.
+    // A routing suggestion only; factual confirmation and human approval still apply.
     return {
       ...base,
       // B1 shadow rule: exactly 5 stars with praise affirmatively present.

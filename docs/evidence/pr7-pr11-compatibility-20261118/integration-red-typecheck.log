@@ -1,0 +1,6 @@
+npm warn Unknown env config "http-proxy". This will stop working in the next major version of npm.
+
+> compliment-complaint-reviewer@0.1.0 typecheck
+> tsc --noEmit
+
+lib/store/schema.ts(97,7): error TS2741: Property 'rating_below_five' is missing in type '{ positive_no_complaint: true; neutral_mixed_sentiment: true; negative_issue: true; unreadable_language: true; unconfirmed_praise: true; sensitive_safety: true; sensitive_legal: true; sensitive_discrimination: true; sensitive_medical: true; sensitive_fraud: true; sensitive_compensation: true; }' but required in type 'Record<ReasonCode, true>'.

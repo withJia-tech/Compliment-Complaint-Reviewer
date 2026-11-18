@@ -1,0 +1,22 @@
+{
+  "command": [
+    "node",
+    "--import",
+    "tsx",
+    "scripts/dailyScan.ts"
+  ],
+  "isolated_fixture_store": true,
+  "results": [
+    {
+      "run": 1,
+      "exit_code": 0,
+      "summary": "Scan complete: 11 review(s) processed since 2026-05-18T13:37:03.224Z"
+    },
+    {
+      "run": 2,
+      "exit_code": 0,
+      "summary": "Scan complete: 0 review(s) processed since 2026-11-18T13:37:03.225Z"
+    }
+  ],
+  "idempotent": true
+}

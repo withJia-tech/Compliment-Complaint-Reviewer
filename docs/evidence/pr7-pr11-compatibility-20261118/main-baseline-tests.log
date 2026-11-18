@@ -1,0 +1,29 @@
+npm warn Unknown env config "http-proxy". This will stop working in the next major version of npm.
+
+> compliment-complaint-reviewer@0.1.0 test
+> vitest run
+
+The CJS build of Vite's Node API is deprecated. See https://vite.dev/guide/troubleshooting.html#vite-cjs-node-api-deprecated for more details.
+
+ RUN  v2.1.9 /workspace/scratch/9758a9a4911b/compliment-compat-main-baseline
+
+ ✓ lib/__tests__/replyDrafter.test.ts (12 tests) 23ms
+ ✓ lib/__tests__/triage.policy.test.ts (28 tests) 23ms
+ ✓ lib/__tests__/store.jsonStore.test.ts (11 tests) 21ms
+ ✓ lib/__tests__/send.regressions.test.ts (4 tests) 18ms
+ ✓ lib/__tests__/demo.dataset2.test.ts (7 tests) 15ms
+ ✓ lib/__tests__/scan.runDailyScan.test.ts (9 tests) 48ms
+ ✓ lib/__tests__/decisions.test.ts (17 tests) 49ms
+ ✓ lib/__tests__/send.boundary.test.ts (28 tests) 181ms
+ ✓ lib/__tests__/golden.routing.test.ts (34 tests) 30ms
+ ✓ lib/__tests__/policy.promotionGate.test.ts (3 tests) 5ms
+ ✓ lib/__tests__/triage.failClosed.test.ts (8 tests) 43ms
+ ✓ lib/__tests__/review.window.test.ts (3 tests) 3ms
+ ✓ lib/__tests__/hosted.demo.test.ts (7 tests) 13ms
+ ✓ lib/__tests__/evals.routing.test.ts (5 tests) 34ms
+ ✓ lib/__tests__/insights.aggregate.test.ts (7 tests) 29ms
+
+ Test Files  15 passed (15)
+      Tests  183 passed (183)
+   Start at  23:01:26
+   Duration  912ms (transform 903ms, setup 0ms, collect 1.90s, tests 536ms, environment 3ms, prepare 1.21s)

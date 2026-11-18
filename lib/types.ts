@@ -38,6 +38,7 @@ export type RiskLevel = "low" | "medium" | "high";
 
 export type ReasonCode =
   | "positive_no_complaint"
+  | "rating_below_five"
   | "neutral_mixed_sentiment"
   | "negative_issue"
   /** 4-5 stars, but written in a language or style the English rules cannot read. */
@@ -56,8 +57,8 @@ export type ReasonCode =
  * automatically — every reply is sent by the owner — so this only says how
  * quickly it can be cleared.
  *
- * `quick_approve`: low risk; the draft can usually be sent as-is in one click.
- * `needs_review`: read the review and the draft before deciding.
+ * `quick_approve`: five-star low-risk queue suggestion; human review still required.
+ * `needs_review`: read the review and draft, including low-risk ratings below five.
  */
 export type RecommendedAction = "quick_approve" | "needs_review";
 

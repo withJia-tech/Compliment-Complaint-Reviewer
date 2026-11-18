@@ -1,0 +1,90 @@
+[
+  {
+    "label": "four-star praise",
+    "stars": 4,
+    "text": "Great food and fast service.",
+    "risk": "low",
+    "sensitive": false,
+    "action": "needs_review",
+    "reasons": [
+      "rating_below_five"
+    ]
+  },
+  {
+    "label": "four-star colloquial praise",
+    "stars": 4,
+    "text": "That croissant was dope—absolutely delicious.",
+    "risk": "low",
+    "sensitive": false,
+    "action": "needs_review",
+    "reasons": [
+      "rating_below_five"
+    ]
+  },
+  {
+    "label": "four-star sarcasm-shaped text",
+    "stars": 4,
+    "text": "Great service—only waited fifty minutes.",
+    "risk": "low",
+    "sensitive": false,
+    "action": "needs_review",
+    "reasons": [
+      "rating_below_five"
+    ]
+  },
+  {
+    "label": "four-star recognised injury",
+    "stars": 4,
+    "text": "Great food but I got hurt on a wet floor.",
+    "risk": "high",
+    "sensitive": true,
+    "action": "needs_review",
+    "reasons": [
+      "sensitive_safety"
+    ]
+  },
+  {
+    "label": "five-star praise control",
+    "stars": 5,
+    "text": "Great food and fast service.",
+    "risk": "low",
+    "sensitive": false,
+    "action": "quick_approve",
+    "reasons": [
+      "positive_no_complaint"
+    ]
+  },
+  {
+    "label": "five-star sarcasm-shaped text: unresolved",
+    "stars": 5,
+    "text": "Great service—only waited fifty minutes.",
+    "risk": "low",
+    "sensitive": false,
+    "action": "quick_approve",
+    "reasons": [
+      "positive_no_complaint"
+    ]
+  },
+  {
+    "label": "five-star unfamiliar language: unresolved",
+    "stars": 5,
+    "text": "食物很好吃，服务也不错。",
+    "risk": "low",
+    "sensitive": false,
+    "action": "quick_approve",
+    "reasons": [
+      "positive_no_complaint"
+    ]
+  },
+  {
+    "label": "five-star novel injury wording: unresolved",
+    "stars": 5,
+    "text": "The hot soup scalded my hand.",
+    "risk": "low",
+    "sensitive": false,
+    "action": "quick_approve",
+    "reasons": [
+      "positive_no_complaint"
+    ]
+  }
+]

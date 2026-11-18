@@ -1,0 +1,55 @@
+{
+  "evals/routing/dev.json": {
+    "unchangedFromMain": true,
+    "sha256": "e03fb1cb43017930be1a8686c2c9f0c21b699794d13a60419497ff341483a692"
+  },
+  "evals/routing/holdout.json": {
+    "unchangedFromMain": true,
+    "sha256": "bcafc7dda6fde185c845ad9c8e45ee05489ffd5cea290189be4237477892d5ee"
+  },
+  "evals/routing/thresholds.json": {
+    "unchangedFromMain": true,
+    "sha256": "40dd624d56a08d23fa9af4f93ccc3efbde5a6bf62b762b6a2353ecdd7320ad7d"
+  },
+  "lib/evals/routingEval.ts": {
+    "unchangedFromMain": true,
+    "sha256": "30603311fa7bc236fad66df227007cb486aa6428c032cc574c5bb7753ca3e510"
+  },
+  "lib/__tests__/evals.routing.test.ts": {
+    "unchangedFromMain": true,
+    "sha256": "06130b2d03602247a52fb063d9aa4d8f32b2161163c9f06f7e62663b6141a8d9"
+  },
+  "lib/decisions.ts": {
+    "unchangedFromMain": true,
+    "sha256": "549e4b839cd685caa07825c587ad402cfb6531122d9eff62dbce4e307893a91b"
+  },
+  "lib/scan/runDailyScan.ts": {
+    "unchangedFromMain": true,
+    "sha256": "c7573f0492660bd5ce5882ed304a4dafe457a770d36a97c9e6166cfdaf208655"
+  },
+  "lib/store/jsonStore.ts": {
+    "unchangedFromMain": true,
+    "sha256": "af10f849bc01bde9c32f5168c9fd02da5af8c63ccdf9b6017f419a717aa612d0"
+  },
+  ".github/workflows/ci.yml": {
+    "unchangedFromMain": true,
+    "sha256": "a46708913aad468f16c4d17ae654566a2d11c3ce01d563b0fd82f78e00129946"
+  },
+  "package-lock.json": {
+    "unchangedFromMain": true,
+    "sha256": "56ea36071271678533c80644e18f17e41b507a25c6fb039ed5a545a0be45c50b"
+  },
+  "data/demo/dataset2.json": {
+    "unchangedFromPR11": true,
+    "sha256": "d1cd87d5f10811879da4632dcb3b0f7d20e28056e4aba2cf02a82b84fec47335"
+  },
+  "privacy": {
+    "exactOriginalAuthorMatches": 0,
+    "maskedAliasesInBundle": 5,
+    "scope": "Public generated assets and derivative dataset; not anonymity or Git-history erasure"
+  },
+  "existingWork": {
+    "changedFiles": [],
+    "repositoriesChecked": 6
+  }
+}

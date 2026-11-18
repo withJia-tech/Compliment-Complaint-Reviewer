@@ -3,6 +3,7 @@ import type { ReasonCode, ReviewTheme } from "@/lib/types";
 export type SensitiveReasonCode = Exclude<
   ReasonCode,
   | "positive_no_complaint"
+  | "rating_below_five"
   | "neutral_mixed_sentiment"
   | "negative_issue"
   | "unreadable_language"
@@ -221,7 +222,7 @@ export const NON_ENGLISH_MARKERS = [
 ];
 
 /**
- * Praise words. A 4-5 star review with text must contain at least one of
+ * Praise words. A five-star review with text must contain at least one of
  * these to be offered as a quick approve: praise has to be present, not just
  * complaint absent.
  */

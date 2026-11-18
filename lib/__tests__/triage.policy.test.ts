@@ -33,10 +33,13 @@ describe("DefaultTriagePolicy", () => {
     expect(result.reasonCodes).toEqual(["positive_no_complaint"]);
   });
 
-  it("classifies a clean 4-star review as low risk, quick approve", () => {
+  // Requirement superseded on 2026-11-18; see docs/OWNER_ATTENTION_CHANGE.md.
+  it("requires owner review for four-star praise without raising its risk", () => {
     const result = policy.classify(review({ stars: 4, text: "Great food and fast service." }));
     expect(result.riskLevel).toBe("low");
-    expect(result.recommendedAction).toBe("quick_approve");
+    expect(result.recommendedAction).toBe("needs_review");
+    expect(result.sensitive).toBe(false);
+    expect(result.reasonCodes).toEqual(["rating_below_five"]);
   });
 
   it("downgrades a 4-star review containing a complaint keyword to medium/needs_review", () => {

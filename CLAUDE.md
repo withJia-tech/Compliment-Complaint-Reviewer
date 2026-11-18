@@ -14,7 +14,9 @@ rubrics) and `docs/DECISIONS.md` (decision log + backlog) before changing behavi
 - **No remedy, refund, voucher, timeline or promise in a published reply.** Goodwill is settled
   out of band and only *recorded* (`remedy_recorded`).
 - Three risk levels (`low`/`medium`/`high`) plus a `sensitive` flag. No escalation tier.
-  Actions are `quick_approve` (low) and `needs_review` (everything else).
+  Actions are `quick_approve` (eligible five-star low risk) and `needs_review`.
+  Every sub-five rating needs review even when low risk. Keep attention separate from severity.
+  See `docs/PR7_PR11_COMPATIBILITY.md` for the current candidate, evidence and remaining gates.
 
 ## Commands
 
@@ -51,7 +53,7 @@ npm run dev         # http://localhost:3000
 ## Routing changes (learned the hard way)
 
 - Quick approve is fail-closed. Don't add a branch that reaches `quick_approve` on the absence
-  of a signal; praise must be present.
+  of a signal; text needs recognised praise. The inherited bare-rating exception applies only at five stars.
 - Never read holdout failures to choose a rule. Once you do, the holdout is burned: move it into
   dev and write a fresh one (ideally labelled by someone else).
 - Tighten `evals/routing/thresholds.json` when a number improves; loosening needs a DECISIONS entry.

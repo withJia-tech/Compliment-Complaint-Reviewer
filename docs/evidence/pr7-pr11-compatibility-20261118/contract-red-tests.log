@@ -1,0 +1,33 @@
+npm warn Unknown env config "http-proxy". This will stop working in the next major version of npm.
+
+> compliment-complaint-reviewer@0.1.0 test
+> vitest run lib/__tests__/pr7.pr11.compatibility.test.ts
+
+The CJS build of Vite's Node API is deprecated. See https://vite.dev/guide/troubleshooting.html#vite-cjs-node-api-deprecated for more details.
+
+ RUN  v2.1.9 /workspace/scratch/9758a9a4911b/compliment-pr7-pr11-compatibility
+
+ ❯ lib/__tests__/pr7.pr11.compatibility.test.ts (7 tests | 1 failed) 43ms
+   × round-trips the new reason through main's validator without rewriting a legacy record 6ms
+     → Store file triage.json failed its integrity check ($.new.reasonCodes[0]: expected one of positive_no_complaint | neutral_mixed_sentiment | negative_issue | unreadable_language | unconfirmed_praise | sensitive_safety | sensitive_legal | sensitive_discrimination | sensitive_medical | sensitive_fraud | sensitive_compensation, got "rating_below_five"). Nothing was changed. Inspect or restore the file before continuing.
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  lib/__tests__/pr7.pr11.compatibility.test.ts > round-trips the new reason through main's validator without rewriting a legacy record
+StoreIntegrityError: Store file triage.json failed its integrity check ($.new.reasonCodes[0]: expected one of positive_no_complaint | neutral_mixed_sentiment | negative_issue | unreadable_language | unconfirmed_praise | sensitive_safety | sensitive_legal | sensitive_discrimination | sensitive_medical | sensitive_fraud | sensitive_compensation, got "rating_below_five"). Nothing was changed. Inspect or restore the file before continuing.
+ ❯ Module.readJson lib/store/jsonStore.ts:60:22
+     58|   }
+     59|   const problem = check(parsed, "$");
+     60|   if (problem) throw new StoreIntegrityError(fileName, problem);
+       |                      ^
+     61|   return parsed as T;
+     62| }
+ ❯ Object.getByReviewId lib/store/triageRepo.ts:13:17
+ ❯ lib/__tests__/pr7.pr11.compatibility.test.ts:42:23
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 6 passed (7)
+   Start at  23:00:07
+   Duration  588ms (transform 143ms, setup 0ms, collect 169ms, tests 43ms, environment 0ms, prepare 70ms)

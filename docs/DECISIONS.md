@@ -118,3 +118,37 @@ floor, false alarms within the owner's stated workload.
 
 Before live OAuth, add a tenant key to the repos so multi-location is a migration, not a rewrite.
 This is what keeps decision 8 a two-way door.
+
+## 18 November 2026 — owner attention below five (local PR #7 candidate)
+
+The owner approved `needs_review` for every rating below five, including apparently
+positive four-star text. This supersedes the previous clean-four-star quick-approval
+expectation. Risk, sensitivity, detection and routing remain separate; no model is added.
+The candidate is `policy-v1.0.1-owner-attention.1`, based on PR #7 at `5cbb6c0`,
+with reviewer-name masking preserved. Main's separate policy-v1.1.0 must be reconciled
+before any integration; this does not replace or promote it.
+
+Queue labels, ordering, daily-brief groups and theme attention counts use the same
+attention requirement. Historic stored classifications/approvals are not rewritten.
+Current display requirements must not be presented as historical reclassification.
+See [the exact scope, test changes and evidence](OWNER_ATTENTION_CHANGE.md).
+
+The initial-release human-approval requirement remains. B1 is parked and is not
+authority to build auto-send. The v0.7 local-approval/no-external-action transition,
+semantic interpretation, owner-context workflow and controlled learning are separate
+unimplemented slices. No publishing behaviour is changed by this candidate.
+
+## 18 November 2026 — PR #7 / #11 main-based compatibility candidate
+
+`policy-v1.1.1-owner-attention.1` combines main's v1.1.0 safeguards with the
+previously approved below-five attention requirement. The older local-candidate
+entry above is historical. The runtime reason schema, policy manifest, UI rubric
+and assertion expectations are reconciled explicitly; history is not rewritten.
+
+The original evaluation labels and thresholds remain unchanged. Both workload
+gates fail (dev 5/18 vs 25%; holdout 6/14 vs 30%). This is a recorded discrepancy,
+not approval to relax thresholds or retune the holdout. A separate metric-contract
+decision must distinguish mandatory owner attention from semantic false alarms
+before integration. No source PR merge, retarget, deployment, automatic learning
+or new storage/identity integration is authorised by this record. See
+[PR7_PR11_COMPATIBILITY.md](PR7_PR11_COMPATIBILITY.md) for evidence and gates.

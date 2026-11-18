@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import goldenCases from "@/data/fixtures/golden.json";
 import { DefaultTriagePolicy } from "@/lib/triage/policy";
-import type { ReasonCode, Review, ReviewTheme, RiskLevel } from "@/lib/types";
+import type { ReasonCode, RecommendedAction, Review, ReviewTheme, RiskLevel } from "@/lib/types";
 
 /**
  * The routing rubric, as data. Each case states what the policy is supposed
@@ -18,6 +18,7 @@ interface GoldenCase {
   text: string;
   expect: {
     riskLevel: RiskLevel;
+    recommendedAction: RecommendedAction;
     sensitive: boolean;
     reasonCode: ReasonCode;
     themes: ReviewTheme[];
@@ -44,6 +45,7 @@ describe("golden routing set", () => {
     const covered = new Set(cases.map((c) => c.expect.reasonCode));
     const all: ReasonCode[] = [
       "positive_no_complaint",
+      "rating_below_five",
       "neutral_mixed_sentiment",
       "negative_issue",
       "unreadable_language",
@@ -62,11 +64,13 @@ describe("golden routing set", () => {
     const result = policy.classify(toReview(testCase));
     expect({
       riskLevel: result.riskLevel,
+      recommendedAction: result.recommendedAction,
       sensitive: result.sensitive,
       reasonCode: result.reasonCodes[0],
       themes: [...result.themes].sort(),
     }).toEqual({
       riskLevel: testCase.expect.riskLevel,
+      recommendedAction: testCase.expect.recommendedAction,
       sensitive: testCase.expect.sensitive,
       reasonCode: testCase.expect.reasonCode,
       themes: [...testCase.expect.themes].sort(),

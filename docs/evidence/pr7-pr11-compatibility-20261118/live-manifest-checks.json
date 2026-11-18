@@ -1,0 +1,55 @@
+[
+  {
+    "host": "pages",
+    "url": "https://withjia-tech.github.io/Compliment-Complaint-Reviewer/build.json",
+    "status": 200,
+    "manifest": {
+      "sha256": "1699f4c20e54ed3cfb15cfe56bde737de7f702687f928794725f2a774aa86255",
+      "asOf": "2026-11-13T00:00:00.000Z",
+      "cases": 16,
+      "datasets": [
+        {
+          "id": "dataset1",
+          "cases": 11,
+          "active": 11,
+          "historical": 0
+        },
+        {
+          "id": "dataset2",
+          "cases": 5,
+          "active": 2,
+          "historical": 3
+        }
+      ]
+    }
+  },
+  {
+    "host": "vercel",
+    "url": "https://compliment-complaint-demo.vercel.app/build.json",
+    "status": 200,
+    "manifest": {
+      "sha256": "1699f4c20e54ed3cfb15cfe56bde737de7f702687f928794725f2a774aa86255",
+      "asOf": "2026-11-13T00:00:00.000Z",
+      "cases": 16,
+      "datasets": [
+        {
+          "id": "dataset1",
+          "cases": 11,
+          "active": 11,
+          "historical": 0
+        },
+        {
+          "id": "dataset2",
+          "cases": 5,
+          "active": 2,
+          "historical": 3
+        }
+      ]
+    }
+  },
+  {
+    "host": "sites",
+    "url": "https://compliment-review-desk-compare.jia2lian7.chatgpt.site/build.json",
+    "error": "HTTP Error 403: Forbidden"
+  }
+]

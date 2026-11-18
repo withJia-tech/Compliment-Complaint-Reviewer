@@ -85,8 +85,8 @@ Next.js prototype retains its own checks and is not suitable for public live use
 - Bundle digest: `d902c2560084ce103c60e5c63d3e9630bc4038b1a2427760dbe87fca3865a740`;
   Pages `build.json` matches the artifact deployed to Vercel and Sites.
 - Browser-verified Pages: Dataset 2 default, two active and three historical cases,
-  discovery-confirmed No response required moves Daniel to Completed and selects Neo;
+  discovery-confirmed No response required moves case 001 to Completed and selects case 002;
   Start over restores the two active cases.
 - No cross-host speed benchmark or live production readiness is claimed.
 
-![Dataset 2 verified on GitHub Pages](screenshots/review-desk-pages-dataset2.jpg)
+The earlier unmasked Pages screenshot is omitted from this branch. The masked dataset has not been deployed or browser-verified.

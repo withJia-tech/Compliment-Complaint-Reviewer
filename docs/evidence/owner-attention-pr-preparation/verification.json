@@ -1,0 +1,28 @@
+{
+  "date": "2026-11-18",
+  "source_base": "5cbb6c038b297d77cce27a42b2da7da8dd195489",
+  "branch": "codex/owner-attention-and-masked-demo",
+  "target_branch": "codex/owner-review-desk",
+  "tests": {
+    "passed": 189,
+    "failed": 0,
+    "files": 16,
+    "exit_code": 0
+  },
+  "typecheck_exit_code": 0,
+  "build_exit_code": 0,
+  "static_build_exit_code": 0,
+  "static_content_sha256": "1699f4c20e54ed3cfb15cfe56bde737de7f702687f928794725f2a774aa86255",
+  "privacy_exact_author_matches": 0,
+  "runtime": {
+    "node": "v24.22.1",
+    "dependencies": "reused, no fresh npm ci"
+  },
+  "not_verified": [
+    "mobile/browser execution",
+    "live deployment",
+    "integration with main policy-v1.1.0",
+    "semantic interpretation and learning"
+  ],
+  "review_parent": "5d0cb9f1f32678327210bbad82b8f402bfa3d40b"
+}

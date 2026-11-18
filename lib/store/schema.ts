@@ -96,6 +96,7 @@ const ACTION: Record<RecommendedAction, true> = { quick_approve: true, needs_rev
 const THEME: Record<ReviewTheme, true> = { food: true, service: true, atmosphere: true };
 const REASON: Record<ReasonCode, true> = {
   positive_no_complaint: true,
+  rating_below_five: true,
   neutral_mixed_sentiment: true,
   negative_issue: true,
   unreadable_language: true,

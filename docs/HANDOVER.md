@@ -1,3 +1,7 @@
+> Current candidate: [PR7_PR11_COMPATIBILITY.md](PR7_PR11_COMPATIBILITY.md). Main + PR #7 + PR #11 are reconciled on a separate branch. Two workload evaluation gates remain failing. Earlier merge/deployment instructions below are historical.
+
+> Historical handover from 13 November. Its merge instructions and task list are not the current scope. See [OWNER_ATTENTION_CHANGE.md](OWNER_ATTENTION_CHANGE.md) for the authorised local change. No merge or publication is authorised.
+
 # Handover — next task: extend the golden set
 
 Written 2026-11-13 at the end of the previous session. Delete this file when the task is done.

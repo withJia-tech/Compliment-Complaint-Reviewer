@@ -10,7 +10,8 @@
       "themes": [
         "food",
         "service"
-      ]
+      ],
+      "recommendedAction": "quick_approve"
     }
   },
   {
@@ -20,11 +21,12 @@
     "expect": {
       "riskLevel": "low",
       "sensitive": false,
-      "reasonCode": "positive_no_complaint",
+      "reasonCode": "rating_below_five",
       "themes": [
         "food",
         "service"
-      ]
+      ],
+      "recommendedAction": "needs_review"
     }
   },
   {
@@ -38,7 +40,8 @@
       "themes": [
         "food",
         "service"
-      ]
+      ],
+      "recommendedAction": "needs_review"
     }
   },
   {
@@ -51,7 +54,8 @@
       "reasonCode": "neutral_mixed_sentiment",
       "themes": [
         "atmosphere"
-      ]
+      ],
+      "recommendedAction": "needs_review"
     }
   },
   {
@@ -65,7 +69,8 @@
       "themes": [
         "food",
         "service"
-      ]
+      ],
+      "recommendedAction": "needs_review"
     }
   },
   {
@@ -78,7 +83,8 @@
       "reasonCode": "negative_issue",
       "themes": [
         "service"
-      ]
+      ],
+      "recommendedAction": "needs_review"
     }
   },
   {
@@ -91,7 +97,8 @@
       "reasonCode": "sensitive_safety",
       "themes": [
         "atmosphere"
-      ]
+      ],
+      "recommendedAction": "needs_review"
     }
   },
   {
@@ -104,7 +111,8 @@
       "reasonCode": "sensitive_medical",
       "themes": [
         "food"
-      ]
+      ],
+      "recommendedAction": "needs_review"
     }
   },
   {
@@ -117,7 +125,8 @@
       "reasonCode": "sensitive_discrimination",
       "themes": [
         "service"
-      ]
+      ],
+      "recommendedAction": "needs_review"
     }
   },
   {
@@ -130,7 +139,8 @@
       "reasonCode": "sensitive_legal",
       "themes": [
         "service"
-      ]
+      ],
+      "recommendedAction": "needs_review"
     }
   },
   {
@@ -141,7 +151,8 @@
       "riskLevel": "high",
       "sensitive": true,
       "reasonCode": "sensitive_fraud",
-      "themes": []
+      "themes": [],
+      "recommendedAction": "needs_review"
     }
   },
   {
@@ -152,7 +163,8 @@
       "riskLevel": "high",
       "sensitive": true,
       "reasonCode": "sensitive_compensation",
-      "themes": []
+      "themes": [],
+      "recommendedAction": "needs_review"
     }
   },
   {
@@ -163,7 +175,8 @@
       "riskLevel": "high",
       "sensitive": true,
       "reasonCode": "sensitive_safety",
-      "themes": []
+      "themes": [],
+      "recommendedAction": "needs_review"
     }
   },
   {
@@ -176,7 +189,8 @@
       "reasonCode": "sensitive_medical",
       "themes": [
         "food"
-      ]
+      ],
+      "recommendedAction": "needs_review"
     }
   },
   {
@@ -189,7 +203,8 @@
       "reasonCode": "sensitive_discrimination",
       "themes": [
         "service"
-      ]
+      ],
+      "recommendedAction": "needs_review"
     }
   },
   {
@@ -200,7 +215,8 @@
       "riskLevel": "high",
       "sensitive": true,
       "reasonCode": "sensitive_compensation",
-      "themes": []
+      "themes": [],
+      "recommendedAction": "needs_review"
     }
   },
   {
@@ -213,7 +229,8 @@
       "reasonCode": "sensitive_safety",
       "themes": [
         "food"
-      ]
+      ],
+      "recommendedAction": "needs_review"
     }
   },
   {
@@ -224,7 +241,8 @@
       "riskLevel": "high",
       "sensitive": true,
       "reasonCode": "sensitive_medical",
-      "themes": []
+      "themes": [],
+      "recommendedAction": "needs_review"
     }
   },
   {
@@ -237,7 +255,8 @@
       "reasonCode": "neutral_mixed_sentiment",
       "themes": [
         "food"
-      ]
+      ],
+      "recommendedAction": "needs_review"
     }
   },
   {
@@ -248,7 +267,8 @@
       "riskLevel": "low",
       "sensitive": false,
       "reasonCode": "positive_no_complaint",
-      "themes": []
+      "themes": [],
+      "recommendedAction": "quick_approve"
     }
   },
   {
@@ -259,7 +279,8 @@
       "riskLevel": "low",
       "sensitive": false,
       "reasonCode": "positive_no_complaint",
-      "themes": []
+      "themes": [],
+      "recommendedAction": "quick_approve"
     }
   },
   {
@@ -270,7 +291,8 @@
       "riskLevel": "low",
       "sensitive": false,
       "reasonCode": "positive_no_complaint",
-      "themes": []
+      "themes": [],
+      "recommendedAction": "quick_approve"
     }
   },
   {
@@ -280,8 +302,9 @@
     "expect": {
       "riskLevel": "low",
       "sensitive": false,
-      "reasonCode": "positive_no_complaint",
-      "themes": []
+      "reasonCode": "rating_below_five",
+      "themes": [],
+      "recommendedAction": "needs_review"
     }
   },
   {
@@ -294,7 +317,8 @@
       "reasonCode": "unconfirmed_praise",
       "themes": [
         "food"
-      ]
+      ],
+      "recommendedAction": "needs_review"
     }
   },
   {
@@ -305,7 +329,8 @@
       "riskLevel": "medium",
       "sensitive": false,
       "reasonCode": "unconfirmed_praise",
-      "themes": []
+      "themes": [],
+      "recommendedAction": "needs_review"
     }
   },
   {
@@ -316,7 +341,8 @@
       "riskLevel": "medium",
       "sensitive": false,
       "reasonCode": "unreadable_language",
-      "themes": []
+      "themes": [],
+      "recommendedAction": "needs_review"
     }
   },
   {
@@ -327,7 +353,8 @@
       "riskLevel": "medium",
       "sensitive": false,
       "reasonCode": "unreadable_language",
-      "themes": []
+      "themes": [],
+      "recommendedAction": "needs_review"
     }
   },
   {
@@ -341,7 +368,8 @@
       "themes": [
         "atmosphere",
         "service"
-      ]
+      ],
+      "recommendedAction": "needs_review"
     }
   },
   {
@@ -352,7 +380,8 @@
       "riskLevel": "low",
       "sensitive": false,
       "reasonCode": "positive_no_complaint",
-      "themes": []
+      "themes": [],
+      "recommendedAction": "quick_approve"
     }
   },
   {
@@ -366,7 +395,8 @@
       "themes": [
         "atmosphere",
         "food"
-      ]
+      ],
+      "recommendedAction": "needs_review"
     }
   },
   {
@@ -377,7 +407,8 @@
       "riskLevel": "low",
       "sensitive": false,
       "reasonCode": "positive_no_complaint",
-      "themes": []
+      "themes": [],
+      "recommendedAction": "quick_approve"
     }
   },
   {
@@ -388,7 +419,8 @@
       "riskLevel": "low",
       "sensitive": false,
       "reasonCode": "positive_no_complaint",
-      "themes": []
+      "themes": [],
+      "recommendedAction": "quick_approve"
     }
   }
 ]
