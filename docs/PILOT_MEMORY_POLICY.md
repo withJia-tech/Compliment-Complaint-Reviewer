@@ -1,5 +1,7 @@
 # Pilot memory policy — accepted product direction
 
+A concrete [authentication, storage and recovery proposal](PILOT_AUTH_STORAGE_RECOVERY_DESIGN.md) and [API contract](PILOT_MEMORY_API_CONTRACT.md) were prepared on 19 November. The synthetic design checks do not change the NOT_RUN implementation statuses below. Provider, deployment, operating ownership and retention approval remain open.
+
 18 November 2026. Accepted after the user reviewed the trade-offs. This records requirements; runtime implementation and verification are pending.
 
 ## Agreed scope

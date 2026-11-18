@@ -1,0 +1,26 @@
+✔ PM-01: phone save is loaded exactly on desktop, original remains (3.465261ms)
+✔ PM-02: competing phone/desktop edits cannot silently overwrite (1.185048ms)
+✔ PM-03: failure before commit leaves all state unchanged and request intact (1.601512ms)
+✔ PM-03/04: lost acknowledgement retries the same request once without duplicate event (0.710508ms)
+✔ PM-04: same request key with different text is rejected (0.555009ms)
+✔ PM-03: replay of an earlier receipt identifies the newer head (1.500803ms)
+✔ PM-05: authorised owner cannot access a different workspace (0.239583ms)
+✔ PM-05: identical case IDs in the two datasets stay separate (0.302967ms)
+✔ PM-05: revoked session cannot read or replay a committed save (0.538564ms)
+✔ PM-05: expired session preserves unsent input without a write (0.486358ms)
+✔ PM-06: facts must be approved, applicable and within their valid dates (0.353321ms)
+✔ PM-07: editing invalidates current approval but preserves its historical record (0.632824ms)
+✔ PM-07: source or policy change blocks saving under obsolete context (0.659693ms)
+✔ PM-07: fact expiry invalidates approval without a new draft or fact write (0.258121ms)
+✔ PM-08: owner interpretation correction changes neither policy nor approved facts (0.460389ms)
+✔ PM-10: save cannot accept a caller-supplied actor or approval authority (0.488491ms)
+✔ PM-10: a model principal cannot save; owner draft saving never publishes or approves (0.844335ms)
+✔ Recovery: a restore changes epoch and rejects old requests and approvals (0.39972ms)
+ℹ tests 18
+ℹ suites 0
+ℹ pass 18
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 158.054698

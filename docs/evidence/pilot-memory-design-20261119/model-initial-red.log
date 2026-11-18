@@ -1,0 +1,42 @@
+✔ PM-01: phone save is loaded exactly on desktop, original remains (3.105327ms)
+✔ PM-02: competing phone/desktop edits cannot silently overwrite (1.169564ms)
+✔ PM-03: failure before commit leaves all state unchanged and request intact (1.423859ms)
+✔ PM-03/04: lost acknowledgement retries the same request once without duplicate event (0.576009ms)
+✔ PM-04: same request key with different text is rejected (0.647304ms)
+✔ PM-03: replay of an earlier receipt identifies the newer head (0.728794ms)
+✔ PM-05: authorised owner cannot access a different workspace (1.164526ms)
+✔ PM-05: identical case IDs in the two datasets stay separate (0.362294ms)
+✖ PM-05: revoked session cannot read or replay a committed save (0.523872ms)
+✔ PM-05: expired session preserves unsent input without a write (0.386931ms)
+✔ PM-06: facts must be approved, applicable and within their valid dates (0.26445ms)
+✔ PM-07: editing invalidates current approval but preserves its historical record (0.545785ms)
+✔ PM-07: source or policy change blocks saving under obsolete context (0.825156ms)
+✔ PM-07: fact expiry invalidates approval without a new draft or fact write (0.232332ms)
+✔ PM-08: owner interpretation correction changes neither policy nor approved facts (0.416634ms)
+✔ PM-10: save cannot accept a caller-supplied actor or approval authority (0.532926ms)
+✔ PM-10: a model principal cannot save; owner draft saving never publishes or approves (0.535629ms)
+✔ Recovery: a restore changes epoch and rejects old requests and approvals (0.435873ms)
+ℹ tests 18
+ℹ suites 0
+ℹ pass 17
+ℹ fail 1
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 175.426519
+
+✖ failing tests:
+
+test at design/pilot-memory/scenarios.mjs:64:1
+✖ PM-05: revoked session cannot read or replay a committed save (0.523872ms)
+  Error: unauthenticated
+      at fail (file:///workspace/scratch/9758a9a4911b/compliment-pilot-design/design/pilot-memory/model.mjs:8:30)
+      at MemoryDesignModel.authorise (file:///workspace/scratch/9758a9a4911b/compliment-pilot-design/design/pilot-memory/model.mjs:21:71)
+      at MemoryDesignModel.load (file:///workspace/scratch/9758a9a4911b/compliment-pilot-design/design/pilot-memory/model.mjs:37:27)
+      at TestContext.<anonymous> (file:///workspace/scratch/9758a9a4911b/compliment-pilot-design/design/pilot-memory/scenarios.mjs:69:18)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1402:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:974:18)
+      at Test.postRun (node:internal/test_runner/test:1542:19)
+      at Test.run (node:internal/test_runner/test:1467:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:974:7)

@@ -1,0 +1,23 @@
+[
+  {
+    "mutation": "remove_version_check",
+    "exitCode": 1,
+    "detected": true,
+    "passed": 17,
+    "failed": 1
+  },
+  {
+    "mutation": "write_before_commit_failure",
+    "exitCode": 1,
+    "detected": true,
+    "passed": 17,
+    "failed": 1
+  },
+  {
+    "mutation": "remove_epoch_check",
+    "exitCode": 1,
+    "detected": true,
+    "passed": 17,
+    "failed": 1
+  }
+]
