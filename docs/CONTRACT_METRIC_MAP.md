@@ -94,13 +94,11 @@ ADR-001 stays open. Prefer a small reviewed context/example set before retrieval
 
 For a later context-value experiment, freeze the cases and rubric first, compare no-context vs approved-context conditions under the same policy, record correction usefulness and unnecessary-question burden, and include counterexamples. Report numerator/denominator, case/run identity, attribution disagreements, latency/cost if actual model calls are separately authorised. Thresholds and sample adequacy must be decided before the deciding experiment, not invented after a favourable run.
 
-## Decisions where the product owner can help
+## Product decisions and remaining implementation choices
 
-1. Must returning from the companion restore a draft into that tab, or is switching back to the original live tab acceptable? The strict assertion remains open; a different requirement must be documented rather than silently substituted.
-2. For the first restaurant pilot, is work confined to one owner/device, or must two people/devices resume the same case? That determines whether recovery and concurrency are near-term requirements.
-3. Which context may be reused: only this case, approved business facts, or selected corrected examples? Identify the approver, allowed users and deletion expectation before choosing storage.
+The user confirmed one owner across phone and desktop and both existing datasets. After reviewing trade-offs, the user accepted saved drafts plus approved business facts, with interpretation corrections retained as reviewable candidates rather than automatically learned rules. See `PILOT_MEMORY_POLICY.md` for the accepted scope and PM-01–PM-10 acceptance checks, all pending execution.
 
-These decisions shape the next implementation; they are not requests to approve actions already completed.
+This resolves the earlier pilot-user and reusable-context questions. Shared storage, authentication, recovery, retention/deletion and operating ownership still need a concrete design. The exact companion return-link mechanism remains open; its existing assertion is unchanged. No memory capability or cross-device behaviour is claimed as implemented by this decision.
 
 
 ### Proposed context-value measurements — not yet executed

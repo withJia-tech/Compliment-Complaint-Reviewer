@@ -57,7 +57,7 @@ Clarify whether switching to the original live tab satisfies the desired return 
 
 Model: interpretation, candidate claims, optional rewrite. Code: schema/evidence/scope/freshness/policy, readiness, tool permissions and persistence. Human: contextual judgment and final approval. H0–H5 are proposed output contracts; current runtime types are only partial counterparts. An owner correction is attributed context, not automatic truth or a global learned rule.
 
-Cloud vs per-business storage is not a binary choice. Ask which devices/people need recovery, who operates the service, what context may be reused and who can delete it. Keep case working context, approved business facts, learning candidates, promoted examples and authoritative audit state separate. ADR-001 stays open.
+The user has now confirmed one owner across phone and desktop, both existing datasets, and controlled reuse: saved drafts plus approved business facts; interpretation corrections remain reviewable candidates. Read `docs/PILOT_MEMORY_POLICY.md` for accepted scope and pending acceptance checks. Do not ask these settled product questions again. Operating ownership, provider/database, retention/deletion and backup responsibilities remain open under ADR-001.
 
 No real model calls occurred. Do not claim sarcasm recognition, learned slang, calibrated error bounds, durable production approval or completion of v0.7 G1–G4. Known development cases are not the unseen evaluation set.
 
