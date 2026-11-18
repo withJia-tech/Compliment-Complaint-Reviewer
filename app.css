@@ -545,7 +545,7 @@ input[type="text"] {
 .desk-priority, .hosted-review .desk-priority { display: inline-block; justify-self: start; width: fit-content; padding: .22rem .48rem; border-radius: 4px; font-size: .7rem; line-height: 1.3; font-weight: 650; }
 .priority-sensitive { background: #f3e8ec; color: #7a314b; }
 .priority-high { background: #f9ebdf; color: #8b4b16; }
-.priority-medium { background: #f7f0dc; color: #765e1b; }
+.priority-medium, .priority-review { background: #f7f0dc; color: #765e1b; }
 .priority-low { background: #e8f1eb; color: #306047; }
 .hosted-review .desk-excerpt { font-size: .8rem; color: #505c66; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
 .hosted-review time { font-size: .7rem; color: var(--muted); }
