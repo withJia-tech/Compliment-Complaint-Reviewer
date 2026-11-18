@@ -8,11 +8,12 @@ const source = (path: string) => `${repository}/blob/${evidenceCommit}/${path}`;
 
 export function BehindTheHood({ demoHref = "/hosted-demo", buildManifestHref }: { demoHref?: string; buildManifestHref?: string }) {
   return <main className="hood-page">
-    <header className="hood-header"><a className="hood-brand" href={demoHref}>◑ Review Desk</a><a className="hood-back" href={demoHref}>Open client demo <span aria-hidden="true">↗</span></a></header>
+    <header className="hood-header"><a className="hood-brand" href={demoHref}>◑ Review Desk</a><a className="hood-back" href={demoHref}>Open a fresh demo <span aria-hidden="true">↗</span></a></header>
     <section className="hood-hero" aria-labelledby="hood-title">
       <p className="desk-eyebrow">ENGINEERING COMPANION</p><h1 id="hood-title">Behind the hood.</h1>
       <p className="hood-lead">Understand the decisions.<br />Inspect the evidence. Know the limits.</p>
       <p>The client demo is for reviewing guests’ feedback. This page explains the rules, safeguards and engineering work behind it.</p>
+      <p className="hood-callout">To continue an unsent draft, return to your original Review Desk tab. Opening a fresh demo here starts a separate session. This demo does not save drafts or decisions for recovery after a reload or tab closure.</p>
       <div className="hood-legend" aria-label="Capability status legend"><span>Available in demo</span><span>Local fixture only</span><span>Proposed</span></div>
     </section>
     <nav className="hood-nav" aria-label="Engineering sections"><a href="#workflow">Workflow</a><a href="#rubrics">Rubrics</a><a href="#traceability">Traceability</a><a href="#reliability">Reliability</a><a href="#evidence">Test evidence</a></nav>
@@ -69,6 +70,6 @@ export function BehindTheHood({ demoHref = "/hosted-demo", buildManifestHref }: 
       <details className="hood-detail"><summary>What this checkpoint does not establish</summary><p>There is no standalone lint job or evaluation-artifact upload step in the checkpoint workflow. Expanded adversarial evaluation and dependency/secret scanning belong to a separate, unmerged classifier branch. Semantic grounding coverage, critical-category recall and broader policy-compliance gates remain open.</p><p>Proposed formal evaluation compares A: human reply alone; B: human reply plus assurance flags; C: flags plus an optional rewrite. Freeze definitions, thresholds and case selection before testing. Report counts, denominators and uncertainty for grievance coverage, aspect correctness, unsupported assertions, critical-allegation recall, policy compliance, unnecessary intervention, human correction time, acceptance/rejection, latency and actual inference cost. High-risk and ambiguous cases need independent human adjudication.</p></details>
       <p className="hood-callout">This page explains the current prototype and its release gates. It does not certify production readiness or close ADR-001.</p>
     </section>
-    <footer className="hood-footer"><a href={demoHref}>← Open client demo</a><span>ComplimentOrComplaint · Review Desk</span></footer>
+    <footer className="hood-footer"><a href={demoHref}>← Open a fresh demo</a><span>ComplimentOrComplaint · Review Desk</span></footer>
   </main>;
 }

@@ -1,0 +1,50 @@
+[
+  {
+    "host": "pages",
+    "url": "https://withjia-tech.github.io/Compliment-Complaint-Reviewer/build.json",
+    "http_status": 200,
+    "manifest": {
+      "sha256": "154fc78c10338d2d65550b737dce6763061023bb91bc9322844b88387cb548f1",
+      "asOf": "2026-11-13T00:00:00.000Z",
+      "cases": 16,
+      "datasets": [
+        {
+          "id": "dataset1",
+          "cases": 11,
+          "active": 11,
+          "historical": 0
+        },
+        {
+          "id": "dataset2",
+          "cases": 5,
+          "active": 2,
+          "historical": 3
+        }
+      ]
+    }
+  },
+  {
+    "host": "vercel",
+    "url": "https://compliment-complaint-demo.vercel.app/build.json",
+    "http_status": 200,
+    "manifest": {
+      "sha256": "154fc78c10338d2d65550b737dce6763061023bb91bc9322844b88387cb548f1",
+      "asOf": "2026-11-13T00:00:00.000Z",
+      "cases": 16,
+      "datasets": [
+        {
+          "id": "dataset1",
+          "cases": 11,
+          "active": 11,
+          "historical": 0
+        },
+        {
+          "id": "dataset2",
+          "cases": 5,
+          "active": 2,
+          "historical": 3
+        }
+      ]
+    }
+  }
+]

@@ -1,0 +1,29 @@
+npm warn Unknown env config "http-proxy". This will stop working in the next major version of npm.
+
+> compliment-complaint-reviewer@0.1.0 test
+> vitest run
+
+[33mThe CJS build of Vite's Node API is deprecated. See https://vite.dev/guide/troubleshooting.html#vite-cjs-node-api-deprecated for more details.[39m
+
+ RUN  v2.1.9 /workspace/scratch/9758a9a4911b/compliment-privacy-publish
+
+ ✓ lib/__tests__/replyDrafter.test.ts (12 tests) 13ms
+ ✓ lib/__tests__/triage.policy.test.ts (28 tests) 17ms
+ ✓ lib/__tests__/demo.dataset2.test.ts (7 tests) 14ms
+ ✓ lib/__tests__/desk.summary.test.ts (11 tests) 46ms
+ ✓ lib/__tests__/send.regressions.test.ts (4 tests) 17ms
+ ✓ lib/__tests__/scan.runDailyScan.test.ts (9 tests) 25ms
+ ✓ lib/__tests__/decisions.test.ts (17 tests) 42ms
+ ✓ lib/__tests__/send.boundary.test.ts (27 tests) 131ms
+ ✓ lib/__tests__/insights.aggregate.test.ts (7 tests) 32ms
+ ✓ lib/__tests__/golden.routing.test.ts (26 tests) 19ms
+ ✓ lib/__tests__/review.window.test.ts (3 tests) 3ms
+ ✓ lib/__tests__/store.jsonStore.test.ts (5 tests) 7ms
+ ✓ lib/__tests__/demo.privacy.test.ts (3 tests) 30ms
+ ✓ lib/__tests__/hosted.demo.test.ts (11 tests) 14ms
+
+ Test Files  14 passed (14)
+      Tests  170 passed (170)
+   Start at  22:11:08
+   Duration  780ms (transform 767ms, setup 0ms, collect 1.54s, tests 408ms, environment 3ms, prepare 934ms)
+

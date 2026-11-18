@@ -1,0 +1,22 @@
+[
+  {
+    "label": "mobile-static-build",
+    "exit_code": 0
+  },
+  {
+    "label": "mobile-full",
+    "exit_code": 0
+  },
+  {
+    "label": "mobile-typecheck",
+    "exit_code": 0
+  },
+  {
+    "label": "mobile-browser-syntax",
+    "exit_code": 0
+  },
+  {
+    "label": "mobile-production-build",
+    "exit_code": 0
+  }
+]

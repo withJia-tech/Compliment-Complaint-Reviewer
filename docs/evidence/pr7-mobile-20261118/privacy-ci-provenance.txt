@@ -1,0 +1,6 @@
+2026-11-18T14:13:15.3030492Z ##[group]Checking out the ref
+2026-11-18T14:13:15.3033311Z [command]/usr/bin/git checkout --progress --force refs/remotes/pull/7/merge
+2026-11-18T14:13:15.3158132Z HEAD is now at a09b506 Merge 5d0cb9f1f32678327210bbad82b8f402bfa3d40b into cfe0daf7473a54c04fb54d53f14c746cce2b5b3b
+2026-11-18T14:13:15.3194618Z [command]/usr/bin/git log -1 --format=%H
+2026-11-18T14:13:41.9045034Z  Test Files  17 passed (17)
+2026-11-18T14:13:41.9045958Z       Tests  201 passed (201)

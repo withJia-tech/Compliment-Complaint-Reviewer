@@ -1,0 +1,37 @@
+{
+  "files": [
+    {
+      "path": "index.html",
+      "status": 200,
+      "bytes": 416,
+      "matches_local_privacy_build": true
+    },
+    {
+      "path": "app.js",
+      "status": 200,
+      "bytes": 250110,
+      "matches_local_privacy_build": true
+    },
+    {
+      "path": "app.css",
+      "status": 200,
+      "bytes": 26414,
+      "matches_local_privacy_build": true
+    },
+    {
+      "path": "demo-behindthehood/index.html",
+      "status": 200,
+      "bytes": 14262,
+      "matches_local_privacy_build": true
+    },
+    {
+      "path": "build.json",
+      "status": 200,
+      "bytes": 349,
+      "matches_local_privacy_build": true
+    }
+  ],
+  "live_sha256": "6894a059e25de591320a27ee9c10d6b4c7460d76ae8744811b77fbf9b1c6f0ea",
+  "manifest_sha256": "6894a059e25de591320a27ee9c10d6b4c7460d76ae8744811b77fbf9b1c6f0ea",
+  "digest_matches": true
+}
