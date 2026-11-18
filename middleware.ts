@@ -8,7 +8,7 @@ export function middleware(request: NextRequest) {
     return new NextResponse("Hosted demo: server mutations are disabled.", { status: 405 });
   }
   const pathname = request.nextUrl.pathname;
-  if (pathname === "/hosted-demo" || pathname.startsWith("/_next/") || pathname === "/favicon.ico") {
+  if (pathname === "/hosted-demo" || pathname === "/demo-behindthehood" || pathname === "/demo-behindthehood/" || pathname.startsWith("/_next/") || pathname === "/favicon.ico") {
     return NextResponse.next();
   }
   return NextResponse.redirect(new URL("/hosted-demo", request.url));

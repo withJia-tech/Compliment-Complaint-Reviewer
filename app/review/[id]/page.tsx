@@ -10,6 +10,8 @@ import { confidenceBand } from "@/lib/triage/confidence";
 import { loadHeaderData, loadQueueRows } from "@/lib/queueData";
 import { auditRepo } from "@/lib/store/auditRepo";
 import { REASON_CODE_EXPLANATIONS } from "@/lib/triage/explain";
+import businessFacts from "@/data/fixtures/businessFacts.json";
+import type { ApprovedBusinessFacts } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
 
@@ -96,6 +98,8 @@ export default async function ReviewDetailPage({
               draft={draft}
               approval={approval}
               version={version ?? ""}
+              reviewText={review.text}
+              facts={businessFacts as ApprovedBusinessFacts}
             />
           </section>
         )}

@@ -24,11 +24,11 @@ checks retain disputed claims and missing evidence.
 
 | Case | Age visible in screenshot | Demo placement |
 | --- | --- | --- |
-| Daniel Foo | a month ago | Active practice case |
-| Neo Eng Seng (Owen) | 2 months ago | Active practice case |
-| PS M | a year ago | Historical, read only |
-| Lind Vic | Edited a year ago | Historical, read only |
-| Dwayne Leong | 2 years ago | Historical, read only |
+| Da**** F** | a month ago | Active practice case |
+| N** E** S*** (O***) | 2 months ago | Active practice case |
+| ** * | a year ago | Historical, read only |
+| Li** V** | Edited a year ago | Historical, read only |
+| Dw**** L**** | 2 years ago | Historical, read only |
 
 The screenshot capture date and exact original publication dates are unknown. Relative
 age labels are preserved verbatim; no fabricated ISO creation times are assigned. The two
@@ -53,13 +53,13 @@ A production promotion still requires the frozen evaluation gates and explicit d
 
 ## Workflow
 
-The default active queue contains Daniel and Neo, with the reported safety issue first.
+The default active queue contains cases 001 and 002, with the reported safety issue first.
 Open the original owner reply to compare it with the demonstration draft. Review discovery
 checks, then approve the draft or choose No response required. Either deliberate decision
 moves the case into Completed for this browser session. Historical cases remain read only.
 Switching datasets preserves independent session decisions; Start over resets both.
 
-## Validation and delivery
+## Historical validation and delivery (unmasked v1)
 
 152 tests pass, including seven Dataset 2 boundary and classification cases. TypeScript,
 the comparison bundle and the Next.js production build pass. Browser checks covered the
@@ -74,4 +74,41 @@ The Pages artifact is commit `c75f0c53ffdb51fcf07365a9cce700ad8ce2942e`; its dep
 completed successfully and the live page was browser-verified, including no-response
 closure and automatic selection of the next case. The source changes are tracked in PR #5.
 
-![Dataset 2 in the deployed review desk](screenshots/review-desk-dataset2.jpg)
+The earlier unmasked Dataset 2 screenshot is omitted from this branch. A new screenshot has not been captured; historical deployment evidence does not verify the masked dataset.
+
+## Name masking — 18 November 2026
+
+The user requested reviewer-name masking. `dataset2-v2-name-masked` is a derivative
+of the existing five cases. Author labels, personal salutations in quoted replies,
+personal references in proposed replies and the identity-mismatch discovery note
+are masked or minimised. Case ids are now opaque `dataset2_case_001` through
+`dataset2_case_005`. Their order still corresponds to the original five cases.
+
+Review wording, star ratings, subratings, age labels, active/historical membership,
+source-image hashes and routing expectations are unchanged. Hashes identify the
+original supplied images, not the masked derivative text. The mismatched salutation
+remains a mismatch; the masking does not establish that the names identify one person.
+
+This is pseudonymisation, not guaranteed anonymity: verbatim review wording and the
+business name can still identify a public source. Business contact information in
+quoted historical replies is retained under the existing reference-only boundary.
+Original uploads and git history are unchanged. Earlier unmasked demo screenshots
+are omitted from this branch rather than presented as evidence for the new dataset.
+
+No deployed host was changed. This local branch does not remove names already present
+on previously deployed versions. Promotion/deployment is a separate instruction.
+The four-star routing rule and language interpretation/learning remain unchanged;
+those require the separately documented policy and architecture work.
+
+### Local verification of the masked derivative
+
+Three new privacy tests failed against the original dataset, then passed after masking.
+The focused dataset/privacy/desk suite passed 21 tests; the full PR-head suite passed
+170 tests in 14 files. Typecheck, static comparison generation and the Next.js
+production build passed. Thirty comparisons confirmed that all five cases retain
+their review text, rating, subratings, dates, source-file references and business name.
+A known-name/id scan found no residual reviewer identifiers in current tracked text
+or the static bundle; two generic `foo*` matcher-comment hits were inspected and
+excluded. This is a bounded known-identifier check, not a universal anonymity claim.
+Routing code, its four-star test and golden expectations remain unchanged.
+Browser/mobile rendering of this masked version has not been verified.

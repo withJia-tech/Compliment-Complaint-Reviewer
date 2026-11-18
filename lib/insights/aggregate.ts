@@ -28,8 +28,9 @@ export const THEME_LABELS: Record<ReviewTheme, string> = {
   atmosphere: "Atmosphere",
 };
 
-function startOfPeriod(date: Date, period: Period): Date {
-  const d = new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate()));
+function startOfPeriod(date: Date, period: Period, timeZone: string): Date {
+  const localDay = new Intl.DateTimeFormat("en-CA", { timeZone, year:"numeric", month:"2-digit", day:"2-digit" }).format(date);
+  const d = new Date(`${localDay}T00:00:00Z`);
   if (period === "month") {
     d.setUTCDate(1);
     return d;
@@ -66,11 +67,13 @@ function mean(values: number[]): number | null {
 export function aggregateByPeriod(
   rows: Array<{ review: Review; triage: TriageResult }>,
   period: Period,
+  timeZone = "UTC",
 ): PeriodBucket[] {
   const buckets = new Map<string, Array<{ review: Review; triage: TriageResult }>>();
 
   for (const row of rows) {
-    const start = startOfPeriod(new Date(row.review.createTime), period);
+    if (!Number.isFinite(Date.parse(row.review.createTime))) continue;
+    const start = startOfPeriod(new Date(row.review.createTime), period, timeZone);
     const key = start.toISOString().slice(0, 10);
     const existing = buckets.get(key);
     if (existing) {
