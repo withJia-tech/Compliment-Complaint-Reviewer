@@ -81,6 +81,6 @@ export function buildDemoDatasets(asOf = new Date("2026-11-13T00:00:00.000Z")): 
   });
   return [
     { id:"dataset1", label:"Dataset 1 · sample reviews", title:syntheticFacts.businessName, kind:"synthetic", asOf:asOf.toISOString(), facts:syntheticFacts, rows:sortRows(syntheticRows) },
-    { id:"dataset2", label:"Dataset 2 · real review examples", title:screenshotData.businessName, kind:"screenshots", asOf:asOf.toISOString(), facts:{locationId:"case-study-tiong-bahru",businessName:screenshotData.businessName,facts:[]}, rows:sortRows(screenshotRows) },
+    { id:"dataset2", label:"Dataset 2 · name-masked real reviews", title:screenshotData.businessName, kind:"screenshots", asOf:asOf.toISOString(), facts:{locationId:"case-study-tiong-bahru",businessName:screenshotData.businessName,facts:[]}, rows:sortRows(screenshotRows) },
   ];
 }

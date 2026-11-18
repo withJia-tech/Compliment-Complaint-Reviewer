@@ -12,10 +12,10 @@ function row(id: string, text = "Wonderful coffee", stars: 1 | 2 | 3 | 4 | 5 = 5
 }
 describe("owner daily brief and periodic signals", () => {
   it("shows the routed concern in a long review without fabricating a headline", () => {
-    const daniel=buildDemoDatasets()[1].rows.find(item=>item.review.id==="dataset2_daniel")!;
-    const excerpt=attentionExcerpt(daniel);
+    const hazardCase=buildDemoDatasets()[1].rows.find(item=>item.review.id==="dataset2_case_001")!;
+    const excerpt=attentionExcerpt(hazardCase);
     expect(excerpt).toContain("broken glass");
-    expect(daniel.review.text).toContain(excerpt.replace(/^…|…$/g,""));
+    expect(hazardCase.review.text).toContain(excerpt.replace(/^…|…$/g,""));
   });
   it("keeps completed decisions out of workload while retaining new-today intake", () => {
     const done = { ...row("done"), approval:{reviewId:"done",actor:"test",status:"approved" as const} };

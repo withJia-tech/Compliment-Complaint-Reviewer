@@ -11,7 +11,7 @@ const byId = (id: string) => dataset.rows.find(row => row.review.id === `dataset
 describe("screenshot dataset boundaries", () => {
   it("keeps five paired cases, two recent practice cases and three historical cases", () => {
     expect(dataset.rows).toHaveLength(5);
-    expect(rowsForView(dataset.rows, {}, "active").map(row => row.review.id)).toEqual(["dataset2_daniel", "dataset2_neo"]);
+    expect(rowsForView(dataset.rows, {}, "active").map(row => row.review.id)).toEqual(["dataset2_case_001", "dataset2_case_002"]);
     expect(rowsForView(dataset.rows, {}, "historical")).toHaveLength(3);
     for (const row of dataset.rows) {
       expect(row.source?.sourceDate.exactDate).toBeNull();
@@ -22,15 +22,15 @@ describe("screenshot dataset boundaries", () => {
     }
   });
   it("does not use recent edits or ambiguous six-month ages as proof of recent publication", () => {
-    const source = byId("daniel").source!;
+    const source = byId("case_001").source!;
     expect(canPractiseRecentCase({...source, sourceDate:{...source.sourceDate,kind:"edited",ageMonthsAtCapture:1}})).toBe(false);
     expect(canPractiseRecentCase({...source, sourceDate:{...source.sourceDate,ageMonthsAtCapture:6}})).toBe(false);
     expect(canPractiseRecentCase({...source, sourceDate:{...source.sourceDate,ageMonthsAtCapture:-1}})).toBe(false);
   });
   it("keeps a no-response decision in Completed and isolates datasets", () => {
-    const outcomes = {dataset2_daniel:{status:"no_response" as const,text:"Reviewed",decidedAt:"2026-11-13T00:00:00Z"}};
-    expect(rowsForView(dataset.rows,outcomes,"active").map(row => row.review.id)).toEqual(["dataset2_neo"]);
-    expect(rowsForView(dataset.rows,outcomes,"completed").map(row => row.review.id)).toEqual(["dataset2_daniel"]);
+    const outcomes = {dataset2_case_001:{status:"no_response" as const,text:"Reviewed",decidedAt:"2026-11-13T00:00:00Z"}};
+    expect(rowsForView(dataset.rows,outcomes,"active").map(row => row.review.id)).toEqual(["dataset2_case_002"]);
+    expect(rowsForView(dataset.rows,outcomes,"completed").map(row => row.review.id)).toEqual(["dataset2_case_001"]);
     expect(rowsForView(datasets[0].rows,outcomes,"active")).toHaveLength(11);
     expect(rowsForView(dataset.rows,outcomes,"historical")).toHaveLength(3);
   });
@@ -43,10 +43,10 @@ describe("screenshot dataset boundaries", () => {
       expect(validateReply(row.draft.text)).toEqual([]);
       expect(row.source!.discoveryChecks.length).toBeLessThanOrEqual(3);
     }
-    expect(byId("dwayne").draft.text).toMatch(/sausage and potatoes/);
-    expect(byId("neo").draft.text).toMatch(/cream shio pan/);
-    expect(byId("lind").draft.text).toMatch(/rather than price alone/);
-    expect(byId("neo").source?.subratings).toBeNull();
+    expect(byId("case_005").draft.text).toMatch(/sausage and potatoes/);
+    expect(byId("case_002").draft.text).toMatch(/cream shio pan/);
+    expect(byId("case_004").draft.text).toMatch(/rather than price alone/);
+    expect(byId("case_002").source?.subratings).toBeNull();
   });
 });
 
@@ -58,13 +58,13 @@ describe("unpromoted dataset-two classifier candidate", () => {
     expect(new DefaultTriagePolicy().classify(review)).toMatchObject({policyVersion:"policy-v1.0.0",sensitive:false});
   });
   it("routes the missing-items refund request without inferring compensation rights", () => {
-    expect(byId("neo").triage).toMatchObject({sensitive:true,reasonCodes:["sensitive_compensation"]});
-    expect(byId("neo").draft.text).not.toMatch(/refund|reimburse|compensat|discount/);
+    expect(byId("case_002").triage).toMatchObject({sensitive:true,reasonCodes:["sensitive_compensation"]});
+    expect(byId("case_002").draft.text).not.toMatch(/refund|reimburse|compensat|discount/);
   });
   it("does not classify owner promises or reviewer metadata as customer evidence", () => {
-    const review = byId("psm").review;
+    const review = byId("case_003").review;
     expect(classifyDataset2({...review,author:"Someone else",ownerReply:"broken glass compensation lawsuit"} as typeof review & {ownerReply:string})).toMatchObject({sensitive:false,reasonCodes:["negative_issue"]});
-    expect(byId("lind").triage.reasonCodes).not.toContain("sensitive_fraud");
-    expect(byId("daniel").triage.matchedKeywords).toContain("broken glass");
+    expect(byId("case_004").triage.reasonCodes).not.toContain("sensitive_fraud");
+    expect(byId("case_001").triage.matchedKeywords).toContain("broken glass");
   });
 });
