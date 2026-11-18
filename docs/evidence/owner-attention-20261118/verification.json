@@ -1,0 +1,101 @@
+{
+  "date": "2026-11-18",
+  "branch": "policy/pr7-owner-attention-20261118",
+  "base_commit": "5cbb6c038b297d77cce27a42b2da7da8dd195489",
+  "working_tree": "uncommitted; includes preceding name-masking changes",
+  "policy": "policy-v1.0.1-owner-attention.1",
+  "runtime": {
+    "node": "24.22.1",
+    "npm": "11.9.0",
+    "next": "15.5.23",
+    "dependencies": "reused; no fresh npm ci; CI Node 22 not reproduced"
+  },
+  "focused_before": {
+    "passed": 57,
+    "failed": 16,
+    "files": 4,
+    "exit_code": 1
+  },
+  "focused_after": {
+    "passed": 73,
+    "failed": 0,
+    "files": 4,
+    "exit_code": 0
+  },
+  "full_suite": {
+    "passed": 189,
+    "failed": 0,
+    "files": 16,
+    "exit_code": 0
+  },
+  "typecheck": {
+    "exit_code": 0
+  },
+  "production_build": {
+    "exit_code": 0
+  },
+  "static_build": {
+    "exit_code": 0,
+    "sha256": "1699f4c20e54ed3cfb15cfe56bde737de7f702687f928794725f2a774aa86255",
+    "asOf": "2026-11-13T00:00:00.000Z",
+    "cases": 16,
+    "datasets": [
+      {
+        "id": "dataset1",
+        "cases": 11,
+        "active": 11,
+        "historical": 0
+      },
+      {
+        "id": "dataset2",
+        "cases": 5,
+        "active": 2,
+        "historical": 3
+      }
+    ]
+  },
+  "standard_scan_cli": {
+    "exit_codes": [
+      1,
+      1
+    ],
+    "status": "blocked before worker execution",
+    "error": "EPERM on tsx local IPC pipe"
+  },
+  "loader_scan": {
+    "command": [
+      "node",
+      "--import",
+      "tsx",
+      "scripts/dailyScan.ts"
+    ],
+    "isolated_fixture_store": true,
+    "results": [
+      {
+        "run": 1,
+        "exit_code": 0,
+        "summary": "Scan complete: 11 review(s) processed since 2026-05-18T13:37:03.224Z"
+      },
+      {
+        "run": 2,
+        "exit_code": 0,
+        "summary": "Scan complete: 0 review(s) processed since 2026-11-18T13:37:03.225Z"
+      }
+    ],
+    "idempotent": true
+  },
+  "privacy": {
+    "prior_workspace_hash_mismatches": [],
+    "dataset_and_privacy_tests_unchanged_from_prior_workspace": true,
+    "original_author_matches_in_static_js_and_companion": 0,
+    "qualification": "name masking; source wording and business are still potentially identifying"
+  },
+  "not_verified": [
+    "browser/mobile behaviour",
+    "physical devices",
+    "live deployments or routes",
+    "CI Node 22 clean install",
+    "model interpretation or learning"
+  ],
+  "external_actions": []
+}

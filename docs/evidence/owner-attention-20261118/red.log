@@ -1,0 +1,328 @@
+npm warn Unknown env config "http-proxy". This will stop working in the next major version of npm.
+
+> compliment-complaint-reviewer@0.1.0 test
+> vitest run lib/__tests__/owner.attention.test.ts lib/__tests__/queue.attention.test.ts lib/__tests__/triage.policy.test.ts lib/__tests__/golden.routing.test.ts
+
+[33mThe CJS build of Vite's Node API is deprecated. See https://vite.dev/guide/troubleshooting.html#vite-cjs-node-api-deprecated for more details.[39m
+
+ RUN  v2.1.9 /workspace/scratch/9758a9a4911b/compliment-owner-attention
+
+ ❯ lib/__tests__/triage.policy.test.ts (28 tests | 1 failed) 30ms
+   × DefaultTriagePolicy > requires owner review for four-star praise without raising its risk 8ms
+     → expected 'quick_approve' to be 'needs_review' // Object.is equality
+ ❯ lib/__tests__/golden.routing.test.ts (26 tests | 2 failed) 28ms
+   × golden routing set > 'clean 4-star praise' 10ms
+     → expected { riskLevel: 'low', …(4) } to deeply equal { riskLevel: 'low', …(4) }
+   × golden routing set > 'false positive guard: \'fellow\' must…' 1ms
+     → expected { riskLevel: 'low', …(4) } to deeply equal { riskLevel: 'low', …(4) }
+ ❯ lib/__tests__/queue.attention.test.ts (1 test | 1 failed) 17ms
+   × sorts an older four-star stored recommendation ahead of newer quick praise without rewriting it 15ms
+     → expected [ '5', '4' ] to deeply equal [ '4', '5' ]
+ ❯ lib/__tests__/owner.attention.test.ts (18 tests | 12 failed) 77ms
+   × requires owner review at 4 stars even for praise 8ms
+     → expected 'quick_approve' to be 'needs_review' // Object.is equality
+   × holds four-star "" without asserting a sensitive incident 5ms
+     → expected { reviewId: 'four', …(9) } to match object { riskLevel: 'low', …(3) }
+(6 matching properties omitted from actual)
+   × holds four-star "That croissant was dope—absolutely delicious." without asserting a sensitive incident 3ms
+     → expected { reviewId: 'four', …(9) } to match object { riskLevel: 'low', …(3) }
+(6 matching properties omitted from actual)
+   × holds four-star "Great service—only waited fifty minutes." without asserting a sensitive incident 1ms
+     → expected { reviewId: 'four', …(9) } to match object { riskLevel: 'low', …(3) }
+(6 matching properties omitted from actual)
+   × shows a current review requirement even for an old stored four-star quick recommendation 1ms
+     → expected 'Positive · reply optional' to be 'Needs review' // Object.is equality
+   × honours a needs-review recommendation independently of low risk or five stars 1ms
+     → expected 'Positive · reply optional' to be 'Needs review' // Object.is equality
+   × counts four-star praise in review workload while keeping both cases low risk 20ms
+     → expected { Object (active, now, ...) } to match object { active: 2, now: +0, review: 1, …(1) }
+(8 matching properties omitted from actual)
+   × prioritises an older review-required case ahead of a newer quick-review case 1ms
+     → expected 'five' to be 'four' // Object.is equality
+   × keeps urgent, review and quick groups disjoint and preserves completion 2ms
+     → expected { active: 3, now: 1, review: +0, …(6) } to match object { active: 3, now: 1, review: 1, …(1) }
+(8 matching properties omitted from actual)
+   × includes low-risk four-star reviews in weekly and monthly theme attention counts 3ms
+     → expected { theme: 'food', count: 2, …(2) } to match object { count: 2, averageStars: 4.5, …(1) }
+(1 matching property omitted from actual)
+   × renders the hosted four-star workspace as review-required, without a thank-you shortcut 14ms
+     → expected '<main class="review-desk"><header cla…' to contain 'Needs review'
+   × renders the server queue card as review-required while retaining the low risk label 3ms
+     → expected '<article class="decision-row "><div c…' to contain 'Needs review'
+
+⎯⎯⎯⎯⎯⎯ Failed Tests 16 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  lib/__tests__/golden.routing.test.ts > golden routing set > 'clean 4-star praise'
+ FAIL  lib/__tests__/golden.routing.test.ts > golden routing set > 'false positive guard: \'fellow\' must…'
+AssertionError: expected { riskLevel: 'low', …(4) } to deeply equal { riskLevel: 'low', …(4) }
+
+- Expected
++ Received
+
+  Object {
+-   "reasonCode": "rating_below_five",
+-   "recommendedAction": "needs_review",
++   "reasonCode": "positive_no_complaint",
++   "recommendedAction": "quick_approve",
+    "riskLevel": "low",
+    "sensitive": false,
+    "themes": Array [
+      "food",
+      "service",
+    ],
+  }
+
+ ❯ lib/__tests__/golden.routing.test.ts:69:8
+     67|       reasonCode: result.reasonCodes[0],
+     68|       themes: [...result.themes].sort(),
+     69|     }).toEqual({
+       |        ^
+     70|       riskLevel: testCase.expect.riskLevel,
+     71|       recommendedAction: testCase.expect.recommendedAction,
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/16]⎯
+
+ FAIL  lib/__tests__/owner.attention.test.ts > requires owner review at 4 stars even for praise
+AssertionError: expected 'quick_approve' to be 'needs_review' // Object.is equality
+
+Expected: "needs_review"
+Received: "quick_approve"
+
+ ❯ lib/__tests__/owner.attention.test.ts:23:57
+     21|
+     22| it.each([1, 2, 3, 4] as const)("requires owner review at %i stars even…
+     23|   expect(row("praise", stars).triage.recommendedAction).toBe("needs_re…
+       |                                                         ^
+     24| });
+     25| it.each(["", "That croissant was dope—absolutely delicious.", "Great s…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/16]⎯
+
+ FAIL  lib/__tests__/owner.attention.test.ts > holds four-star "" without asserting a sensitive incident
+ FAIL  lib/__tests__/owner.attention.test.ts > holds four-star "That croissant was dope—absolutely delicious." without asserting a sensitive incident
+ FAIL  lib/__tests__/owner.attention.test.ts > holds four-star "Great service—only waited fifty minutes." without asserting a sensitive incident
+AssertionError: expected { reviewId: 'four', …(9) } to match object { riskLevel: 'low', …(3) }
+(6 matching properties omitted from actual)
+
+- Expected
++ Received
+
+  Object {
+    "reasonCodes": Array [
+-     "rating_below_five",
++     "positive_no_complaint",
+    ],
+-   "recommendedAction": "needs_review",
++   "recommendedAction": "quick_approve",
+    "riskLevel": "low",
+    "sensitive": false,
+  }
+
+ ❯ lib/__tests__/owner.attention.test.ts:27:41
+     25| it.each(["", "That croissant was dope—absolutely delicious.", "Great s…
+     26|   "holds four-star %j without asserting a sensitive incident", text =>…
+     27|     expect(row("four", 4, text).triage).toMatchObject({ riskLevel: "lo…
+       |                                         ^
+     28|       recommendedAction: "needs_review", reasonCodes: ["rating_below_f…
+     29|   },
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/16]⎯
+
+ FAIL  lib/__tests__/owner.attention.test.ts > shows a current review requirement even for an old stored four-star quick recommendation
+AssertionError: expected 'Positive · reply optional' to be 'Needs review' // Object.is equality
+
+Expected: "Needs review"
+Received: "Positive · reply optional"
+
+ ❯ lib/__tests__/owner.attention.test.ts:45:35
+     43|     reasonCodes: ["positive_no_complaint"], policyVersion: "policy-v1.…
+     44|   const original = structuredClone(stored.triage);
+     45|   expect(decisionHeading(stored)).toBe("Needs review");
+       |                                   ^
+     46|   expect(decisionLabel(stored)).toBe("Review & approve");
+     47|   expect(stored.triage).toEqual(original); // Presentation must not re…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/16]⎯
+
+ FAIL  lib/__tests__/owner.attention.test.ts > honours a needs-review recommendation independently of low risk or five stars
+AssertionError: expected 'Positive · reply optional' to be 'Needs review' // Object.is equality
+
+Expected: "Needs review"
+Received: "Positive · reply optional"
+
+ ❯ lib/__tests__/owner.attention.test.ts:52:33
+     50|   const held = row("held", 5);
+     51|   held.triage.recommendedAction = "needs_review";
+     52|   expect(decisionHeading(held)).toBe("Needs review");
+       |                                 ^
+     53|   expect(decisionLabel(held)).toBe("Review & approve");
+     54|   expect(dailyBrief([held], now)).toMatchObject({ now: 0, review: 1, p…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/16]⎯
+
+ FAIL  lib/__tests__/owner.attention.test.ts > counts four-star praise in review workload while keeping both cases low risk
+AssertionError: expected { Object (active, now, ...) } to match object { active: 2, now: +0, review: 1, …(1) }
+(8 matching properties omitted from actual)
+
+- Expected
++ Received
+
+  Object {
+    "active": 2,
+    "now": 0,
+-   "positive": 1,
+-   "review": 1,
++   "positive": 2,
++   "review": 0,
+  }
+
+ ❯ lib/__tests__/owner.attention.test.ts:58:33
+     56| it("counts four-star praise in review workload while keeping both case…
+     57|   const rows = [row("four", 4), row("five", 5)];
+     58|   expect(dailyBrief(rows, now)).toMatchObject({ active: 2, now: 0, rev…
+       |                                 ^
+     59|   expect(decisionMetrics(rows).risk).toEqual({ sensitive: 0, high: 0, …
+     60| });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[6/16]⎯
+
+ FAIL  lib/__tests__/owner.attention.test.ts > prioritises an older review-required case ahead of a newer quick-review case
+AssertionError: expected 'five' to be 'four' // Object.is equality
+
+Expected: "four"
+Received: "five"
+
+ ❯ lib/__tests__/owner.attention.test.ts:64:61
+     62|   const four = row("four", 4), five = row("five", 5);
+     63|   five.review.createTime = "2026-11-13T07:00:00Z";
+     64|   expect(dailyBrief([five, four], now).priority?.review.id).toBe("four…
+       |                                                             ^
+     65| });
+     66| it("keeps urgent, review and quick groups disjoint and preserves compl…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[7/16]⎯
+
+ FAIL  lib/__tests__/owner.attention.test.ts > keeps urgent, review and quick groups disjoint and preserves completion
+AssertionError: expected { active: 3, now: 1, review: +0, …(6) } to match object { active: 3, now: 1, review: 1, …(1) }
+(8 matching properties omitted from actual)
+
+- Expected
++ Received
+
+  Object {
+    "active": 3,
+    "now": 1,
+-   "positive": 1,
+-   "review": 1,
++   "positive": 2,
++   "review": 0,
+  }
+
+ ❯ lib/__tests__/owner.attention.test.ts:69:49
+     67|   const urgent = row("safety", 4, "I got hurt.");
+     68|   const four = row("four", 4), five = row("five", 5);
+     69|   expect(dailyBrief([four, five, urgent], now)).toMatchObject({ active…
+       |                                                 ^
+     70|   expect(dailyBrief([four, five, urgent], now).priority?.review.id).to…
+     71|   expect(decisionHeading({ ...four, approval: { reviewId: "four", acto…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[8/16]⎯
+
+ FAIL  lib/__tests__/owner.attention.test.ts > includes low-risk four-star reviews in weekly and monthly theme attention counts
+AssertionError: expected { theme: 'food', count: 2, …(2) } to match object { count: 2, averageStars: 4.5, …(1) }
+(1 matching property omitted from actual)
+
+- Expected
++ Received
+
+  Object {
+    "averageStars": 4.5,
+    "count": 2,
+-   "needsAttention": 1,
++   "needsAttention": 0,
+  }
+
+ ❯ lib/__tests__/owner.attention.test.ts:79:8
+     77|   for (const period of ["week", "month"] as const) {
+     78|     expect(aggregateByPeriod(rows, period)[0].themes.find(theme => the…
+     79|       .toMatchObject({ count: 2, averageStars: 4.5, needsAttention: 1 …
+       |        ^
+     80|   }
+     81| });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[9/16]⎯
+
+ FAIL  lib/__tests__/owner.attention.test.ts > renders the hosted four-star workspace as review-required, without a thank-you shortcut
+AssertionError: expected '<main class="review-desk"><header cla…' to contain 'Needs review'
+
+Expected: "Needs review"
+Received: "<main class="review-desk"><header class="desk-header"><div><p class="desk-eyebrow">REVIEW DESK</p><h1>Example Cafe</h1><p class="desk-intro">A governed review desk for owner-operators. Check the evidence, then approve every response.</p></div><div class="desk-demo"><span>Demo · nothing is sent</span><button class="btn-link">Start over</button></div></header><div class="desk-dataset"><label for="dataset-select">Review dataset</label><select id="dataset-select"><option value="dataset2" selected="">Synthetic test</option></select></div><nav class="desk-surface-nav" aria-label="Review desk sections"><button aria-pressed="true">Review queue</button><button aria-pressed="false">Weekly &amp; monthly signals</button></nav><section class="daily-brief" aria-labelledby="daily-brief-title"><div class="brief-top"><h2 id="daily-brief-title">Today’s review desk</h2><span>0 new today · 0 updated today</span></div><p class="brief-counts"><strong>0</strong> need attention now <span>·</span> <strong>0</strong> need review <span>·</span> <strong>1</strong> positive</p><p class="brief-priority"><strong>Highest priority:</strong> 4-star review — “Great food and fast service.”</p><p class="brief-context">Check the review and draft before deciding. Every send needs your approval.</p><button class="btn-secondary">Open queue</button></section><div class="hosted-grid"><section id="review-queue" tabindex="-1" class="desk-queue" aria-label="Review queue"><div class="desk-queue-head"><h2>Needs your review</h2><p class="page-sub">Past 6 months · priority first, newest next</p><div class="desk-tabs"><button aria-pressed="true">Active <span>1</span></button><button aria-pressed="false">Completed <span>0</span></button></div></div><div class="desk-review-list"><button class="hosted-review  selected" aria-pressed="true"><span class="desk-card-top"><span>4★ · Synthetic case</span></span><span class="desk-priority priority-low">Positive · reply optional</span><span class="desk-excerpt">“Great food and fast service.”</span><span class="desk-date">Synthetic Reviewer · Food · Service</span><span class="desk-date">Draft ready · 0 approved facts cited</span><span class="card-action">Review thank-you <span aria-hidden="true">→</span></span></button></div></section><section id="review-workspace" tabindex="-1" class="desk-workspace" aria-label="Review workspace"><div class="desk-workspace-head"><div><p class="desk-eyebrow">YOUR NEXT REVIEW</p><h2>Synthetic Reviewer’s review</h2></div><span class="page-sub">4/5 ★ · Synthetic case</span></div><section class="desk-recommendation"><span class="desk-priority priority-low">Positive · reply optional</span><h3>Recommended next step</h3><p>Check the thank-you draft, or close the review if no response is needed.</p><details><summary>Why this recommendation?</summary><p>4-5 stars with no complaint language detected — low risk; the draft can usually be approved as-is.</p><p>A customer’s account is not a verified finding about cause or employee conduct.</p></details></section><details class="desk-facts"><summary>Check approved business facts</summary><ul></ul><p>No business facts are used in this draft.</p></details><div class="reply-with-evidence"><section class="desk-editor"><label for="hosted-reply">Suggested response</label><p class="page-sub">Edit the wording to match what you can support.</p><textarea id="hosted-reply" rows="5" maxLength="4000">Thank you for your feedback.</textarea><label class="hosted-check"><input type="checkbox"/>I have completed discovery and checked the available facts. Any reply contains no unsupported promises or private staff information.</label><div class="desk-actions"><div><button>Approve response</button><p>Accept this reply and close the review.</p></div><div><button class="btn-secondary">No response required</button><p>Close after discovery, without a reply.</p></div></div><p class="desk-session-note">Demo decisions last until you refresh or start over.</p></section><aside class="reply-evidence" aria-label="Evidence for this reply"><h3>Approved business facts</h3><p>No approved business facts cited.</p><p class="evidence-caption">References from the original draft. Check any changes you make.</p><h3>Review evidence</h3><blockquote class="evidence-quote" tabindex="0">Great food and fast service.</blockquote><p class="evidence-caption">Customer’s account · not a verified finding about cause or staff conduct.</p></aside></div></section></div><footer class="desk-footer"><a href="/demo-behindthehood" target="_blank" rel="noopener noreferrer">Behind the hood <span aria-hidden="true">↗</span><span class="sr-only"> (opens in a new tab)</span></a></footer></main>"
+
+ ❯ lib/__tests__/owner.attention.test.ts:94:16
+     92|   const html = renderToStaticMarkup(createElement(HostedDemo, { datase…
+     93|     title: facts.businessName, kind: "synthetic", asOf: now.toISOStrin…
+     94|   expect(html).toContain("Needs review");
+       |                ^
+     95|   expect(html).toContain("Review &amp; approve");
+     96|   expect(html).toContain("below five stars");
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[10/16]⎯
+
+ FAIL  lib/__tests__/owner.attention.test.ts > renders the server queue card as review-required while retaining the low risk label
+AssertionError: expected '<article class="decision-row "><div c…' to contain 'Needs review'
+
+Expected: "Needs review"
+Received: "<article class="decision-row "><div class="decision-row-top"><strong class="">Positive · reply optional</strong><span>4★ · 12 Nov</span></div><p class="decision-excerpt">“Great food and fast service.”</p><p class="decision-meta">Food · Service · Low risk · Pending</p><div class="decision-row-bottom"><span>Draft ready · 0 approved facts cited</span><button type="button" aria-expanded="false" aria-controls="editor-four">Review thank-you</button></div></article>"
+
+ ❯ lib/__tests__/owner.attention.test.ts:103:16
+    101|   const html = renderToStaticMarkup(createElement(QueueRow, { ...row("…
+    102|     explanation: "Rating requires review.", version: "test", facts }));
+    103|   expect(html).toContain("Needs review");
+       |                ^
+    104|   expect(html).toContain("Review &amp; approve");
+    105|   expect(html).toContain("Low risk");
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[11/16]⎯
+
+ FAIL  lib/__tests__/queue.attention.test.ts > sorts an older four-star stored recommendation ahead of newer quick praise without rewriting it
+AssertionError: expected [ '5', '4' ] to deeply equal [ '4', '5' ]
+
+- Expected
++ Received
+
+  Array [
+-   "4",
+    "5",
++   "4",
+  ]
+
+ ❯ lib/__tests__/queue.attention.test.ts:24:55
+     22|     }
+     23|     const stored = fs.readFileSync(path.join(dir, "triage.json"), "utf…
+     24|     expect(loadQueueRows().map(row => row.review.id)).toEqual(["4", "5…
+       |                                                       ^
+     25|     expect(fs.readFileSync(path.join(dir, "triage.json"), "utf8")).toB…
+     26|   } finally {
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[12/16]⎯
+
+ FAIL  lib/__tests__/triage.policy.test.ts > DefaultTriagePolicy > requires owner review for four-star praise without raising its risk
+AssertionError: expected 'quick_approve' to be 'needs_review' // Object.is equality
+
+Expected: "needs_review"
+Received: "quick_approve"
+
+ ❯ lib/__tests__/triage.policy.test.ts:40:38
+     38|     const result = policy.classify(review({ stars: 4, text: "Great foo…
+     39|     expect(result.riskLevel).toBe("low");
+     40|     expect(result.recommendedAction).toBe("needs_review");
+       |                                      ^
+     41|     expect(result.sensitive).toBe(false);
+     42|     expect(result.reasonCodes).toEqual(["rating_below_five"]);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[13/16]⎯
+
+ Test Files  4 failed (4)
+      Tests  16 failed | 57 passed (73)
+   Start at  21:30:56
+   Duration  906ms (transform 653ms, setup 0ms, collect 1.05s, tests 151ms, environment 1ms, prepare 371ms)

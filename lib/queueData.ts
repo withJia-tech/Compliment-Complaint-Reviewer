@@ -6,13 +6,13 @@ import { draftRepo } from "@/lib/store/draftRepo";
 import { locationRepo } from "@/lib/store/locationRepo";
 import { reviewRepo } from "@/lib/store/reviewRepo";
 import { triageRepo } from "@/lib/store/triageRepo";
+import { queuePriority } from "@/lib/desk/summary";
 import {
   type Approval,
   type ApprovedBusinessFacts,
   DEFAULT_LOCATION_ID,
   type Draft,
   type Review,
-  type RiskLevel,
   type TriageResult,
 } from "@/lib/types";
 
@@ -23,8 +23,6 @@ export interface QueueRowData {
   approval: Approval | null;
   version?: string;
 }
-
-const RISK_ORDER: Record<RiskLevel, number> = { high: 0, medium: 1, low: 2 };
 
 /** Reviews joined with their triage/draft/approval, sensitive and high risk first. */
 export function loadQueueRows(): QueueRowData[] {
@@ -47,11 +45,8 @@ export function loadQueueRows(): QueueRowData[] {
         : "",
     }))
     .sort((a, b) => {
-      if (a.triage.sensitive !== b.triage.sensitive)
-        return a.triage.sensitive ? -1 : 1;
-      const riskDiff =
-        RISK_ORDER[a.triage.riskLevel] - RISK_ORDER[b.triage.riskLevel];
-      if (riskDiff !== 0) return riskDiff;
+      const attentionDiff = queuePriority(a) - queuePriority(b);
+      if (attentionDiff !== 0) return attentionDiff;
       return (
         new Date(b.review.createTime).getTime() -
         new Date(a.review.createTime).getTime()

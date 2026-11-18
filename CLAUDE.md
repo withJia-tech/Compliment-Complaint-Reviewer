@@ -14,7 +14,9 @@ rubrics) and `docs/DECISIONS.md` (decision log + backlog) before changing behavi
 - **No remedy, refund, voucher, timeline or promise in a published reply.** Goodwill is settled
   out of band and only *recorded* (`remedy_recorded`).
 - Three risk levels (`low`/`medium`/`high`) plus a `sensitive` flag. No escalation tier.
-  Actions are `quick_approve` (low) and `needs_review` (everything else).
+  Actions are `quick_approve` (eligible five-star low risk) and `needs_review`.
+  Every sub-five rating needs review even when low risk. Keep attention separate from severity.
+  See `docs/OWNER_ATTENTION_CHANGE.md` for this local candidate and the historical handover boundary.
 
 ## Commands
 
