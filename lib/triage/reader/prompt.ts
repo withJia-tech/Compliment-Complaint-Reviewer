@@ -1,6 +1,7 @@
 import { createHash } from "node:crypto";
 import { z } from "zod";
 import { ReviewReadingSchema } from "@/lib/triage/reader/types";
+import { REQUEST_CONTRACT } from "@/lib/triage/reader/requestContract";
 
 /** Bump when the prompt or schema changes, so cached readings from an older prompt are not reused. */
 export const READER_PROMPT_VERSION = "reader-v1";
@@ -41,5 +42,7 @@ export const READER_FINGERPRINT = createHash("sha256")
   .update(readerUserMessage(0, "\u0001"))
   .update("\u0000")
   .update(JSON.stringify(z.toJSONSchema(ReviewReadingSchema)))
+  .update("\u0000")
+  .update(JSON.stringify(REQUEST_CONTRACT))
   .digest("hex")
   .slice(0, 12);

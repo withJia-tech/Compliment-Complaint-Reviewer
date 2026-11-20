@@ -2,7 +2,8 @@ import path from "node:path";
 import Anthropic from "@anthropic-ai/sdk";
 import { cascadeFromFile } from "@/lib/triage/reader/cachedReader";
 import { CascadeReviewReader, cascadeReaderId } from "@/lib/triage/reader/cascade";
-import { ClaudeReviewReader, DEFAULT_ESCALATION_MODEL, DEFAULT_READER_MODEL } from "@/lib/triage/reader/claudeReader";
+import { ClaudeReviewReader, readerClient, DEFAULT_ESCALATION_MODEL, DEFAULT_READER_MODEL } from "@/lib/triage/reader/claudeReader";
+import type { RunBudget } from "./runBudget";
 import type { ModelReader, ReviewReader } from "@/lib/triage/reader/types";
 
 export const DEFAULT_DEMO_CACHE = path.join("data", "readings", "demo.json");
@@ -23,13 +24,13 @@ export function defaultReaderId(): string {
  */
 export function liveReaderFromEnv(
   env: Env = process.env,
-  options: { client?: Anthropic; wrap?: (reader: ModelReader) => ModelReader } = {},
+  options: { client?: Anthropic; wrap?: (reader: ModelReader) => ModelReader; budget?: RunBudget } = {},
 ): CascadeReviewReader {
-  const client = options.client ?? new Anthropic();
+  const client = options.client ?? readerClient(env.ANTHROPIC_API_KEY);
   const wrap = options.wrap ?? ((reader: ModelReader) => reader);
-  const primary = wrap(new ClaudeReviewReader({ client, model: env.CCR_READER_MODEL || DEFAULT_READER_MODEL }));
+  const primary = wrap(new ClaudeReviewReader({ client, model: env.CCR_READER_MODEL || DEFAULT_READER_MODEL, budget: options.budget }));
   const escalationModel = env.CCR_READER_ESCALATION_MODEL || DEFAULT_ESCALATION_MODEL;
-  const escalation = escalationModel === "off" ? null : wrap(new ClaudeReviewReader({ client, model: escalationModel }));
+  const escalation = escalationModel === "off" ? null : wrap(new ClaudeReviewReader({ client, model: escalationModel, budget: options.budget }));
   return new CascadeReviewReader(primary, escalation);
 }
 

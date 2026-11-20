@@ -137,19 +137,23 @@ for your account.
 model) send the uncertain ones to Claude Sonnet 5.5 for a second read: a concern, personal
 details, three stars or fewer, a language other than English, a link, or anything the keyword
 rules already flagged. A plain, happy English review stays on Haiku. The second read can only
-add attention, never remove it. `npm run read:golden` (dry run) prints a ceiling: under $0.30
-for the 47 golden reviews with text even if every one escalated, so well under a cent per
-review. The evaluation gate fails above one cent per review. To try another set-up, set
-`CCR_READER_MODEL` and `CCR_READER_ESCALATION_MODEL` (or `off`) and pass `--out <file>`.
+add attention, never remove it. `npm run read:golden` is a no-key dry run: its $0.28623
+illustrative estimate is not a spending ceiling. The full token reservation is $2.82993 for 47
+primary and at most 47 escalation requests. The unchanged evaluation gate limits recorded mean
+cost to one cent per review; that threshold does not authorize spending.
 
-**Demo without a key.** `npm run read:demo -- --yes` (once, with your key) saves readings for
-the demo reviews to `data/readings/demo.json`. Commit that file, then anyone can run the demo
-with `CCR_READER=cache npm run scan` at no cost and with no key.
+**Record only after explicit approval.** Reading commands now require `--yes`, `--max-cost-usd`,
+`--max-calls` and a new absolute `--out` path outside the repository. They disable retries and
+server-side fallback, validate input counts, and stop on failed/unknown-cost attempts. These run
+bounds apply to the recording commands, not the separate live application scan. Do not run a live
+scan as part of this evaluation. See [the bounded run proposal](docs/READER_EVIDENCE_HARDENING.md).
 
-**Evaluate it.** `npm run read:golden -- --yes` runs the golden dataset through the reader,
-prints how many of the 49 cases match, how many escalated and what it cost, and saves every model
-attempt so the evaluation gate replays them. The gate only accepts a run made by exactly the
-default reader (same models, routing and prompt).
+**Replay without a key.** Format 3 recordings bind actual model identities, source/configuration,
+dataset and complete attempts. Model rationale is omitted from saved files. The gate repeats replay
+and rejects incomplete, stale, unknown-cost or mismatched evidence. Use
+`npm run eval:gate -- --stdout-only --readings /absolute/private/run.json` to inspect a private
+recording without copying it into the repository. This synthetic evaluation is not production approval.
+A demo recording is a separate optional run, not a prerequisite for the golden gate.
 
 Goodwill remedies — vouchers and the like — are settled outside this app over email or
 WhatsApp. The detail page records that one was offered so the audit trail is complete, but

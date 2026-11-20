@@ -1,5 +1,10 @@
 # Handover — prove the cheaper reader (B13), then decide the learning-loop and Google questions
 
+**20 November local update:** the owner approved the reader-evidence hardening patch only.
+See [READER_EVIDENCE_HARDENING.md](READER_EVIDENCE_HARDENING.md) for current controls, tests
+and the bounded run proposal. Historical commands below no longer authorize or initiate a run
+without explicit budget/output arguments. No paid run, push or merge is authorized.
+
 Written 2026-11-13. Read `CLAUDE.md`, `SPEC.md`, `docs/DECISIONS.md` and
 `docs/LEARNING_LOOP_PLAN.md` first. Delete this file when the items below are done.
 
@@ -29,15 +34,10 @@ Written 2026-11-13. Read `CLAUDE.md`, `SPEC.md`, `docs/DECISIONS.md` and
 
 ## Waiting on the owner
 
-1. With your key, on your machine:
-   ```bash
-   npm run read:golden -- --yes   # writes tests/fixtures/golden/readings/risk_classifier_v1.json
-   npm run read:demo -- --yes     # writes data/readings/demo.json
-   npm run eval:gate              # should now pass, or show exactly which fixtures miss
-   git add tests/fixtures/golden/readings data/readings && git commit -m "Record evaluation run" && git push
-   ```
-   Optional comparison (not committed): `CCR_READER_MODEL=claude-sonnet-5-5
-   CCR_READER_ESCALATION_MODEL=off npm run read:golden -- --yes --out /tmp/sonnet.json`.
+1. Review the bounded run proposal in `READER_EVIDENCE_HARDENING.md`. A fresh explicit approval
+   is required before using an API key or recording model output. `npm run read:golden` is safe
+   without a key and makes no requests. A demo recording is not needed for the golden gate.
+
 2. Decisions D2 and D4–D8 in `docs/LEARNING_LOOP_PLAN.md` (D1 and D3 are decided).
 3. Google route for B12 (API with OAuth, MCP connector, or both), and apply for Business Profile
    API access: approval is the long pole.

@@ -1,4 +1,6 @@
 import { readFileSync } from "node:fs";
+import { createHash } from "node:crypto";
+import path from "node:path";
 import type { TriagePolicy } from "@/lib/interfaces/triagePolicy";
 import type { ReviewReader } from "@/lib/triage/reader/types";
 import { triageReview } from "@/lib/triage/triageReview";
@@ -20,10 +22,17 @@ export interface GoldenFixture {
 }
 
 export function loadGoldenFixtures(file: string): GoldenFixture[] {
-  return readFileSync(file, "utf8")
+  const raw = readFileSync(file, "utf8");
+  const manifest = JSON.parse(readFileSync(path.join(path.dirname(file), "MANIFEST.json"), "utf8"))[path.basename(file)];
+  if (!manifest || manifest.status !== "approved" || createHash("sha256").update(raw).digest("hex") !== manifest.sha256) {
+    throw new Error("Golden dataset is not approved or its checksum differs from the manifest");
+  }
+  const fixtures = raw
     .split("\n")
     .filter((line) => line.length > 0)
     .map((line) => JSON.parse(line) as GoldenFixture);
+  if (fixtures.length !== manifest.fixtures || new Set(fixtures.map((f) => f.fixture_id)).size !== fixtures.length || fixtures.some((f) => f.version !== manifest.version)) throw new Error("Golden dataset count, ids or version invalid");
+  return fixtures;
 }
 
 export function fixtureToReview(fixture: GoldenFixture): Review {

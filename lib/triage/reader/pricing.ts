@@ -24,6 +24,11 @@ export interface ModelTally extends TokenUsage {
 
 /** What a cascade reader did over a run. */
 export interface ReaderStats {
+  primaryFailures?: number;
+  escalationFailures?: number;
+  recoveredReads?: number;
+  missingRecordings?: number;
+  unknownUsage?: number;
   reads: number;
   escalations: number;
   escalationReasons: Partial<Record<string, number>>;
@@ -45,9 +50,10 @@ export function usageSummary(stats: ReaderStats): UsageSummary {
     if (cost === null) unknownPriceModels.push(model);
     else total += cost;
   }
-  const computable = stats.reads > 0 && unknownPriceModels.length === 0;
+  const known = unknownPriceModels.length === 0 && !stats.unknownUsage;
+  const computable = stats.reads > 0 && known;
   return {
-    totalCostUsd: unknownPriceModels.length === 0 ? total : Number.NaN,
+    totalCostUsd: known ? total : Number.NaN,
     costPerReviewUsd: computable ? total / stats.reads : Number.NaN,
     unknownPriceModels,
   };

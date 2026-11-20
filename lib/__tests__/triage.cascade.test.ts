@@ -23,9 +23,12 @@ function reading(overrides: Partial<ReviewReading> = {}): ReviewReading {
 }
 
 const usage = { inputTokens: 1000, outputTokens: 200 };
-const ok = (model: string, r: ReviewReading): ReadAttempt => ({ model, ok: true, reading: r, usage });
+const ok = (model: string, r: ReviewReading): ReadAttempt => ({ model, observedModel: model, responseId: "synthetic_test", usageKnown: true, ok: true, reading: r, usage });
 const failed = (model: string, reason: "refused" | "api_error"): ReadAttempt => ({
   model,
+  observedModel: model,
+  responseId: "synthetic_test",
+  usageKnown: reason != "api_error",
   ok: false,
   reason,
   usage: reason === "api_error" ? { inputTokens: 0, outputTokens: 0 } : usage,
@@ -151,8 +154,8 @@ describe("cascade reader: when it escalates", () => {
 
 describe("cascade reader: identity, usage and cost", () => {
   it("names both models, the routing version and a prompt fingerprint in its id", () => {
-    expect(cascadeReaderId(CHEAP, STRONG)).toMatch(/^routing-v1\[claude-haiku-5-5>claude-sonnet-5-5\]:reader-v1@[0-9a-f]{12}$/);
-    expect(cascadeReaderId(CHEAP, null)).toMatch(/^routing-v1\[claude-haiku-5-5\]:reader-v1@[0-9a-f]{12}$/);
+    expect(cascadeReaderId(CHEAP, STRONG)).toMatch(/^routing-v2\[claude-haiku-5-5>claude-sonnet-5-5\]:reader-v1@[0-9a-f]{12}$/);
+    expect(cascadeReaderId(CHEAP, null)).toMatch(/^routing-v2\[claude-haiku-5-5\]:reader-v1@[0-9a-f]{12}$/);
     expect(cascadeReaderId("claude-opus-5-5", STRONG)).not.toBe(cascadeReaderId(CHEAP, STRONG));
   });
 
@@ -227,6 +230,6 @@ describe("recorded runs", () => {
   it("rejects a readings file that does not match the schema instead of replaying it", () => {
     const file = path.join(dir, "junk.json");
     writeFileSync(file, JSON.stringify({ readerId: "x", createdAt: "", readings: {} }));
-    expect(() => loadReadingCache(file)).toThrow(/not a valid readings file/);
+    expect(() => loadReadingCache(file)).toThrow(/valid readings file/);
   });
 });

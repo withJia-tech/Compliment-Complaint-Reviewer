@@ -16,7 +16,7 @@ import type { Review } from "@/lib/types";
  * Bump when the escalation rules below change: a saved evaluation run then
  * goes stale, because a replay could route reviews differently.
  */
-export const ROUTING_VERSION = "routing-v1";
+export const ROUTING_VERSION = "routing-v2";
 
 export type EscalationReason =
   | "primary_failed"
@@ -102,6 +102,11 @@ export class CascadeReviewReader implements ReviewReader {
     escalations: 0,
     escalationReasons: {},
     byModel: {},
+    primaryFailures: 0,
+    escalationFailures: 0,
+    recoveredReads: 0,
+    missingRecordings: 0,
+    unknownUsage: 0,
   };
 
   constructor(
@@ -118,6 +123,7 @@ export class CascadeReviewReader implements ReviewReader {
   }
 
   private tally(attempt: ReadAttempt): void {
+    if (attempt.usageKnown === false || (!attempt.ok && attempt.reason === "api_error")) this.stats.unknownUsage! += 1;
     const t = (this.stats.byModel[attempt.model] ??= { calls: 0, inputTokens: 0, outputTokens: 0 });
     t.calls += 1;
     t.inputTokens += attempt.usage.inputTokens;
@@ -128,6 +134,13 @@ export class CascadeReviewReader implements ReviewReader {
     this.stats.reads += 1;
     const first = await this.primary.attempt(review);
     this.tally(first);
+    if (!first.ok) {
+      this.stats.primaryFailures! += 1;
+      if (first.reason === "not_cached") {
+        this.stats.missingRecordings! += 1;
+        throw new ReaderError("Missing primary recording", "not_cached");
+      }
+    }
 
     const reasons = escalationReasons(review, first, context);
     if (reasons.length === 0 || !this.escalation) {
@@ -141,7 +154,12 @@ export class CascadeReviewReader implements ReviewReader {
     const second = await this.escalation.attempt(review);
     this.tally(second);
     // The escalation was needed, so its failure is not covered by the cheap read.
-    if (!second.ok) throw new ReaderError(`The escalation reader could not read this review (${second.reason})`, second.reason);
+    if (!second.ok) {
+      this.stats.escalationFailures! += 1;
+      if (second.reason === "not_cached") this.stats.missingRecordings! += 1;
+      throw new ReaderError(`The escalation reader could not read this review (${second.reason})`, second.reason);
+    }
+    if (!first.ok) this.stats.recoveredReads! += 1;
     return first.ok ? combineReadings(first.reading, second.reading) : second.reading;
   }
 }

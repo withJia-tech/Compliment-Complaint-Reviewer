@@ -1,143 +1,114 @@
-/**
- * Runs reviews through the second reader with YOUR key and saves every model
- * attempt, so the demo and the evaluation gate can replay them for free.
- *
- *   npm run read:golden -- --yes   # the 49-review golden dataset (the evaluation run)
- *   npm run read:demo -- --yes     # the app's demo reviews (for CCR_READER=cache)
- *
- * The default reader is Claude Haiku 5.5 on every review, with the uncertain
- * ones escalated to Claude Sonnet 5.5. To compare another set-up, set
- * CCR_READER_MODEL / CCR_READER_ESCALATION_MODEL (or "off") and pass
- * --out <file>: a non-default run never overwrites the committed one.
- *
- * Without --yes it only prints how many reviews it would read and a cost ceiling.
- * Needs ANTHROPIC_API_KEY in your environment or .env.local. Never commit a key.
- * Prints fixture ids and labels only, never review text.
- */
-import { readFileSync } from "node:fs";
+/** Dry by default. --yes authorizes external requests only when explicit bounds and a new private output are supplied. */
+import { existsSync, lstatSync, readFileSync, realpathSync } from "node:fs";
 import path from "node:path";
-import demoReviews from "@/data/fixtures/reviews.json";
+import { loadGoldenFixtures, fixtureToReview, evaluate, summarize, checkThresholds } from "@/lib/eval/goldenEval";
+import { cleanSourceCommit, evidenceBinding, validateRecording } from "@/lib/eval/readerEvidence";
 import { DefaultTriagePolicy } from "@/lib/triage/policy";
-import { ReadingRecorder } from "@/lib/triage/reader/cachedReader";
-import { DEFAULT_DEMO_CACHE, defaultReaderId, liveReaderFromEnv } from "@/lib/triage/reader/fromEnv";
+import { ReadingRecorder, cascadeFromCache } from "@/lib/triage/reader/cachedReader";
+import { liveReaderFromEnv } from "@/lib/triage/reader/fromEnv";
+import { DEFAULT_READER_MODEL, DEFAULT_ESCALATION_MODEL } from "@/lib/triage/reader/claudeReader";
+import { cascadeReaderId } from "@/lib/triage/reader/cascade";
+import { RunBudget } from "@/lib/triage/reader/runBudget";
+import { REQUEST_CONTRACT } from "@/lib/triage/reader/requestContract";
 import { costUsd, usageSummary } from "@/lib/triage/reader/pricing";
 import { triageReview } from "@/lib/triage/triageReview";
-import type { RecommendedAction, Review, RiskLevel } from "@/lib/types";
+import type { Review } from "@/lib/types";
 
-// Rough per-review token use at low effort: the fixed instructions plus one review in, a short reading out.
-const EST = { inputTokens: 900, outputTokens: 400 };
-const COST_LIMIT_USD = 0.01;
+class RunInputError extends Error {}
 
-interface GoldenFixture {
-  fixture_id: string;
-  stars: number;
-  review_text: string;
-  expected_primary_action: RecommendedAction;
-  expected_risk_level: RiskLevel;
-  expected_sensitive: boolean;
-}
+const GOLDEN = "tests/fixtures/golden/risk_classifier_v1.jsonl";
 
-const GOLDEN = path.join("tests", "fixtures", "golden", "risk_classifier_v1.jsonl");
-const GOLDEN_READINGS = path.join("tests", "fixtures", "golden", "readings", "risk_classifier_v1.json");
-
-function loadGolden(): GoldenFixture[] {
-  return readFileSync(GOLDEN, "utf8")
-    .split("\n")
-    .filter(Boolean)
-    .map((line) => JSON.parse(line) as GoldenFixture);
-}
-
-function asReview(id: string, stars: number, text: string): Review {
-  return { id, locationId: "loc_001", author: "Reader", stars: stars as Review["stars"], text, createTime: "", updateTime: "" };
-}
-
-function money(n: number | null): string {
-  return n === null || !Number.isFinite(n) ? "unknown (model not in the price table)" : `$${n.toFixed(5)}`;
-}
-
-async function main() {
-  const args = process.argv.slice(2);
+function options(args: string[]) {
   const target = args[0];
-  const confirmed = args.includes("--yes");
-  const outIndex = args.indexOf("--out");
-  const outArg = outIndex >= 0 ? args[outIndex + 1] : null;
-  if (target !== "golden" && target !== "demo") {
-    console.error("Usage: tsx scripts/readReviews.ts <golden|demo> [--yes] [--out <file>]");
-    process.exitCode = 1;
-    return;
+  if (target !== "golden" && target !== "demo") throw new RunInputError("Target must be golden or demo");
+  const values = new Map<string, string>();
+  let yes = false;
+  for (let i = 1; i < args.length; i++) {
+    const flag = args[i];
+    if (flag === "--yes" && !yes) { yes = true; continue; }
+    if (!["--out", "--max-cost-usd", "--max-calls"].includes(flag) || values.has(flag) || !args[i + 1] || args[i + 1].startsWith("--")) throw new RunInputError("Invalid, duplicate or incomplete argument");
+    values.set(flag, args[++i]);
   }
-
-  const golden = target === "golden" ? loadGolden() : [];
-  const reviews =
-    target === "golden" ? golden.map((f) => asReview(f.fixture_id, f.stars, f.review_text)) : (demoReviews as Review[]);
-  const toRead = reviews.filter((r) => r.text.trim() !== "");
-
-  const recorder = new ReadingRecorder();
-  const reader = liveReaderFromEnv(process.env, { wrap: (m) => recorder.wrap(m) });
-  const isDefault = reader.id === defaultReaderId();
-  const out = outArg ?? (isDefault ? (target === "golden" ? GOLDEN_READINGS : DEFAULT_DEMO_CACHE) : null);
-  if (!out) {
-    console.error(`${reader.id} is not the default reader (${defaultReaderId()}).`);
-    console.error("Pass --out <file> so this comparison run does not overwrite the committed evaluation run.");
-    process.exitCode = 1;
-    return;
-  }
-
-  const ceiling = reader.models.reduce<number | null>((sum, m) => {
-    const c = costUsd(m, EST);
-    return sum === null || c === null ? null : sum + c * toRead.length;
-  }, 0);
-  console.log(`${toRead.length} review(s) to read with ${reader.id}.`);
-  console.log(`Cost ceiling if every review escalated: ${money(ceiling)}. Writes ${out}.`);
-  if (!confirmed) {
-    console.log("Nothing sent. Re-run with --yes to read them with your key.");
-    return;
-  }
-  if (!process.env.ANTHROPIC_API_KEY) {
-    console.error("ANTHROPIC_API_KEY is not set. Put it in .env.local or export it in your shell.");
-    process.exitCode = 1;
-    return;
-  }
-
-  const policy = new DefaultTriagePolicy();
-  let failures = 0;
-  let mismatches = 0;
-  for (const review of reviews) {
-    const result = await triageReview(review, policy, reader);
-    if (result.reasonCodes.includes("reader_failed")) failures += 1;
-
-    const fixture = golden.find((f) => f.fixture_id === review.id);
-    if (!fixture) continue;
-    const ok =
-      result.recommendedAction === fixture.expected_primary_action &&
-      result.riskLevel === fixture.expected_risk_level &&
-      result.sensitive === fixture.expected_sensitive;
-    if (!ok) {
-      mismatches += 1;
-      console.log(
-        `  MISMATCH ${review.id}: got ${result.recommendedAction}/${result.riskLevel}/sensitive=${result.sensitive}` +
-          `, expected ${fixture.expected_primary_action}/${fixture.expected_risk_level}/sensitive=${fixture.expected_sensitive}` +
-          (result.reading ? ` (reader: ${result.reading.concern}/${result.reading.category})` : ""),
-      );
-    }
-  }
-
-  recorder.save(out, reader);
-  const { stats } = reader;
-  const summary = usageSummary(stats);
-  console.log(`Saved ${out}.`);
-  console.log(`Reader failures (held for review): ${failures}`);
-  console.log(`Escalated: ${stats.escalations} of ${stats.reads} (${JSON.stringify(stats.escalationReasons)})`);
-  for (const [model, t] of Object.entries(stats.byModel)) {
-    console.log(`  ${model}: ${t.calls} call(s), ${t.inputTokens} in / ${t.outputTokens} out, ${money(costUsd(model, t))}`);
-  }
-  console.log(
-    `Cost per review: ${money(summary.costPerReviewUsd)} (gate limit $${COST_LIMIT_USD}); total ${money(summary.totalCostUsd)}.`,
-  );
-  if (target === "golden") console.log(`Golden dataset: ${golden.length - mismatches}/${golden.length} match.`);
+  return { target, yes, out: values.get("--out"), maxCostUsd: Number(values.get("--max-cost-usd")), maxCalls: Number(values.get("--max-calls")) };
 }
-
-main().catch((error) => {
-  console.error("Reading failed:", error instanceof Error ? error.message : error);
-  process.exitCode = 1;
-});
+function assertNewPrivateOutput(out: string) {
+  if (!path.isAbsolute(out)) throw new RunInputError("Output must be an absolute path outside the repository");
+  let parent = path.dirname(out);
+  while (!existsSync(parent)) parent = path.dirname(parent);
+  const relative = path.relative(realpathSync(process.cwd()), realpathSync(parent));
+  if (!relative.startsWith(`..${path.sep}`) && relative !== ".." && !path.isAbsolute(relative)) throw new RunInputError("Output must be outside the repository");
+  try { lstatSync(out); throw new RunInputError("Output already exists; never overwrite evidence"); }
+  catch (error) { if ((error as NodeJS.ErrnoException).code !== "ENOENT") throw error; }
+}
+async function main() {
+  const opts = options(process.argv.slice(2));
+  const dataset = opts.target === "golden" ? GOLDEN : "data/fixtures/reviews.json";
+  const golden = opts.target === "golden" ? loadGoldenFixtures(dataset) : [];
+  const reviews: Review[] = opts.target === "golden" ? golden.map(fixtureToReview) : JSON.parse(readFileSync(dataset, "utf8"));
+  const binding = evidenceBinding(dataset, reviews);
+  const primary = process.env.CCR_READER_MODEL || DEFAULT_READER_MODEL;
+  const escalationSetting = process.env.CCR_READER_ESCALATION_MODEL || DEFAULT_ESCALATION_MODEL;
+  const escalation = escalationSetting === "off" ? null : escalationSetting;
+  const models = escalation ? [primary, escalation] : [primary];
+  if (primary === escalation) throw new RunInputError("Primary and escalation models must differ");
+  const n = reviews.filter((r) => r.text.trim()).length;
+  const estimate = models.reduce((sum, model) => {
+    const cost = costUsd(model, { inputTokens: 900, outputTokens: 400 });
+    if (cost === null) throw new RunInputError("Unqualified model price");
+    return sum + cost * n;
+  }, 0);
+  const reservation = models.reduce((sum, model) => sum + costUsd(model, { inputTokens: REQUEST_CONTRACT.maxInputTokens, outputTokens: REQUEST_CONTRACT.maxOutputTokens })! * n, 0);
+  console.log(`${n} non-empty reviews; ${cascadeReaderId(primary, escalation)}.`);
+  console.log(`Estimate at 900 input / 400 output tokens per call: $${estimate.toFixed(5)} (not a ceiling).`);
+  console.log(`Full reservation at input/output bounds: $${reservation.toFixed(5)}; at most ${n * models.length} generation and ${n * models.length} token-count requests.`);
+  console.log(`Endpoint ${REQUEST_CONTRACT.endpoint}; retries 0; server fallback off; request timeout 60s; run timeout 30m.`);
+  if (!opts.yes) {
+    console.log("Dry run: no client created, no requests sent, no files written. Live execution needs --yes --max-cost-usd <budget> --max-calls <limit> --out <new-absolute-private-path> and separate owner approval.");
+    return;
+  }
+  if (!opts.out) throw new RunInputError("An explicit private output path is required");
+  assertNewPrivateOutput(opts.out);
+  if (!Number.isFinite(opts.maxCostUsd) || opts.maxCostUsd <= 0 || !Number.isSafeInteger(opts.maxCalls) || opts.maxCalls <= 0) throw new RunInputError("Explicit positive --max-cost-usd and --max-calls values are required");
+  const budget = new RunBudget(opts.maxCostUsd, opts.maxCalls);
+  if (opts.maxCalls > n * models.length) throw new RunInputError("Call limit exceeds dataset/model bound");
+  if (!process.env.ANTHROPIC_API_KEY) throw new RunInputError("Owner API key is not configured");
+  let sourceCommit: string;
+  try { sourceCommit = cleanSourceCommit(); } catch { throw new RunInputError("Commit the reviewed local patch before a live run"); }
+  const recorder = new ReadingRecorder();
+  const reader = liveReaderFromEnv(process.env, { budget, wrap: (model) => {
+    const recorded = recorder.wrap(model);
+    return { model: model.model, attempt: async (review) => {
+      const attempt = await recorded.attempt(review);
+      budget.observe(attempt); // A failure stops this experiment even if application recovery is possible.
+      return attempt;
+    } };
+  } });
+  let completed = false;
+  try {
+    for (const review of reviews) {
+      budget.assertActive();
+      const result = await triageReview(review, new DefaultTriagePolicy(), reader);
+      budget.assertActive();
+      if (result.reasonCodes.includes("reader_failed")) throw new RunInputError("A reader attempt failed");
+    }
+    completed = true;
+  } catch { console.error(`Run stopped: ${budget.stopped ?? "reader failure"}. Evidence is incomplete; no automatic retry.`); }
+  const evidence = { ...binding, sourceCommit, maxCostUsd: opts.maxCostUsd, maxCalls: opts.maxCalls, tokenCountCalls: budget.tokenCountCalls, generationCalls: budget.calls, completed };
+  recorder.save(opts.out, reader, evidence);
+  console.log(`Saved ${completed ? "complete" : "incomplete"} private recording. Generation calls: ${budget.calls}; token-count calls: ${budget.tokenCountCalls}.`);
+  if (!completed) { process.exitCode = 1; return; }
+  const cache = recorder.snapshot(reader, evidence);
+  const integrity = validateRecording(cache, reviews, binding, reader.id);
+  const replay = cascadeFromCache(cache);
+  if (opts.target === "golden") {
+    const outcomes = await evaluate(golden, new DefaultTriagePolicy(), replay);
+    const usage = usageSummary(replay.stats);
+    const metrics = { ...summarize(outcomes), readerFailures: integrity.attemptFailures, costPerReviewUsd: usage.costPerReviewUsd };
+    const config = JSON.parse(readFileSync("eval/thresholds.json", "utf8"));
+    const breaches = checkThresholds(metrics, config.modes.rules_plus_reader);
+    console.log(`Golden exact match (including category): ${metrics.exactMatch}/${metrics.cases}; unsafe quick approvals: ${metrics.unsafeQuickApprove}; sensitive recall: ${metrics.sensitiveRecall}; attempt failures: ${integrity.attemptFailures}; recorded mean cost/read: $${usage.costPerReviewUsd.toFixed(5)}.`);
+    console.log(`Threshold comparison: ${breaches.length ? "FAIL" : "PASS"}; this is not production approval.`);
+    if (breaches.length) process.exitCode = 1;
+  }
+}
+main().catch((error) => { console.error(error instanceof RunInputError ? error.message : "Reader run failed preflight or evidence validation. No result approved; inspect settings and private output before retry."); process.exitCode = 1; });

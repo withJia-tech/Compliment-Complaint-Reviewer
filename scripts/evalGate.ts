@@ -26,7 +26,9 @@ import {
   loadGoldenFixtures,
   loosenedLimits,
   summarize,
+  fixtureToReview,
 } from "@/lib/eval/goldenEval";
+import { evidenceBinding, validateRecording, verifySourceCommit } from "@/lib/eval/readerEvidence";
 import { DefaultTriagePolicy } from "@/lib/triage/policy";
 import { type ReadingCacheFile, cascadeFromCache, loadReadingCache } from "@/lib/triage/reader/cachedReader";
 import { defaultReaderId } from "@/lib/triage/reader/fromEnv";
@@ -100,8 +102,13 @@ async function main() {
   const args = process.argv.slice(2);
   const baseIndex = args.indexOf("--base");
   const basePath = baseIndex >= 0 ? args[baseIndex + 1] : null;
+  const readingsIndex = args.indexOf("--readings");
 
   const config = JSON.parse(readFileSync("eval/thresholds.json", "utf8")) as ThresholdsFile;
+  if (readingsIndex >= 0) {
+    if (!args[readingsIndex + 1]) throw new Error("--readings requires a path");
+    config.readings = args[readingsIndex + 1];
+  }
   const fixtures = loadGoldenFixtures(config.dataset);
   const policy = new DefaultTriagePolicy();
   const results: ModeResult[] = [];
@@ -117,7 +124,7 @@ async function main() {
   // Mode 2: rules + reader, replayed from the committed evaluation run.
   {
     const expectedReaderId = defaultReaderId();
-    const rerun = "Run `npm run read:golden -- --yes` with your own key and commit the file.";
+    const rerun = "Obtain approval for a bounded recording run; see docs/READER_EVIDENCE_HARDENING.md.";
     const notRun = (status: "fail" | "not_run", note: string) =>
       results.push({ mode: "rules_plus_reader", status, note, metrics: null, breaches: [], outcomes: [] });
 
@@ -135,26 +142,44 @@ async function main() {
       notRun("not_run", `No evaluation run at ${config.readings}. ${rerun} A missing run fails the gate: it is never treated as a pass.`);
     else if (identity.status === "stale") notRun("fail", `${identity.note} ${rerun}`);
     else if (cache) {
-      const reader = cascadeFromCache(cache);
-      const outcomes = await evaluate(fixtures, policy, reader);
-      const usage = usageSummary(reader.stats);
-      const metrics: EvalMetrics = {
-        ...summarize(outcomes),
-        costPerReviewUsd: usage.costPerReviewUsd,
-        escalations: reader.stats.escalations,
-      };
-      const breaches = checkThresholds(metrics, config.modes.rules_plus_reader);
-      const priceNote = usage.unknownPriceModels.length
-        ? ` No price for ${usage.unknownPriceModels.join(", ")}: cost cannot be measured, which fails.`
-        : "";
-      results.push({
-        mode: "rules_plus_reader",
-        status: breaches.length ? "fail" : "pass",
-        note: `Replayed from ${cache.readerId}, recorded ${cache.createdAt}. ${reader.stats.escalations} of ${reader.stats.reads} reviews escalated.${priceNote}`,
-        metrics,
-        breaches,
-        outcomes,
-      });
+      let integrity;
+      try {
+        const reviews = fixtures.map(fixtureToReview);
+        integrity = validateRecording(cache, reviews, evidenceBinding(config.dataset, reviews), expectedReaderId);
+        verifySourceCommit(cache);
+      } catch (error) {
+        integrity = undefined;
+        notRun("fail", error instanceof Error ? error.message : "Recording integrity failed");
+      }
+      if (integrity) {
+        const reader = cascadeFromCache(cache);
+        const outcomes = await evaluate(fixtures, policy, reader);
+        const repeatedReader = cascadeFromCache(cache);
+        const repeatedOutcomes = await evaluate(fixtures, policy, repeatedReader);
+        if (JSON.stringify(outcomes) !== JSON.stringify(repeatedOutcomes) || JSON.stringify(reader.stats) !== JSON.stringify(repeatedReader.stats)) {
+          throw new Error("Recorded replay is not reproducible");
+        }
+        const usage = usageSummary(reader.stats);
+        const metrics: EvalMetrics = {
+          ...summarize(outcomes),
+          // The zero-failure gate counts failed attempts even when the cascade recovers.
+          readerFailures: integrity.attemptFailures,
+          costPerReviewUsd: usage.costPerReviewUsd,
+          escalations: reader.stats.escalations,
+        };
+        const breaches = checkThresholds(metrics, config.modes.rules_plus_reader);
+        const priceNote = usage.unknownPriceModels.length
+          ? ` No price for ${usage.unknownPriceModels.join(", ")}: cost cannot be measured, which fails.`
+          : "";
+        results.push({
+          mode: "rules_plus_reader",
+          status: breaches.length ? "fail" : "pass",
+          note: `Replayed from ${cache.readerId}, recorded ${cache.createdAt}. ${reader.stats.escalations} of ${reader.stats.reads} reviews escalated. Primary failures ${integrity.primaryFailures}; escalation failures ${integrity.escalationFailures}; recovered ${integrity.recoveredReads}; final failures ${summarize(outcomes).readerFailures}.${priceNote}`,
+          metrics,
+          breaches,
+          outcomes,
+        });
+      }
     }
   }
 
@@ -169,13 +194,15 @@ async function main() {
     results.every((r) => r.status === "pass") && (loosened.length === 0 || config.loosening_reason.trim() !== "");
   const md = markdown(results, loosened, config.loosening_reason.trim(), passed);
 
-  mkdirSync(OUT_DIR, { recursive: true });
-  writeFileSync(
-    path.join(OUT_DIR, "report.json"),
-    `${JSON.stringify({ passed, generatedAt: new Date().toISOString(), loosened, results }, null, 2)}\n`,
-  );
-  writeFileSync(path.join(OUT_DIR, "report.md"), md);
-  if (process.env.GITHUB_STEP_SUMMARY) appendFileSync(process.env.GITHUB_STEP_SUMMARY, md);
+  if (!args.includes("--stdout-only")) {
+    mkdirSync(OUT_DIR, { recursive: true });
+    writeFileSync(
+      path.join(OUT_DIR, "report.json"),
+      `${JSON.stringify({ passed, generatedAt: new Date().toISOString(), loosened, results }, null, 2)}\n`,
+    );
+    writeFileSync(path.join(OUT_DIR, "report.md"), md);
+    if (process.env.GITHUB_STEP_SUMMARY) appendFileSync(process.env.GITHUB_STEP_SUMMARY, md);
+  }
 
   console.log(md);
   if (!passed) process.exitCode = 1;

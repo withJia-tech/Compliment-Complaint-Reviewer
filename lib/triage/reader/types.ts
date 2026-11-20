@@ -15,7 +15,7 @@ export const READING_CATEGORIES = [
 /** What the second reader returns for one review. Enforced by structured outputs. */
 export const ReviewReadingSchema = z.object({
   language: z
-    .string()
+    .string().regex(/^[a-z]{2,3}(?:[-_][A-Za-z0-9]{2,8})?$/)
     .describe("Main language of the review as a short tag, e.g. en, en-SG (Singlish), zh, ms, ja, es."),
   concern: z
     .enum(["none", "complaint", "sensitive"])
@@ -27,6 +27,10 @@ export const ReviewReadingSchema = z.object({
     .boolean()
     .describe("True if the review contains a phone number, email, street address, card or order number, or names an individual person."),
   rationale: z.string().describe("One short sentence in English explaining the reading. Do not repeat personal details."),
+}).superRefine((reading, ctx) => {
+  if ((reading.concern === "sensitive") !== (reading.category !== "none")) {
+    ctx.addIssue({ code: "custom", message: "Concern and category disagree" });
+  }
 });
 
 export type ReviewReading = z.infer<typeof ReviewReadingSchema>;
@@ -43,7 +47,7 @@ export interface ReviewReader {
   read(review: Review, context?: ReadContext): Promise<ReviewReading>;
 }
 
-export type ReaderFailureReason = "refused" | "truncated" | "unparsed" | "not_cached" | "api_error";
+export type ReaderFailureReason = "refused" | "truncated" | "unparsed" | "not_cached" | "api_error" | "invalid_response";
 
 export interface TokenUsage {
   inputTokens: number;
@@ -51,9 +55,14 @@ export interface TokenUsage {
 }
 
 /** One model's attempt at one review: a reading or a failure, and what it cost either way. */
-export type ReadAttempt =
+export type ReadAttempt = {
+  /** False means usage/billing cannot be established; zero is not evidence of free usage. */
+  usageKnown?: boolean;
+  observedModel?: string;
+  responseId?: string;
+} & (
   | { model: string; ok: true; reading: ReviewReading; usage: TokenUsage }
-  | { model: string; ok: false; reason: ReaderFailureReason; usage: TokenUsage };
+  | { model: string; ok: false; reason: ReaderFailureReason; usage: TokenUsage });
 
 /** A single model that reads reviews. The cascade combines one or two of these. */
 export interface ModelReader {
